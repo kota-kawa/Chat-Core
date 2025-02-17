@@ -1,0 +1,11 @@
+/* variables.css */
+/* カラーバリエーションなど共通で参照する変数を定義 */
+
+:root {
+  --primary-color: #19c37d;
+  --secondary-color: #f5f5f5;
+  --accent-color: #ff6b6b;
+  --text-dark: #1a1a1a;
+  --text-light: #ffffff;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}

@@ -1,0 +1,81 @@
+/* buttons.css */
+/* ボタン関連のスタイル全般 */
+
+/* 固定表示する丸ボタン */
+.circle-button {
+  position: fixed;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  z-index: 1000;
+  cursor: pointer; /* 追加 */
+}
+
+
+/* prompt-sharing / settings-btn は .circle-button を継承 */
+.prompt-sharing {
+  top: 10px;
+  right: 10px;
+}
+
+.settings-btn {
+  top: 10px;
+  left: 10px;
+  border: none;
+}
+
+/* 新規チャットボタン */
+.new-chat-btn {
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.new-chat-btn i {
+  font-size: 1.2rem;
+}
+
+/* アイコンボタン */
+.icon-button {
+  padding: 0.8rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: white;
+}
+
+/* プライマリボタン */
+.primary-button {
+  background: var(--primary-color);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+}
+
+.primary-button:hover {
+  background: #16a367;
+  transform: scale(0.98);
+}

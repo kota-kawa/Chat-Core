@@ -1,0 +1,391 @@
+/* ベースカラーパレット */
+:root {
+  --primary-color: #2ecc71;      /* 明るい緑 */
+  --accent-color: #27ae60;       /* 濃い緑 */
+  --text-color: #333;
+  --light-bg: #e8f5e9;           /* 背景の淡い緑 */
+  --card-bg: #ffffff;
+  --shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(120deg, var(--light-bg) 0%, #ffffff 100%);
+  color: var(--text-color);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ヘッダー */
+.prompts-header {
+  background: url('prompt_share.jpg') no-repeat center center/cover;
+  color: #fff;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: var(--shadow);
+  position: relative;
+  min-height: 300px;  /* ヘッダーの高さを増加 */
+}
+
+/* チャットに戻るボタン（アイコンのみの丸いボタン） */
+.back-to-chat-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--accent-color);
+  color: #fff;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 1.2rem;
+  transition: background 0.3s;
+}
+
+.back-to-chat-btn:hover {
+  background: #1e8449;
+}
+
+/* ヘッダー内の検索セクション（横・縦とも中央に配置） */
+.prompts-header .search-section {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  max-width: 500px;
+}
+
+/* ==================== */
+/* 検索セクション */
+/* ==================== */
+.search-box {
+  display: flex;
+  align-items: center;
+  background: #f9fff9;
+  border-radius: 30px;
+  box-shadow: var(--shadow);
+  padding: 0.25rem;
+  width: 100%;
+}
+
+.search-box input {
+  border: none;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  width: 100%;
+  outline: none;
+  border-radius: 30px 0 0 30px;
+  background: #f9fff9;
+  transition: box-shadow 0.3s ease;
+}
+
+.search-box input:focus {
+  box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+}
+
+.search-box button {
+  background: var(--accent-color);
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-radius: 30px;
+  font-size: 1.2rem;
+  transition: background 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-box button:hover {
+  background: #1e8449;
+}
+
+/* ==================== */
+/* メインコンテナ */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* ==================== */
+/* カテゴリセクション */
+/* ==================== */
+.categories {
+  background: var(--card-bg);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.categories h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.category-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  justify-items: center;
+}
+
+.category-card {
+  background: #fefefe;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+}
+
+.category-card.active,
+.category-card:hover {
+  box-shadow: var(--shadow);
+  border-color: var(--primary-color);
+  transform: translateY(-3px);
+}
+
+.category-card i {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: var(--accent-color);
+}
+
+/* ==================== */
+/* プロンプト一覧 */
+/* ==================== */
+.prompts-list h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.prompt-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.prompt-card {
+  background: var(--card-bg);
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  flex: 1 1 calc(48% - 1rem);
+  padding: 1rem;
+  box-shadow: var(--shadow);
+  transition: 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.prompt-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-color);
+}
+
+.prompt-card h3 {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--accent-color);
+}
+
+.prompt-card p {
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+.prompt-meta {
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  color: #555;
+}
+
+/* ==================== */
+/* Bookmark ボタン */
+/* ==================== */
+.bookmark-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--accent-color);
+  outline: none;
+  transition: color 0.3s ease;
+}
+
+.bookmark-btn.bookmarked {
+  color: var(--primary-color);
+}
+
+/* ==================== */
+/* モーダル */
+/* ==================== */
+.post-modal {
+  display: flex;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease;
+}
+
+.post-modal.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.post-modal-content {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: 10px;
+  max-width: 600px;
+  width: 90%;
+  position: relative;
+  box-shadow: var(--shadow);
+  /* 固定サイズ・スクロール対応 */
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+/* ==================== */
+/* 投稿フォーム */
+/* ==================== */
+.post-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-group label {
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+.form-group input[type="text"],
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text-color);
+}
+
+/* ==================== */
+/* 投稿ボタン */
+/* ==================== */
+.submit-btn {
+  background: var(--accent-color);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.submit-btn:hover {
+  background: #1e8449;
+}
+
+/* ==================== */
+/* 新規投稿ボタン */
+/* ==================== */
+.new-prompt-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background 0.3s ease, transform 0.3s ease;
+  font-weight: 600;
+}
+
+.new-prompt-btn:hover {
+  background: #27ae60;
+  transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .prompt-card {
+    flex: 1 1 100%;
+  }
+  .search-box input {
+    width: 160px;
+  }
+}
+
+/* ==================== */
+/* ガードレール情報のスタイル */
+/* ==================== */
+.guardrail-info {
+  background: #f5f5f5;
+  border-left: 4px solid var(--accent-color);
+  padding: 0.5rem;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: var(--text-color);
+}

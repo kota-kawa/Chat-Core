@@ -1,0 +1,4 @@
+flask
+groq
+mysql-connector-python
+google-generativeai

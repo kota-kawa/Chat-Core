@@ -1,0 +1,40 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: flask_app
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - Gemini_API_KEY=${Gemini_API_KEY}
+      - MYSQL_HOST=db
+      - MYSQL_USER=chatuser
+      - MYSQL_PASSWORD=chatpass
+      - MYSQL_DATABASE=chat_db
+      # Flask のホットリロード用（Dockerfile で ENV FLASK_ENV=development を設定しているので省略可）
+      # - FLASK_ENV=development
+      # - FLASK_DEBUG=1
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app           # ホストのカレントディレクトリをコンテナ内 /app にマウント
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    environment:
+      # root のパスワード
+      MYSQL_ROOT_PASSWORD: root_password
+      # 作成するデータベース
+      MYSQL_DATABASE: chat_db
+      # ここで作成するユーザ
+      MYSQL_USER: chatuser
+      MYSQL_PASSWORD: chatpass
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+volumes:
+  db_data:

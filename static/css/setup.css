@@ -1,0 +1,78 @@
+/* setup.css */
+/* セットアップ画面（#setup-container, .setup-formなど）関連 */
+
+#setup-container {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 560px;
+  backdrop-filter: blur(10px);
+  animation: slideUp 0.5s ease-out;
+}
+
+.setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  position: relative;
+}
+
+.form-label {
+  position: absolute;
+  top: -10px;
+  left: 15px;
+  background: white;
+  padding: 0 5px;
+  font-size: 0.9rem;
+  color: var(--primary-color);
+}
+
+.setup-form textarea,
+.setup-form select {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.setup-form textarea:focus,
+.setup-form select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(25,195,125,0.2);
+  outline: none;
+}
+
+.task-selection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.prompt-card {
+  background: white;
+  padding: 1.2rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #e0e0e0;
+  flex: 1 1 calc(50% - 1rem);
+
+  /* アイコン・文字をすべて中央揃え */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.prompt-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  border-color: var(--primary-color);
+}

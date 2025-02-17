@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Assistant Pro</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/setup.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+</head>
+<body>
+  <!-- ページ全体に固定表示する丸ボタン（セットアップカードの外） -->
+  <a href="/prompt_share" class="circle-button prompt-sharing" title="プロンプト共有サービス">
+    <i class="bi bi-share"></i>
+  </a>
+  <button id="settings-btn" class="circle-button settings-btn" title="設定"></button>
+
+
+  <div id="setup-container">
+    <form class="setup-form" id="setup-form">
+      <h2 style="text-align: center; margin-bottom: 1.5rem;">AI Assistant セットアップ</h2>
+      <div class="form-group">
+        <label class="form-label">現在の状況・作業環境（入力なしでもOK）</label>
+        <textarea id="setup-info" rows="4" placeholder="例：大学生、リモートワーク中　／　自宅のデスク、周囲は静か"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">AIモデル選択</label>
+        <select id="ai-model">
+          <option value="llama3-70b-8192">llama3-70b-8192</option>
+          <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+          <option value="llama-3.3-70b-versatile" selected>llama-3.3-70b-versatile（デフォルト）</option>
+          <option value="gemma2-9b-it">gemma2-9b-it</option>
+          <option value="google-gemini">Google Gemini</option>
+        </select>
+      </div>
+      <div>
+        <p style="margin-bottom: 0.5rem; color: var(--primary-color); font-weight: bold;">
+          実行したいタスクを選択（クリックで即実行）
+        </p>
+        <div class="task-selection">
+          <div class="prompt-card" data-task="メール作成">📧 メール作成</div>
+          <div class="prompt-card" data-task="要約">📄 要約</div>
+          <div class="prompt-card" data-task="問題へ回答">📋 問題へ回答</div>
+          <div class="prompt-card" data-task="問題解決">🛠️ 問題解決</div>
+          <div class="prompt-card" data-task="情報提供">ℹ️ 情報の提供</div>
+          <div class="prompt-card" data-task="レシピ">🍳 レシピの提案</div>
+          <div class="prompt-card" data-task="旅行計画">✈️ 旅行計画</div>
+          <div class="prompt-card" data-task="悩み相談">💬 悩み相談</div>
+          <div class="prompt-card" data-task="メッセージへの返答">📨 メッセージへの返答</div>
+          <div class="prompt-card" data-task="デート計画">💑 デート計画の作成</div>
+          <div class="prompt-card" data-task="アイデア発想">💡 アイデア発想</div>
+        </div>
+      </div>
+      <!-- これまでのチャットを見るボタン -->
+      <div style="text-align: center; margin-top: 0.2rem;">
+        <button id="access-chat-btn" type="button" class="primary-button">
+          <i class="bi bi-chat-left-text"></i> これまでのチャットを見る
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div id="chat-container">
+    <div class="chat-header">
+      <div class="header-left">
+        <button id="back-to-setup" class="icon-button" title="設定変更">
+          <i class="bi bi-arrow-left"></i>
+        </button>
+        <span>AI Assistant Pro</span>
+      </div>
+      <div class="typing-indicator" id="typing-indicator" style="display: none;">
+        <div class="typing-dot"></div>
+        <div class="typing-dot" style="animation-delay: 0.2s"></div>
+        <div class="typing-dot" style="animation-delay: 0.4s"></div>
+      </div>
+    </div>
+    <div class="chat-main">
+      <div class="sidebar" id="chat-room-sidebar">
+        <button id="new-chat-btn" class="new-chat-btn">
+          <i class="bi bi-plus-lg"></i> 新規チャット
+        </button>
+        <div id="chat-room-list"></div>
+      </div>
+      <div class="chat-area">
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="input-container">
+          <div class="input-wrapper">
+            <input type="text" id="user-input" placeholder="メッセージを入力..." />
+            <button class="primary-button" id="send-btn">
+              <i class="bi bi-send"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- フロント側のメインJS -->
+  <script src="{{ url_for('static', filename='js/dom.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/setup.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+</body>
+</html>

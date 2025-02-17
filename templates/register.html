@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AIチャット 登録</title>
+  <!-- Bootstrap CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <style>
+    /* 既存のスタイル */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #0e401e, #164f2f);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    .register-container {
+      position: relative;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      animation: float 5s ease-in-out infinite;
+      width: 90% !important;
+      max-width: 400px !important;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .title {
+      font-size: 2rem;
+      color: #00ff88;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 5px #008844;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0% { text-shadow: 2px 2px 5px #008844; }
+      100% { text-shadow: 4px 4px 20px #00ff88; }
+    }
+    .input-label {
+      display: block;
+      font-size: 1.2rem;
+      color: #00ff88;
+      margin-bottom: 10px;
+    }
+    .text-input {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 25px;
+      background: rgba(0, 0, 0, 0.2);
+      color: #ffffff;
+      outline: none;
+      transition: all 0.3s ease;
+      margin-bottom: 20px;
+    }
+    .text-input:focus {
+      background: rgba(0, 0, 0, 0.3);
+      box-shadow: 0 0 10px #00ff88;
+    }
+    .submit-btn,
+    .google-btn {
+      width: 80%;
+      margin: 10px auto;
+      text-align: center;
+    }
+    .submit-btn {
+      background-color: #00ff88;
+      color: #ffffff;
+      border: none;
+      padding: 10px 25px;
+      font-size: 1.2rem;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: block;
+    }
+    .submit-btn:hover {
+      background-color: #008844;
+      box-shadow: 0 0 15px #00ff88;
+    }
+    .google-btn {
+      background-color: #4285F4;
+      color: #ffffff;
+      border: none;
+      padding: 10px 25px;
+      font-size: 1.2rem;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      justify-content: center;
+    }
+    .google-btn:hover {
+      background-color: #357AE8;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    }
+    .google-container {
+      margin-top: 40px;
+    }
+    .bot-icon {
+      font-size: 4rem;
+      color: #00ff88;
+      margin-bottom: 20px;
+      animation: botBlink 3s ease-in-out infinite;
+    }
+    @keyframes botBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .chat-background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url("{{ url_for('static', filename='img2.jpeg') }}") no-repeat center center/cover;
+      opacity: 0.2;
+      z-index: 0;
+    }
+    #codeSection .text-input {
+      background: rgba(0, 0, 0, 0.3);
+      border: 2px solid #ff8800;
+      color: #ff8800;
+    }
+    #codeSection .text-input:focus {
+      background: rgba(0, 0, 0, 0.4);
+      box-shadow: 0 0 10px #ff8800;
+    }
+    #codeSection .submit-btn {
+      background-color: #ff8800;
+      color: #000000;
+    }
+    #codeSection .submit-btn:hover {
+      background-color: #ffaa00;
+      box-shadow: 0 0 15px #ff8800;
+    }
+    /* ★ スピナーのスタイル ★ */
+    .spinner {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 100px;
+      height: 100px;
+      margin: -50px 0 0 -50px;
+      z-index: 10000;
+    }
+    .spinner .spinner-circle {
+      position: absolute;
+      border: 4px dashed #00ff88;
+      border-radius: 50%;
+      width: 100%;
+      height: 100%;
+      animation: spin 1.5s linear infinite;
+    }
+    .spinner .spinner-circle:nth-child(2) {
+      border: 4px dashed #ff8800;
+      animation-duration: 2s;
+      transform: rotate(45deg);
+    }
+    .spinner .spinner-fish {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem;
+      animation: fishspin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg) scale(0.8); }
+      50% { transform: rotate(180deg) scale(1.2); }
+      100% { transform: rotate(360deg) scale(0.8); }
+    }
+    @keyframes fishspin {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    /* ★ ここまで ★ */
+  </style>
+</head>
+<body>
+  <div class="chat-background"></div>
+  <div class="register-container">
+    <div class="bot-icon" id="iconDisplay">🐟</div>
+    <h1 class="title">登録ページ</h1>
+    <form id="registrationForm" onsubmit="return false;">
+      <!-- メールアドレス入力セクション -->
+      <div id="emailSection">
+        <label for="email" class="input-label">メールアドレス:</label>
+        <input type="email" id="email" name="email" required class="text-input" placeholder="example@mail.com">
+        <button type="button" class="submit-btn" id="sendEmailBtn">確認メール送信</button>
+        <div class="google-container">
+          <button type="button" class="google-btn" id="googleRegisterBtn">
+            <i class="bi bi-google"></i> Googleで登録
+          </button>
+        </div>
+      </div>
+      <!-- 認証コード入力セクション（初期は非表示） -->
+      <div id="codeSection" style="display: none;">
+        <label for="authCode" class="input-label">認証コード:</label>
+        <input type="text" id="authCode" name="authCode" required class="text-input" placeholder="認証コードを入力">
+        <button type="button" class="submit-btn" id="verifyCodeBtn">認証する</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ★ スピナー表示用要素 ★ -->
+  <div id="spinner" class="spinner" style="display: none;">
+    <div class="spinner-circle"></div>
+    <div class="spinner-circle"></div>
+    <div class="spinner-fish">🐠</div>
+  </div>
+
+  <!-- Bootstrap Modal (共通モーダル) -->
+  <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content" style="background: rgba(14, 64, 30, 0.9); color: #00ff88;">
+        <div class="modal-header">
+          <h5 class="modal-title" id="messageModalLabel">お知らせ</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="OK"></button>
+        </div>
+        <div class="modal-body" id="modalMessage">
+          <!-- メッセージ内容をここに設定 -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS (Bundle: Popper含む) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+    const modalMessageEl = document.getElementById('modalMessage');
+    const iconDisplay = document.getElementById('iconDisplay');
+    const emailSection = document.getElementById('emailSection');
+    const codeSection = document.getElementById('codeSection');
+    const spinner = document.getElementById('spinner');
+
+    function showModalMessage(msg) {
+      modalMessageEl.textContent = msg;
+      messageModal.show();
+    }
+
+    // 「確認メール送信」ボタンの処理
+    document.getElementById('sendEmailBtn').addEventListener('click', async () => {
+      const email = document.getElementById('email').value.trim();
+      if (!email) {
+        showModalMessage("メールアドレスを入力してください。");
+        return;
+      }
+      // スピナー表示＆ボタンを無効化
+      spinner.style.display = 'block';
+      document.getElementById('sendEmailBtn').disabled = true;
+      try {
+        const res = await fetch('/api/send_verification_email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          showModalMessage(`「${email}」 に確認メールを送信しました。認証コードを入力してください。`);
+          emailSection.style.display = 'none';
+          codeSection.style.display = 'block';
+          iconDisplay.textContent = '🐳'; // 絵文字を変更
+        } else {
+          showModalMessage('エラー: ' + data.error);
+        }
+      } catch (err) {
+        showModalMessage('送信エラー: ' + err.message);
+      } finally {
+        spinner.style.display = 'none';
+        document.getElementById('sendEmailBtn').disabled = false;
+      }
+    });
+
+    // 「認証する」ボタンの処理
+    document.getElementById('verifyCodeBtn').addEventListener('click', async () => {
+      const code = document.getElementById('authCode').value.trim();
+      if (!code) {
+        showModalMessage("認証コードを入力してください。");
+        return;
+      }
+      try {
+        const res = await fetch('/api/verify_registration_code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ authCode: code })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          showModalMessage("認証が完了しました！\n数秒後にトップページへ移動します。");
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 2000);
+        } else {
+          showModalMessage("認証失敗: " + data.error);
+        }
+      } catch (err) {
+        showModalMessage("通信エラー: " + err.message);
+      }
+    });
+
+    // Google登録ボタン（ダミー）
+    document.getElementById('googleRegisterBtn').addEventListener('click', function() {
+      showModalMessage("Googleで登録する機能はまだ実装されていません。");
+    });
+  </script>
+</body>
+</html>

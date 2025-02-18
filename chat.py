@@ -354,3 +354,21 @@ def get_chat_history():
 
         messages = ephemeral_chats[sid][chat_room_id]["messages"]
         return jsonify({"messages": messages})
+
+
+
+@chat_bp.route("/api/tasks", methods=["GET"])
+def get_tasks():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        # 必要に応じて、iconなど別のカラムもSELECT
+        query = "SELECT name FROM task_with_examples ORDER BY id ASC"
+        cursor.execute(query)
+        tasks = cursor.fetchall()  # 例: [{'name': 'メール作成'}, {'name': '要約'}, …]
+        return jsonify({"tasks": tasks})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()

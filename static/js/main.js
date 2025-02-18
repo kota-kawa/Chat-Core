@@ -1,5 +1,6 @@
 // main.js
 
+
 document.addEventListener('DOMContentLoaded', () => {
   // ログイン状態をAPIで確認し、左上ボタンの表示を切り替え
   fetch("/api/current_user")

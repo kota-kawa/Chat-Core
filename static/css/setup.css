@@ -50,6 +50,7 @@
 }
 
 .task-selection {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;

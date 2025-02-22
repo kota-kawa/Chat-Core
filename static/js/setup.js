@@ -5,23 +5,23 @@ function loadTaskCards() {
   fetch("/api/tasks")
     .then(response => response.json())
     .then(data => {
-      if (data.error) {
-        console.error("タスク取得エラー:", data.error);
-        return;
-      }
       const container = document.getElementById('task-selection');
       container.innerHTML = "";  // 既存の内容をクリア
       data.tasks.forEach(task => {
         const card = document.createElement('div');
         card.className = 'prompt-card';
         card.setAttribute('data-task', task.name);
-        // 必要に応じて task.icon などを利用してアイコンを表示することも可能
         card.innerText = task.name;
         container.appendChild(card);
       });
-      // タスクカード全体に対してイベントデリゲーションを設定
+      // タスクカード全体に対してクリックイベントを設定
       initSetupTaskCards();
+      // 初期の「もっと見る」ボタン（タスクが6個以上なら）を設定
       initToggleTasks();
+      // タスク読み込み後に編集ボタンも再生成
+      if (typeof initTaskOrderEditing === 'function') {
+        initTaskOrderEditing();
+      }
     })
     .catch(error => {
       console.error("タスク読み込みに失敗:", error);
@@ -44,8 +44,10 @@ function initSetupTaskCards() {
   container.addEventListener('click', handleTaskCardClick);
 }
 
-// クリックされた要素がタスクカードなら、チャットルーム作成・初回メッセージ送信を実行
+// タスクカードのクリックイベントハンドラー
 function handleTaskCardClick(event) {
+  // 編集モード中はクリックを無視（ドラッグ専用）
+  if (window.isEditingOrder) return;
   const card = event.target.closest('.prompt-card');
   if (!card) return;
   const setupInfo = setupInfoElement.value.trim();
@@ -66,10 +68,7 @@ function handleTaskCardClick(event) {
     .then(() => {
       showChatInterface();
       loadChatRooms();
-      // 新規ルームなのでローカルチャット履歴は初期化
       localStorage.removeItem(`chatHistory_${currentChatRoomId}`);
-
-      // 最初のメッセージとして、状況と選択タスクを送信
       const firstMessage = `【状況・作業環境】${setupInfo}\n【リクエスト】${task}`;
       generateResponse(firstMessage, aiModel);
     })
@@ -81,6 +80,12 @@ function handleTaskCardClick(event) {
 
 // タスクカードが6個以上ある場合、「もっと見る」ボタンで折りたたみ/展開する処理
 function initToggleTasks() {
+  // 既存の「もっと見る」ボタンがあれば削除する
+  const existingToggleBtn = document.getElementById('toggle-tasks-btn');
+  if (existingToggleBtn) {
+    existingToggleBtn.remove();
+  }
+
   const taskCards = document.querySelectorAll('.task-selection .prompt-card');
   if (taskCards.length > 6) {
     // 6個目以降を初期状態で非表示にする
@@ -107,6 +112,7 @@ function initToggleTasks() {
     });
   }
 }
+
 
 // グローバルへエクスポート
 window.showSetupForm = showSetupForm;

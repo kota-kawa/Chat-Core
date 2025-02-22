@@ -1,5 +1,20 @@
 /* task-order.css */
 
+#edit-task-order-btn {
+    width: 2.0rem;           /* 固定の幅を設定 */
+    height: 2.0rem;          /* 固定の高さを設定 */
+    border-radius: 50%;      /* 完全な円形にする */
+    padding: 0;              /* 余白をなくす */
+    display: flex;           /* アイコンを中央に配置 */
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;       /* アイコンのサイズ調整 */
+    border: none;            /* ボーダーがあれば削除 */
+}
+
+  
+  
+  
 /* 並び替え編集中のカードにアニメーション（震える効果） */
 .prompt-card.editable {
     animation: shake 0.5s infinite;

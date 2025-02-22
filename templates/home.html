@@ -38,15 +38,15 @@
           <option value="google-gemini">Google Gemini</option>
         </select>
       </div>
-      <div>
-        <p style="margin-bottom: 0.5rem; color: var(--primary-color); font-weight: bold;">
+      
+      <div class="task-selection-header" style="display: inline-flex; align-items: center;">
+        <p id="task-selection-text" style="margin: 0; color: var(--primary-color); font-weight: bold; margin-right: 0.5rem;">
           実行したいタスクを選択（クリックで即実行）
         </p>
-
-        <div class="task-selection" id="task-selection"></div>
-        
- 
+        <!-- 並び替え編集ボタンをここに挿入 -->
       </div>
+      <div class="task-selection" id="task-selection"></div>
+
       <!-- これまでのチャットを見るボタン -->
       <div style="text-align: center; margin-top: 0.2rem;">
         <button id="access-chat-btn" type="button" class="primary-button">

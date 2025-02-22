@@ -9,30 +9,45 @@ let taskOffsetY = 0;
 
 // タスクカード読み込み後に並び替え編集ボタンを追加する処理
 function initTaskOrderEditing() {
-  const taskSelection = document.querySelector('.task-selection');
-  if (!taskSelection) return;
-  // 既存の編集ボタンがあれば削除して再生成する
+  // ヘッダー要素を取得
+  const header = document.querySelector('.task-selection-header');
+  if (!header) return;
+
+  // 既存のボタンがあれば削除
   if (editButton) {
     editButton.remove();
     editButton = null;
   }
+  
+  // ボタン作成
   editButton = document.createElement('button');
   editButton.id = 'edit-task-order-btn';
   editButton.className = 'primary-button';
-  editButton.style.marginTop = '1rem';
-  editButton.type = 'button';  // フォーム送信を防ぐために明示的に指定
-  editButton.textContent = '並び替え編集';
+  // インライン表示に合わせるため余白は不要
+  editButton.style.margin = '0';
+  editButton.type = 'button';  // フォーム送信を防止
+  // Bootstrapのアイコンをセット（ここでは例としてbi-arrows-moveを使用）
+  editButton.innerHTML = '<i class="bi bi-arrows-move"></i>';
+  editButton.title = '並び替え編集';  // ツールチップ用
+
   editButton.addEventListener('click', toggleTaskOrderEditing);
-  taskSelection.parentNode.insertBefore(editButton, taskSelection.nextSibling);
+  // ヘッダー内にボタンを追加
+  header.appendChild(editButton);
 }
 
 // 編集モードの ON/OFF 切替
 function toggleTaskOrderEditing() {
+  // 編集モードをトグルする
   isEditingOrder = !isEditingOrder;
-  window.isEditingOrder = isEditingOrder; // 他スクリプトで参照可能にする
+  window.isEditingOrder = isEditingOrder;
+
   if (isEditingOrder) {
-    editButton.textContent = '並び替え完了';
-    // 編集中は全カードを表示し、「もっと見る」ボタンを隠す
+    // 編集モード開始時：
+    // ボタンを押した瞬間にアイコンをチェックマークに変更し、タイトルを「完了」にする
+    editButton.title = "完了";
+    editButton.innerHTML = '<i class="bi bi-check"></i>';
+    
+    // タスクカード表示の設定やドラッグ＆ドロップを有効化
     document.querySelectorAll('.task-selection .prompt-card').forEach(card => {
       card.style.display = 'flex';
     });
@@ -42,15 +57,20 @@ function toggleTaskOrderEditing() {
     }
     enableTaskDragAndDrop();
   } else {
-    editButton.textContent = '並び替え編集';
+    // 編集モード終了時：
+    // チェックマークを押すと、完了として並び順を保存
     disableTaskDragAndDrop();
     saveTaskOrder();
-    // 編集終了後、再度タスクの折りたたみ状態を復元（必要なら）
     if (typeof window.initToggleTasks === 'function') {
       window.initToggleTasks();
     }
+    // ボタンのアイコンとタイトルを元に戻す
+    editButton.title = "並び替え編集";
+    editButton.innerHTML = '<i class="bi bi-arrows-move"></i>';
   }
 }
+
+
 
 // ドラッグ＆ドロップ用イベントを有効化（各カードに .editable クラス追加）
 function enableTaskDragAndDrop() {
@@ -176,7 +196,7 @@ function saveTaskOrder() {
     if (data.error) {
       alert("並び順の保存に失敗: " + data.error);
     } else {
-      alert("並び順が保存されました。");
+      //alert("並び順が保存されました。");
     }
   })
   .catch(err => {

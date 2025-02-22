@@ -266,25 +266,47 @@ def chat():
     if match and len(all_messages) == 1:
         environment = match.group(1).strip()
         task = match.group(2).strip()
-        if task in TASK_PROMPTS:
-            prompt_data = TASK_PROMPTS[task]
+
+        # DBから指定タスクのプロンプトテンプレートと few-shot 例を取得する
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        query = "SELECT prompt_template, few_shot_examples FROM task_with_examples WHERE name = %s"
+        cursor.execute(query, (task,))
+        prompt_data = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if prompt_data:
             template = prompt_data.get("prompt_template", "")
             formatted_template = template.format(環境=environment)
-            few_shot_examples = prompt_data.get("few_shot_examples", [])
+            few_shot_examples = prompt_data.get("few_shot_examples", "")
             extra_prompt = ""
             if few_shot_examples:
-                few_shot_text_lines = []
-                for i, example in enumerate(few_shot_examples, start=1):
-                    few_shot_text_lines.append(
-                        "【例{}】\n文章: \"{}\"\n感情: \"{}\"".format(
-                            i, example.get("input", ""), example.get("output", "")
+                try:
+                    few_shot_examples = json.loads(few_shot_examples)
+                except Exception as e:
+                    few_shot_examples = []
+                if few_shot_examples:
+                    few_shot_text_lines = []
+                    for i, example in enumerate(few_shot_examples, start=1):
+                        few_shot_text_lines.append(
+                            "【例{}】\n文章: \"{}\"\n感情: \"{}\"".format(
+                                i, example.get("input", ""), example.get("output", "")
+                            )
                         )
-                    )
-                extra_prompt += "\n\n".join(few_shot_text_lines)
+                    extra_prompt += "\n\n".join(few_shot_text_lines)
             extra_prompt += "\n\n【タスク】\n" + formatted_template
             all_messages.insert(0, {"role": "system", "content": extra_prompt})
 
     conversation_messages = [system_prompt] + all_messages
+
+    # conversation_messages を extra_prompt.txt に書き込む
+    try:
+        with open('extra_prompt.txt', 'w', encoding='utf-8') as f:
+            f.write(json.dumps(conversation_messages, ensure_ascii=False, indent=2))
+    except Exception as e:
+        print("Failed to write conversation_messages to extra_prompt.txt:", e)
+
 
     if model == "google-gemini":
         from gemini import get_gemini_response
@@ -356,17 +378,38 @@ def get_chat_history():
         return jsonify({"messages": messages})
 
 
-
+# タスクカードの取得
 @chat_bp.route("/api/tasks", methods=["GET"])
 def get_tasks():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        # 必要に応じて、iconなど別のカラムもSELECT
-        query = "SELECT name FROM task_with_examples ORDER BY id ASC"
+        # display_order に基づいて並び替え
+        query = "SELECT name FROM task_with_examples ORDER BY display_order ASC"
         cursor.execute(query)
-        tasks = cursor.fetchall()  # 例: [{'name': 'メール作成'}, {'name': '要約'}, …]
+        tasks = cursor.fetchall()  # 例: [{'name': 'メール作成'}, …]
         return jsonify({"tasks": tasks})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+# タスクカード並び替え
+@chat_bp.route("/api/update_tasks_order", methods=["POST"])
+def update_tasks_order():
+    data = request.get_json()
+    new_order = data.get("order")
+    if not new_order or not isinstance(new_order, list):
+        return jsonify({"error": "order must be a list"}), 400
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        for index, task_name in enumerate(new_order):
+            query = "UPDATE task_with_examples SET display_order = %s WHERE name = %s"
+            cursor.execute(query, (index, task_name))
+        conn.commit()
+        return jsonify({"message": "Order updated"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:

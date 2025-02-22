@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/setup.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tasks_order/tasks_order.css') }}">
 </head>
 <body>
   <!-- ページ全体に固定表示する丸ボタン（セットアップカードの外） -->
@@ -44,20 +45,7 @@
 
         <div class="task-selection" id="task-selection"></div>
         
-        <!--
-        <div class="task-selection">
-          <div class="prompt-card" data-task="メール作成">📧 メール作成</div>
-          <div class="prompt-card" data-task="要約">📄 要約</div>
-          <div class="prompt-card" data-task="問題へ回答">📋 問題へ回答</div>
-          <div class="prompt-card" data-task="問題解決">🛠️ 問題解決</div>
-          <div class="prompt-card" data-task="情報提供">ℹ️ 情報の提供</div>
-          <div class="prompt-card" data-task="レシピ">🍳 レシピの提案</div>
-          <div class="prompt-card" data-task="旅行計画">✈️ 旅行計画</div>
-          <div class="prompt-card" data-task="悩み相談">💬 悩み相談</div>
-          <div class="prompt-card" data-task="メッセージへの返答">📨 メッセージへの返答</div>
-          <div class="prompt-card" data-task="デート計画">💑 デート計画の作成</div>
-          <div class="prompt-card" data-task="アイデア発想">💡 アイデア発想</div>
-        </div>-->
+ 
       </div>
       <!-- これまでのチャットを見るボタン -->
       <div style="text-align: center; margin-top: 0.2rem;">
@@ -108,6 +96,7 @@
   <script src="{{ url_for('static', filename='js/setup.js') }}"></script>
   <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/tasks_order/tasks_order.js') }}"></script>
 
 </body>
 </html>

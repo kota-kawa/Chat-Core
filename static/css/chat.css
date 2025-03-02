@@ -190,7 +190,7 @@
 /* ユーザーメッセージの場合、コピー ボタンはバブルの左上に配置 */
 .user-message-wrapper .copy-btn {
   left: -2rem;
-  top: -0.2rem;
+  top: -0.1rem;
 }
 
 /* AI（Bot）メッセージの場合、コピー ボタンはバブルの右上に配置 */
@@ -232,7 +232,7 @@
 
 #user-input:focus {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(25,195,125,0.2);
+  box-shadow: 0 0 0 3px rgba(25, 195, 125, 0.2);
 }
 
 /* タイピングインジケータ */

@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AIチャットログイン</title>
+  <script type="module" src="{{ url_for('static', filename='js/web_components/spinner.js') }}"></script>
   <!-- Bootstrap Icons CDN -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   <style>
@@ -131,34 +132,7 @@
       opacity: 0.2;
       z-index: 0;
     }
-    /* --- 奇抜で鮮やかなスピナーのスタイル --- */
-    .spinner-container {
-      display: none;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
-    .spinner {
-      width: 80px;
-      height: 80px;
-      border: 8px solid transparent;
-      border-top-color: #ff00ff;
-      border-right-color: #00ffff;
-      border-bottom-color: #ffff00;
-      border-left-color: #ff0000;
-      border-radius: 50%;
-      animation: spin 1s linear infinite, hueShift 3s linear infinite;
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    @keyframes hueShift {
-      0%   { filter: hue-rotate(0deg); }
-      100% { filter: hue-rotate(360deg); }
-    }
+    
     /* --- モーダルのスタイル --- */
     .modal {
       display: none; /* 初期は非表示 */
@@ -208,10 +182,10 @@
     <div class="bot-icon">🌱</div>
     <h1 class="title">ログインページ</h1>
     <div id="error-message" style="color: red; margin-bottom: 10px;"></div>
-    <!-- スピナー表示エリア（初期は非表示） -->
-    <div id="spinner" class="spinner-container">
-      <div class="spinner"></div>
-    </div>
+
+    <!-- スピナー表示エリア（Web Componentを利用） -->
+<my-spinner id="spinner"></my-spinner>
+
     <!-- メールアドレス入力部 -->
     <div id="email-section">
       <label for="email" class="email-label">メールアドレス:</label>
@@ -256,7 +230,7 @@
       }
       
       // メール送信中はスピナーを表示
-      document.getElementById('spinner').style.display = 'block';
+      document.getElementById('spinner').show();
       
       fetch('/api/send_login_code', {
         method: 'POST',
@@ -266,7 +240,7 @@
       .then(response => response.json())
       .then(data => {
         // 通信完了後はスピナーを非表示に
-        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('spinner').hide();
         if (data.status === "success") {
           // メールアドレス入力部を隠し、認証コード入力部を表示
           document.getElementById('email-section').style.display = 'none';
@@ -283,7 +257,7 @@
       })
       .catch(error => {
         console.error('Error:', error);
-        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('spinner').hide();
         errorMessage.textContent = "サーバーエラーが発生しました。";
       });
     });

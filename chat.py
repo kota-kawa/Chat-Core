@@ -40,11 +40,6 @@ def cleanup_ephemeral_chats():
     for sid in sids_to_delete:
         del ephemeral_chats[sid]
 
-# JSONファイルからプロンプトテンプレートとfew-shot例を読み込む
-PROMPT_TEMPLATES_FILE = os.path.join(os.path.dirname(__file__), 'prompt_templates.json')
-with open(PROMPT_TEMPLATES_FILE, encoding='utf-8') as f:
-    TASK_PROMPTS = json.load(f)
-
 chat_bp = Blueprint('chat', __name__)
 
 # ----------------------------------------
@@ -262,7 +257,12 @@ def chat():
         ephemeral_chats[sid][chat_room_id]["messages"].append({"role": "user", "content": user_message})
         all_messages = ephemeral_chats[sid][chat_room_id]["messages"]
 
+
+
     extra_prompt = None
+    # ユーザーメッセージの解析前に初期化
+    prompt_data = None  # prompt_data を初期化
+
     if match and len(all_messages) == 1:
         environment = match.group(1).strip()
         task = match.group(2).strip()
@@ -276,29 +276,46 @@ def chat():
         cursor.close()
         conn.close()
 
-        if prompt_data:
-            template = prompt_data.get("prompt_template", "")
-            formatted_template = template.format(環境=environment)
-            few_shot_examples = prompt_data.get("few_shot_examples", "")
-            extra_prompt = ""
-            if few_shot_examples:
-                try:
-                    few_shot_examples = json.loads(few_shot_examples)
-                except Exception as e:
-                    few_shot_examples = []
-                if few_shot_examples:
-                    few_shot_text_lines = []
-                    for i, example in enumerate(few_shot_examples, start=1):
-                        few_shot_text_lines.append(
-                            "【例{}】\n文章: \"{}\"\n感情: \"{}\"".format(
-                                i, example.get("input", ""), example.get("output", "")
-                            )
-                        )
-                    extra_prompt += "\n\n".join(few_shot_text_lines)
-            extra_prompt += "\n\n【タスク】\n" + formatted_template
-            all_messages.insert(0, {"role": "system", "content": extra_prompt})
+    # conversation_messages を必ず初期化
+    conversation_messages = []
 
-    conversation_messages = [system_prompt] + all_messages
+    if prompt_data:
+        few_shot_examples_str = prompt_data.get("few_shot_examples", "")
+        extra_prompt = ""
+        loaded_examples = []
+
+        if few_shot_examples_str:
+            try:
+                safe_few_shot_str = few_shot_examples_str.replace('\n', '\\n')
+                if isinstance(few_shot_examples_str, list):
+                    loaded_examples = few_shot_examples_str
+                else:
+                    loaded_examples = json.loads(safe_few_shot_str)
+            except Exception as e:
+                print("few_shotのパースエラー:", e)
+                loaded_examples = []
+
+        if loaded_examples:
+            few_shot_text_lines = []
+            for i, example in enumerate(loaded_examples, start=1):
+                input_text = example.get("input", "").strip()
+                output_text = example.get("output", "").strip()
+                few_shot_text_lines.append("Q{}: {}\nA{}: {}".format(i, input_text, i, output_text))
+            extra_prompt += "\n\n".join(few_shot_text_lines)
+
+        conversation_messages.append({
+            "role": "system",
+            "content": "あなたは日本語で回答する便利なアシスタントです。"
+        })
+        conversation_messages.append({
+            "role": "system",
+            "content": extra_prompt
+        })
+    else:
+        conversation_messages.append(system_prompt)
+
+    conversation_messages += all_messages
+
 
     # conversation_messages を extra_prompt.txt に書き込む
     try:

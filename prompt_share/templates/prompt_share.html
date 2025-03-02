@@ -87,6 +87,11 @@
         </div>
       </section>
 
+
+
+      <div id="promptResults"></div>
+
+
       <!-- プロンプト一覧セクション -->
       <section class="prompts-list">
         <h2 id="selected-category-title">全てのプロンプト</h2>
@@ -143,7 +148,7 @@
           </div>
           <div class="form-group">
             <label for="prompt-author">投稿者名</label>
-            <input type="text" id="prompt-author" placeholder="ニックネームなど" required />
+            <input type="text" id="prompt-author" placeholder="ニックネームなど" value="アイデア職人" required />
           </div>
           <!-- ガードレールの使用チェック -->
           <div class="form-group">
@@ -154,12 +159,8 @@
           <!-- ガードレールチェック時に表示する入力例・出力例のフィールド -->
           <div id="guardrail-fields" style="display: none;">
             <div class="form-group">
-              <label for="prompt-input-example">入力例</label>
-              <textarea id="prompt-input-example" rows="3" placeholder="入力例を入力"></textarea>
-            </div>
-            <div class="form-group">
-              <label for="prompt-output-example">出力例</label>
-              <textarea id="prompt-output-example" rows="3" placeholder="出力例を入力"></textarea>
+              <label for="prompt_example">入出力例</label>
+              <textarea id="prompt_example" rows="3" placeholder="入出力例を入力"></textarea>
             </div>
           </div>
           <button type="submit" class="submit-btn">
@@ -176,5 +177,8 @@
 
     <!-- メインのJavaScript -->
     <script src="{{ url_for('prompt_share.static', filename='prompt_share.js') }}"></script>
+    <!-- 例: HTML の末尾に追加 -->
+<script src="{{ url_for('prompt_share.static', filename='prompt_search.js') }}"></script>
+
   </body>
 </html>

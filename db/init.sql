@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS task_with_examples (
   name VARCHAR(255) NOT NULL UNIQUE,
   prompt_template TEXT,
   few_shot_examples TEXT,
+  display_order INT NOT NULL DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )
@@ -43,7 +44,18 @@ CREATE TABLE IF NOT EXISTS task_with_examples (
   COLLATE=utf8mb4_unicode_ci;
 
 
-ALTER TABLE task_with_examples ADD COLUMN display_order INT NOT NULL DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS prompts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    content TEXT NOT NULL,
+    author VARCHAR(50) NOT NULL,
+    prompt_example TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
 
 
 

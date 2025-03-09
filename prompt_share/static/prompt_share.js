@@ -8,39 +8,141 @@ document.addEventListener("DOMContentLoaded", function () {
       .then(data => {
         const promptContainer = document.querySelector(".prompt-cards");
         promptContainer.innerHTML = ""; // 既存のカードをクリア
+
         if (data.prompts) {
           data.prompts.forEach(prompt => {
+
+            // 変更点①:
+            // サーバーから返却された各プロンプトに、ブックマーク状態を示すフィールド（bookmarked）があると仮定
+            const isBookmarked = prompt.bookmarked;
+
+            // 変更点②:
+            // ブックマーク状態に応じて、アイコンのHTMLを切り替える
+            const bookmarkIcon = isBookmarked
+              ? `<i class="bi bi-bookmark-fill"></i>`
+              : `<i class="bi bi-bookmark"></i>`;
+
+
             const card = document.createElement("div");
             card.classList.add("prompt-card");
-            // カテゴリフィルタ用に data-category 属性を設定
-            card.setAttribute("data-category", prompt.category);
+
+            // カード内で position: absolute; を使うため、相対配置を設定
+            card.style.position = "relative";
+
+            // カード内容を組み立て
             card.innerHTML = `
-              <button class="bookmark-btn"><i class="bi bi-bookmark"></i></button>
+              <!-- ブックマークボタン：カード右上に固定 -->
+                  <button class="bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" style="position: absolute; top: 10px; right: 10px; z-index: 2;">
+                    ${bookmarkIcon}
+                  </button>
+              
               <h3>${prompt.title}</h3>
               <p>${prompt.content}</p>
-              ${ prompt.input_example ? `<div class="guardrail-info">
-                <strong>入出力例:</strong> ${prompt.input_example}
-              </div>` : '' }
-              <div class="prompt-meta">
+
+              <!-- カテゴリと投稿者情報 ＋ （必要なら）トグルボタン＋ポップアップ -->
+              <div class="prompt-meta" style="text-align: center; margin-top: 10px; position: relative;">
                 <span>カテゴリ: ${prompt.category}</span>
-                <span>投稿者: ${prompt.author}</span>
+                
+                ${(prompt.input_examples || prompt.output_examples)
+                ? `
+                      <!-- トグルボタン。小さめのBootstrapボタンを利用 -->
+                      <button class="toggle-guardrail btn btn-outline-success btn-sm" style="margin: 0 6px; padding: 2px 6px;">
+                        <i class="bi bi-caret-down"></i>
+                      </button>
+              
+                      <span>投稿者: ${prompt.author}</span>
+              
+                      <!-- 入出力例のポップアップ。カードの高さを変えないよう絶対配置 -->
+                      <div class="guardrail-info" style="
+                            display: none; 
+                            position: absolute; 
+                            bottom: 40px; 
+                            left: 50%; 
+                            transform: translateX(-50%);
+                            background: #fff; 
+                            border: 1px solid #ddd; 
+                            border-radius: 4px; 
+                            padding: 10px; 
+                            width: 80%;
+                            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+                            z-index: 3;">
+                        <strong>入力例:</strong> ${prompt.input_examples}<br>
+                        <strong>出力例:</strong> ${prompt.output_examples}
+                      </div>
+                    `
+                : `
+                      <span style="margin-left: 6px;">投稿者: ${prompt.author}</span>
+                    `
+              }
               </div>
             `;
-            // ブックマークボタンの処理
+
+
+            // 変更点④:
+            // ブックマークボタンにクリックイベントを設定
             const bookmarkBtn = card.querySelector(".bookmark-btn");
             bookmarkBtn.addEventListener("click", function (e) {
               e.stopPropagation();
+              // ボタンのクラスをトグルし、ブックマーク状態を切り替える
               bookmarkBtn.classList.toggle("bookmarked");
-              bookmarkBtn.innerHTML = bookmarkBtn.classList.contains("bookmarked")
+              const isBookmarkedNow = bookmarkBtn.classList.contains("bookmarked");
+              bookmarkBtn.innerHTML = isBookmarkedNow
                 ? `<i class="bi bi-bookmark-fill"></i>`
                 : `<i class="bi bi-bookmark"></i>`;
+
+              // 変更点⑤:
+              // ブックマーク状態が「オン」になった場合、サーバーに情報を送信して保存する
+              if (isBookmarkedNow) {
+                fetch('/prompt_share/api/bookmark', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    title: prompt.title,       // task_with_examples の name に対応
+                    content: prompt.content,   // task_with_examples の prompt_template に対応
+                    input_examples: prompt.input_examples || "",
+                    output_examples: prompt.output_examples || ""
+                  })
+                })
+                .then(response => response.json())
+                .then(result => {
+                  if (result.error) {
+                    console.error("ブックマーク保存エラー:", result.error);
+                  } else {
+                    console.log("ブックマークが保存されました:", result.message);
+                  }
+                })
+                .catch(err => {
+                  console.error("ブックマーク保存中にエラーが発生しました:", err);
+                });
+              }
             });
+
+            // 変更点⑥:
+            // 入力例または出力例がある場合、トグルボタンのクリックイベントを設定してポップアップ表示を切り替え
+            if (prompt.input_examples || prompt.output_examples) {
+              const toggleButton = card.querySelector(".toggle-guardrail");
+              const guardrailInfo = card.querySelector(".guardrail-info");
+
+              toggleButton.addEventListener("click", function (e) {
+                e.stopPropagation();
+                if (guardrailInfo.style.display === "none") {
+                  guardrailInfo.style.display = "block";
+                  toggleButton.innerHTML = '<i class="bi bi-caret-up"></i>';
+                } else {
+                  guardrailInfo.style.display = "none";
+                  toggleButton.innerHTML = '<i class="bi bi-caret-down"></i>';
+                }
+              });
+            }
+
             promptContainer.appendChild(card);
           });
         }
       })
       .catch(err => console.error("プロンプト取得エラー:", err));
   }
+
+
 
   // 初回ロード時にプロンプト一覧を取得
   loadPrompts();
@@ -163,16 +265,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ガードレール使用のチェックと値取得
     const useGuardrail = document.getElementById("guardrail-checkbox").checked;
-    let prompt_example = "";
+    let input_examples = "";
+    let output_examples = "";
     if (useGuardrail) {
-      prompt_example = document.getElementById("prompt_example").value;
+      input_examples = document.getElementById("prompt-input-example").value;
+      output_examples = document.getElementById("prompt-output-example").value;
     }
+
+    // 公開設定スイッチの状態取得
+    const isPublic = publishToggle.checked;
+
     const postData = {
       title: title,
       category: category,
       content: content,
       author: author,
-      prompt_example: prompt_example
+      input_examples: input_examples,
+      output_examples: output_examples,
+      is_public: isPublic
     };
 
     fetch('/prompt_share/api/prompts', {
@@ -182,24 +292,24 @@ document.addEventListener("DOMContentLoaded", function () {
       },
       body: JSON.stringify(postData)
     })
-    .then(response => response.json())
-    .then(result => {
-      if (result.error) {
-        alert("エラー: " + result.error);
-      } else {
-        alert("プロンプトが投稿されました！");
-        // フォームリセット＆モーダルを閉じる
-        postForm.reset();
-        document.getElementById("guardrail-fields").style.display = "none";
-        document.getElementById("postModal").classList.remove("show");
-        // 最新のプロンプト一覧を再読み込み
-        loadPrompts();
-      }
-    })
-    .catch(err => {
-      console.error("投稿エラー:", err);
-      alert("プロンプト投稿中にエラーが発生しました。");
-    });
+      .then(response => response.json())
+      .then(result => {
+        if (result.error) {
+          alert("エラー: " + result.error);
+        } else {
+          alert("プロンプトが投稿されました！");
+          // フォームリセット＆モーダルを閉じる
+          postForm.reset();
+          document.getElementById("guardrail-fields").style.display = "none";
+          document.getElementById("postModal").classList.remove("show");
+          // 最新のプロンプト一覧を再読み込み
+          loadPrompts();
+        }
+      })
+      .catch(err => {
+        console.error("投稿エラー:", err);
+        alert("プロンプト投稿中にエラーが発生しました。");
+      });
   });
 
   // ------------------------------
@@ -242,6 +352,15 @@ document.addEventListener("DOMContentLoaded", function () {
           : `<i class="bi bi-bookmark"></i>`;
       });
     }
+  });
+
+  // ------------------------------
+  // 公開設定スイッチ（Bootstrap）の処理
+  // ------------------------------
+  const publishToggle = document.getElementById("publishToggle");
+  const publishLabel = document.getElementById("publishLabel");
+  publishToggle.addEventListener("change", function () {
+    publishLabel.textContent = publishToggle.checked ? "公開する" : "自分専用";
   });
 
   // ------------------------------

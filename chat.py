@@ -270,7 +270,7 @@ def chat():
         # DBから指定タスクのプロンプトテンプレートと few-shot 例を取得する
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        query = "SELECT prompt_template, few_shot_examples FROM task_with_examples WHERE name = %s"
+        query = "SELECT prompt_template, input_examples, output_examples FROM task_with_examples WHERE name = %s"
         cursor.execute(query, (task,))
         prompt_data = cursor.fetchone()
         cursor.close()
@@ -279,29 +279,39 @@ def chat():
     # conversation_messages を必ず初期化
     conversation_messages = []
 
+    
     if prompt_data:
-        few_shot_examples_str = prompt_data.get("few_shot_examples", "")
+        # 変更開始: DBに登録されている few shot の例は JSON 配列ではなくプレーンテキストの場合にも対応する
+        input_examples_str = prompt_data.get("input_examples", "")
+        output_examples_str = prompt_data.get("output_examples", "")
         extra_prompt = ""
-        loaded_examples = []
 
-        if few_shot_examples_str:
-            try:
-                safe_few_shot_str = few_shot_examples_str.replace('\n', '\\n')
-                if isinstance(few_shot_examples_str, list):
-                    loaded_examples = few_shot_examples_str
-                else:
-                    loaded_examples = json.loads(safe_few_shot_str)
-            except Exception as e:
-                print("few_shotのパースエラー:", e)
-                loaded_examples = []
+        # ヘルパー関数: 文字列が JSON 配列ならパース、そうでなければ単一例としてリスト化する
+        def parse_examples(ex_str):
+            if not ex_str:
+                return []
+            ex_str = ex_str.strip()
+            if ex_str.startswith("["):
+                try:
+                    return json.loads(ex_str)
+                except Exception as e:
+                    print("JSONパースエラー:", e)
+                    return [ex_str]
+            else:
+                return [ex_str]
 
-        if loaded_examples:
+        loaded_input_examples = parse_examples(input_examples_str)
+        loaded_output_examples = parse_examples(output_examples_str)
+
+        # 数が異なる場合は、少ない方の数に合わせる
+        num_examples = min(len(loaded_input_examples), len(loaded_output_examples))
+        if num_examples > 0:
             few_shot_text_lines = []
-            for i, example in enumerate(loaded_examples, start=1):
-                input_text = example.get("input", "").strip()
-                output_text = example.get("output", "").strip()
-                few_shot_text_lines.append("Q{}: {}\nA{}: {}".format(i, input_text, i, output_text))
-            extra_prompt += "\n\n".join(few_shot_text_lines)
+            for i in range(num_examples):
+                inp_text = loaded_input_examples[i].strip()
+                out_text = loaded_output_examples[i].strip()
+                few_shot_text_lines.append("Q{}: {}\nA{}: {}".format(i+1, inp_text, i+1, out_text))
+            extra_prompt = "\n\n".join(few_shot_text_lines)
 
         conversation_messages.append({
             "role": "system",

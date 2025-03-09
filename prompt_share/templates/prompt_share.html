@@ -7,15 +7,18 @@
     <!-- Google Fonts -->
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
-      rel="stylesheet"
-    />
+      rel="stylesheet" />
+    <!-- Bootstrap -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
-    />
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
     <!-- メインのCSS -->
-    <link rel="stylesheet" href="{{ url_for('prompt_share.static', filename='prompt_share.css') }}">
+    <link rel="stylesheet"
+      href="{{ url_for('prompt_share.static', filename='prompt_share.css') }}">
   </head>
   <body>
     <!-- ヘッダー -->
@@ -27,11 +30,10 @@
       <!-- ヘッダー背景画像上に中央配置される検索フォーム -->
       <div class="search-section">
         <div class="search-box">
-          <input 
-            type="text" 
-            id="searchInput" 
-            placeholder="キーワードでプロンプトを検索..." 
-          />
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="キーワードでプロンプトを検索..." />
           <button id="searchButton">
             <i class="bi bi-search"></i>
           </button>
@@ -87,10 +89,7 @@
         </div>
       </section>
 
-
-
       <div id="promptResults"></div>
-
 
       <!-- プロンプト一覧セクション -->
       <section class="prompts-list">
@@ -123,14 +122,24 @@
         <span class="close-btn">&times;</span>
         <h2>新しいプロンプトを投稿</h2>
         <form class="post-form" id="postForm">
+
+          <!-- 新規項目: 公開設定スイッチ（Bootstrap版） -->
+          <div class="form-check form-switch my-3">
+            <input class="form-check-input" type="checkbox" id="publishToggle">
+            <label class="form-check-label" for="publishToggle"
+              id="publishLabel">自分専用</label>
+          </div>
+
           <div class="form-group">
             <label for="prompt-title">タイトル</label>
-            <input type="text" id="prompt-title" placeholder="プロンプトのタイトルを入力" required />
+            <input type="text" id="prompt-title" placeholder="プロンプトのタイトルを入力"
+              required />
           </div>
           <div class="form-group">
+
             <label for="prompt-category">カテゴリ</label>
             <select id="prompt-category" required>
-              <option value="">カテゴリを選択</option>
+              <option value>カテゴリを選択</option>
               <option value="恋愛">恋愛</option>
               <option value="勉強">勉強</option>
               <option value="趣味">趣味</option>
@@ -144,25 +153,35 @@
           </div>
           <div class="form-group">
             <label for="prompt-content">プロンプト内容</label>
-            <textarea id="prompt-content" rows="5" placeholder="具体的なプロンプト内容を入力" required></textarea>
+            <textarea id="prompt-content" rows="5" placeholder="具体的なプロンプト内容を入力"
+              required></textarea>
           </div>
           <div class="form-group">
             <label for="prompt-author">投稿者名</label>
-            <input type="text" id="prompt-author" placeholder="ニックネームなど" value="アイデア職人" required />
+            <input type="text" id="prompt-author" placeholder="ニックネームなど"
+              value="アイデア職人" required />
           </div>
           <!-- ガードレールの使用チェック -->
           <div class="form-group">
             <label>
-              <input type="checkbox" id="guardrail-checkbox"> ガードレールを使用する
+              <input type="checkbox" id="guardrail-checkbox"> 入出力例を追加する
             </label>
           </div>
+
           <!-- ガードレールチェック時に表示する入力例・出力例のフィールド -->
           <div id="guardrail-fields" style="display: none;">
             <div class="form-group">
-              <label for="prompt_example">入出力例</label>
-              <textarea id="prompt_example" rows="3" placeholder="入出力例を入力"></textarea>
+              <label for="prompt-input-example">入力例</label>
+              <textarea id="prompt-input-example" rows="3"
+                placeholder="例: 夏休みの思い出をテーマにした短いエッセイを書いてください。"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="prompt-output-example">出力例</label>
+              <textarea id="prompt-output-example" rows="3"
+                placeholder="例: 夏休みのある日、私は家族と一緒に海辺へ出かけました。波の音と潮風に包まれながら、子供の頃の記憶がよみがえり、心が温かくなりました。その日は一生忘れられない、宝物のような時間となりました。"></textarea>
             </div>
           </div>
+
           <button type="submit" class="submit-btn">
             <i class="bi bi-upload"></i> 投稿する
           </button>
@@ -176,9 +195,11 @@
     </button>
 
     <!-- メインのJavaScript -->
-    <script src="{{ url_for('prompt_share.static', filename='prompt_share.js') }}"></script>
+    <script
+      src="{{ url_for('prompt_share.static', filename='prompt_share.js') }}"></script>
     <!-- 例: HTML の末尾に追加 -->
-<script src="{{ url_for('prompt_share.static', filename='prompt_search.js') }}"></script>
+    <script
+      src="{{ url_for('prompt_share.static', filename='prompt_search.js') }}"></script>
 
   </body>
 </html>

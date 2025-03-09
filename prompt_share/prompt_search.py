@@ -15,7 +15,7 @@ def search_prompts():
     try:
         if query:
             sql = """
-                SELECT id, title, category, content, author, prompt_example, created_at
+                SELECT id, title, category, content, author, few_shot_examples, created_at
                 FROM prompts
                 WHERE title LIKE %s OR content LIKE %s OR category LIKE %s OR author LIKE %s
                 ORDER BY created_at DESC

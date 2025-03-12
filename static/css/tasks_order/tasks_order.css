@@ -15,10 +15,11 @@
   
   
   
-/* 並び替え編集中のカードにアニメーション（震える効果） */
-.prompt-card.editable {
-    animation: shake 0.5s infinite;
-  }
+/* タスクラッパーが編集状態の場合、内部のカードに振動アニメーションを適用 */
+.task-wrapper.editable .prompt-card {
+  animation: shake 0.5s infinite;
+}
+
   
   /* ドラッグ中のカード */
   .prompt-card.dragging {

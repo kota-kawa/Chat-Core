@@ -74,23 +74,33 @@ function toggleTaskOrderEditing() {
 
 // ドラッグ＆ドロップ用イベントを有効化（各カードに .editable クラス追加）
 function enableTaskDragAndDrop() {
-  const cards = document.querySelectorAll('.prompt-card');
-  cards.forEach((card, index) => {
-    card.classList.add('editable');  // CSS の shake アニメーションが適用される
-    // 各カードのアニメーション開始タイミングをずらす（例: 0.1秒刻み）
-    card.style.animationDelay = `${index * 0.1}s`;
-    card.style.touchAction = 'none';
-    card.addEventListener('pointerdown', onTaskPointerDown);
+  const wrappers = document.querySelectorAll('.task-wrapper');
+  wrappers.forEach((wrapper, index) => {
+    wrapper.classList.add('editable');  // ラッパーに追加
+    // 内部のカードにも追加
+    const card = wrapper.querySelector('.prompt-card');
+    if (card) {
+      card.classList.add('editable');
+      // 各カードのアニメーション開始タイミングをずらす（例: 0.1秒刻み）
+      card.style.animationDelay = `${index * 0.1}s`;
+    }
+    wrapper.style.touchAction = 'none';
+    wrapper.addEventListener('pointerdown', onTaskPointerDown);
   });
 }
 
 
+
 // イベント解除
 function disableTaskDragAndDrop() {
-  const cards = document.querySelectorAll('.prompt-card');
-  cards.forEach(card => {
-    card.classList.remove('editable');
-    card.removeEventListener('pointerdown', onTaskPointerDown);
+  const wrappers = document.querySelectorAll('.task-wrapper');
+  wrappers.forEach(wrapper => {
+    wrapper.classList.remove('editable');
+    const card = wrapper.querySelector('.prompt-card');
+    if (card) {
+      card.classList.remove('editable');
+    }
+    wrapper.removeEventListener('pointerdown', onTaskPointerDown);
   });
   document.removeEventListener('pointermove', onTaskPointerMove);
   document.removeEventListener('pointerup', onTaskPointerUp);
@@ -103,14 +113,16 @@ function disableTaskDragAndDrop() {
 
 
 
+
+
 // pointerdown イベント
 function onTaskPointerDown(e) {
   if (e.button !== 0) return;
-  draggingTask = e.currentTarget;
+  draggingTask = e.currentTarget; // task-wrapper をドラッグ対象にする
   draggingTask.classList.add('dragging');
   const rect = draggingTask.getBoundingClientRect();
 
-  // カードをコンテナ内で絶対配置にする
+  // 絶対配置に変更
   draggingTask.style.position = 'absolute';
   draggingTask.style.width = rect.width + 'px';
   draggingTask.style.height = rect.height + 'px';
@@ -118,13 +130,12 @@ function onTaskPointerDown(e) {
 
   const container = document.querySelector('.task-selection');
   const containerRect = container.getBoundingClientRect();
-  // クライアント座標からコンテナ内の座標を算出
   draggingTask.style.left = (e.clientX - containerRect.left - rect.width / 2) + 'px';
   draggingTask.style.top = (e.clientY - containerRect.top - rect.height / 2) + 'px';
 
-  // プレースホルダーを生成
+  // プレースホルダーを作成（task-wrapper 用）
   taskPlaceholder = document.createElement('div');
-  taskPlaceholder.className = 'prompt-card placeholder';
+  taskPlaceholder.className = 'task-wrapper placeholder';
   taskPlaceholder.style.width = rect.width + 'px';
   taskPlaceholder.style.height = rect.height + 'px';
   taskPlaceholder.style.border = '1px dashed #aaa';
@@ -143,14 +154,14 @@ function onTaskPointerMove(e) {
   draggingTask.style.left = (e.clientX - containerRect.left - cardWidth / 2) + 'px';
   draggingTask.style.top = (e.clientY - containerRect.top - cardHeight / 2) + 'px';
 
-  // プレースホルダーの位置更新（上下のカードとの比較）
-  const cards = Array.from(container.querySelectorAll('.prompt-card:not(.dragging)'));
+  // プレースホルダーの位置更新（wrapper単位で）
+  const wrappers = Array.from(container.querySelectorAll('.task-wrapper:not(.dragging)'));
   let placed = false;
-  for (let card of cards) {
-    const rect = card.getBoundingClientRect();
-    const cardCenterY = rect.top + rect.height / 2;
-    if (e.clientY < cardCenterY) {
-      container.insertBefore(taskPlaceholder, card);
+  for (let wrapper of wrappers) {
+    const rect = wrapper.getBoundingClientRect();
+    const centerY = rect.top + rect.height / 2;
+    if (e.clientY < centerY) {
+      container.insertBefore(taskPlaceholder, wrapper);
       placed = true;
       break;
     }
@@ -165,6 +176,7 @@ function onTaskPointerUp(e) {
   const container = document.querySelector('.task-selection');
   container.insertBefore(draggingTask, taskPlaceholder);
   draggingTask.classList.remove('dragging');
+  // スタイルリセット
   draggingTask.style.position = '';
   draggingTask.style.left = '';
   draggingTask.style.top = '';
@@ -183,8 +195,10 @@ function onTaskPointerUp(e) {
 
 // 並び順をサーバーに保存する関数
 function saveTaskOrder() {
-  const cards = document.querySelectorAll('.prompt-card');
-  const newOrder = Array.from(cards).map(card => card.getAttribute('data-task'));
+  const wrappers = document.querySelectorAll('.task-wrapper');
+  const newOrder = Array.from(wrappers).map(wrapper => {
+    return wrapper.querySelector('.prompt-card').getAttribute('data-task');
+  });
   
   fetch('/api/update_tasks_order', {
     method: 'POST',
@@ -195,14 +209,13 @@ function saveTaskOrder() {
   .then(data => {
     if (data.error) {
       alert("並び順の保存に失敗: " + data.error);
-    } else {
-      //alert("並び順が保存されました。");
     }
   })
   .catch(err => {
     alert("並び順の保存に失敗: " + err.toString());
   });
 }
+
 
 // エクスポート（他のスクリプトから利用できるように）
 window.initTaskOrderEditing = initTaskOrderEditing;

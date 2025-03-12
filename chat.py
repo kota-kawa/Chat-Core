@@ -412,7 +412,7 @@ def get_tasks():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         # display_order に基づいて並び替え
-        query = "SELECT name FROM task_with_examples ORDER BY display_order ASC"
+        query = "SELECT name, input_examples, output_examples FROM task_with_examples ORDER BY display_order ASC"
         cursor.execute(query)
         tasks = cursor.fetchall()  # 例: [{'name': 'メール作成'}, …]
         return jsonify({"tasks": tasks})

@@ -2,18 +2,98 @@
 
 // APIからタスクを取得してタスクカードを生成する
 function loadTaskCards() {
+  // モーダル要素を取得（HTMLに書いた #io-modal, #io-modal-content）
+  const ioModal = document.getElementById("io-modal");
+  const ioModalContent = document.getElementById("io-modal-content");
+
+  // モーダルを閉じる関数（モーダル全体を非表示に）
+  function closeIOModal() {
+    ioModal.style.display = "none";
+  }
+
+  // 画面のどこかをクリックした時にモーダルが開いていれば閉じる
+  document.addEventListener("click", () => {
+    if (ioModal.style.display === "block") {
+      closeIOModal();
+    }
+  });
+
+  // モーダルの中身をクリックした時は閉じないようにする（バブリング停止）
+  ioModalContent.addEventListener("click", (e) => {
+    e.stopPropagation();
+  });
+
+  // タスク一覧を取得
   fetch("/api/tasks")
     .then(response => response.json())
     .then(data => {
-      const container = document.getElementById('task-selection');
-      container.innerHTML = "";  // 既存の内容をクリア
+      const container = document.getElementById("task-selection");
+      container.innerHTML = ""; // 既存をクリア
+
       data.tasks.forEach(task => {
-        const card = document.createElement('div');
-        card.className = 'prompt-card';
-        card.setAttribute('data-task', task.name);
-        card.innerText = task.name;
-        container.appendChild(card);
+        // 2列レイアウト用ラッパー
+        const taskWrapper = document.createElement("div");
+        taskWrapper.className = "task-wrapper";
+
+        // カード本体
+        const card = document.createElement("div");
+        card.className = "prompt-card";
+        card.setAttribute("data-task", task.name);
+
+        // ヘッダーコンテナ（タスク名とトグルボタン）
+        const headerContainer = document.createElement("div");
+        headerContainer.className = "header-container";
+
+        // タスク名
+        const header = document.createElement("div");
+        header.className = "task-header";
+        header.innerText = task.name;
+
+        // トグルボタン(Bootstrapのクラスを使用: btn + btn-outline-success + btn-sm)
+        const toggleBtn = document.createElement("button");
+        toggleBtn.type = "button";
+        toggleBtn.classList.add("btn", "btn-outline-success", "btn-sm");
+        toggleBtn.innerHTML = '<i class="bi bi-caret-down"></i>';
+
+        // 入出力例の文字列
+        const inputExamples = task.input_examples || "入力例がありません";
+        const outputExamples = task.output_examples || "出力例がありません";
+
+        // トグルボタンのクリック -> モーダルで入出力例を表示
+        toggleBtn.addEventListener("click", (e) => {
+          e.stopPropagation(); // このクリックで document へ伝播して閉じないように
+          
+          // モーダルに入出力例を挿入
+          // 毎回クリアして、新しい内容を差し込む
+          ioModalContent.innerHTML = `
+            <h5 style="margin-bottom: 1rem;">入出力例</h5>
+            <div style="margin-bottom: 0.5rem; font-weight: bold;">入力例</div>
+            <div style="margin-bottom: 1rem;">${inputExamples}</div>
+            <div style="margin-bottom: 0.5rem; font-weight: bold;">出力例</div>
+            <div>${outputExamples}</div>
+          `;
+          
+          // モーダルを表示
+          ioModal.style.display = "block";
+        });
+
+        // ヘッダーにタスク名とボタンを追加 -> カードに追加
+        headerContainer.appendChild(header);
+        headerContainer.appendChild(toggleBtn);
+        card.appendChild(headerContainer);
+
+        // ラッパーにカードを入れて、最終的にコンテナに配置
+        taskWrapper.appendChild(card);
+        container.appendChild(taskWrapper);
       });
+      
+      
+      
+      
+      
+
+      
+
       // タスクカード全体に対してクリックイベントを設定
       initSetupTaskCards();
       // 初期の「もっと見る」ボタン（タスクが6個以上なら）を設定

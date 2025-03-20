@@ -8,6 +8,7 @@ from chat import cleanup_ephemeral_chats  # chat.py に定義されたクリー�
 app = Flask(__name__)
 app.secret_key = "YOUR_SECRET_KEY"  # セッション暗号化キー
 
+
 # 各Blueprintをimport
 from auth import auth_bp
 from verification import verification_bp

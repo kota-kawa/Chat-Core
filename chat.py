@@ -247,17 +247,21 @@ def chat():
             cursor.close()
             conn.close()
 
-        save_message_to_db(chat_room_id, user_message, "user")
+        #save_message_to_db(chat_room_id, user_message, "user")
+        formatted_user_message = user_message.replace("\n", "<br>")
+        save_message_to_db(chat_room_id, formatted_user_message, "user")
+       
         all_messages = get_chat_room_messages(chat_room_id)
     else:
         sid = get_session_id()
         if sid not in ephemeral_chats or chat_room_id not in ephemeral_chats[sid]:
             return jsonify({"error": "該当ルームが存在しません"}), 404
 
-        ephemeral_chats[sid][chat_room_id]["messages"].append({"role": "user", "content": user_message})
+        #ephemeral_chats[sid][chat_room_id]["messages"].append({"role": "user", "content": user_message})
+        formatted_user_message = user_message.replace("\n", "<br>")
+        ephemeral_chats[sid][chat_room_id]["messages"].append({"role": "user", "content": formatted_user_message})
+        
         all_messages = ephemeral_chats[sid][chat_room_id]["messages"]
-
-
 
     extra_prompt = None
     # ユーザーメッセージの解析前に初期化

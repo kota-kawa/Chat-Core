@@ -231,6 +231,16 @@ function generateResponse(message, aiModel) {
   // ユーザーのメッセージを即時表示
   renderUserMessage(message);
 
+  const spinnerWrapper = document.createElement('div');
+  spinnerWrapper.className = 'message-wrapper bot-message-wrapper';
+  const spinnerDiv = document.createElement('div');
+  spinnerDiv.className = 'bot-message';
+  // スピナーのHTML（適宜CSSでスタイル調整してください）
+  spinnerDiv.innerHTML = '<div class="spinner"></div>';
+  spinnerWrapper.appendChild(spinnerDiv);
+  chatMessages.appendChild(spinnerWrapper);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+
   fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -243,6 +253,7 @@ function generateResponse(message, aiModel) {
   .then(res => res.json())
   .then(data => {
     hideTypingIndicator();
+    spinnerWrapper.remove();
     if (data.response) {
       animateBotMessage(data.response);
     } else if (data.error) {
@@ -251,6 +262,7 @@ function generateResponse(message, aiModel) {
   })
   .catch(err => {
     hideTypingIndicator();
+    spinnerWrapper.remove();
     animateBotMessage("エラー: " + err.toString());
   });
 }
@@ -306,7 +318,10 @@ function renderUserMessage(text) {
   // メッセージ本体
   const messageDiv = document.createElement('div');
   messageDiv.className = 'user-message';
-  messageDiv.textContent = text;
+  
+  const replaced = text.replace(/\n/g, '<br>');
+  messageDiv.innerHTML = replaced;
+
   messageDiv.style.animation = 'floatUp 0.5s ease-out';
 
   // コピーボタン
@@ -329,7 +344,7 @@ function renderUserMessage(text) {
   chatMessages.appendChild(wrapper);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 
-  saveMessageToLocalStorage(text, 'user');
+  saveMessageToLocalStorage(replaced, 'user');
 }
 
 /**
@@ -399,7 +414,8 @@ function displayMessage(text, sender) {
     wrapper.className = 'message-wrapper user-message-wrapper';
     const messageDiv = document.createElement('div');
     messageDiv.className = 'user-message';
-    messageDiv.textContent = text;
+    //messageDiv.textContent = text;
+    messageDiv.innerHTML = text;
 
     copyBtn.addEventListener('click', () => {
       navigator.clipboard.writeText(text).then(() => {

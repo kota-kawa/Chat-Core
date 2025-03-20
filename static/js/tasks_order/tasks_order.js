@@ -50,13 +50,149 @@ function toggleTaskOrderEditing() {
     // タスクカード表示の設定やドラッグ＆ドロップを有効化
     document.querySelectorAll('.task-selection .prompt-card').forEach(card => {
       card.style.display = 'flex';
+      card.style.position = 'relative';
     });
     const toggleBtn = document.getElementById('toggle-tasks-btn');
     if (toggleBtn) {
       toggleBtn.style.display = 'none';
     }
     enableTaskDragAndDrop();
+
+
+    document.querySelectorAll('.prompt-card').forEach(card => {
+      // 既にボタンが存在する場合は削除（念のため）
+      const existingDeleteContainer = card.querySelector('.delete-container');
+      const existingEditContainer = card.querySelector('.edit-container');
+      if (existingDeleteContainer) existingDeleteContainer.remove();
+      if (existingEditContainer) existingEditContainer.remove();
+
+      // 削除ボタンコンテナ（左上・カード外側に配置）
+      const deleteContainer = document.createElement('div');
+      deleteContainer.className = 'delete-container';
+      deleteContainer.style.position = 'absolute';
+      deleteContainer.style.top = '-10px';
+      deleteContainer.style.left = '-10px';
+      deleteContainer.style.zIndex = '10';
+
+      // 削除ボタン
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'card-delete-btn';
+      deleteBtn.style.width = '24px';
+      deleteBtn.style.height = '24px';
+      deleteBtn.style.borderRadius = '50%';
+      deleteBtn.style.border = 'none';
+      deleteBtn.style.backgroundColor = '#dc3545';
+      deleteBtn.style.color = 'white';
+      deleteBtn.style.fontSize = '14px';
+      deleteBtn.style.display = 'flex';
+      deleteBtn.style.alignItems = 'center';
+      deleteBtn.style.justifyContent = 'center';
+      deleteBtn.innerHTML = '<i class="bi bi-trash"></i>';
+      // ボタン押下時にタスクカードのクリックイベントと区別するためイベント伝播を停止
+      deleteBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          // 機能は未実装（デザインのみ）
+      });
+
+      // 削除ボタン用ツールチップ
+      const deleteTooltip = document.createElement('span');
+      deleteTooltip.textContent = '削除';
+      deleteTooltip.style.position = 'absolute';
+      deleteTooltip.style.bottom = '100%';
+      deleteTooltip.style.left = '50%';
+      deleteTooltip.style.transform = 'translateX(-50%)';
+      deleteTooltip.style.marginBottom = '4px';
+      deleteTooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.75)';
+      deleteTooltip.style.color = 'white';
+      deleteTooltip.style.padding = '2px 4px';
+      deleteTooltip.style.borderRadius = '4px';
+      deleteTooltip.style.fontSize = '10px';
+      deleteTooltip.style.whiteSpace = 'nowrap';
+      deleteTooltip.style.opacity = '0';
+      deleteTooltip.style.transition = 'opacity 0.2s';
+
+      // ホバー時の挙動（削除ボタン）
+      deleteContainer.addEventListener('mouseenter', () => {
+         deleteTooltip.style.opacity = '1';
+         deleteBtn.style.transform = 'scale(1.1)';
+      });
+      deleteContainer.addEventListener('mouseleave', () => {
+         deleteTooltip.style.opacity = '0';
+         deleteBtn.style.transform = '';
+      });
+
+      deleteContainer.appendChild(deleteBtn);
+      deleteContainer.appendChild(deleteTooltip);
+
+      // 編集ボタンコンテナ（右上・カード外側に配置）
+      const editContainer = document.createElement('div');
+      editContainer.className = 'edit-container';
+      editContainer.style.position = 'absolute';
+      editContainer.style.top = '-10px';
+      editContainer.style.right = '-10px';
+      editContainer.style.zIndex = '10';
+
+      // 編集ボタン
+      const editBtn = document.createElement('button');
+      editBtn.className = 'card-edit-btn';
+      editBtn.style.width = '24px';
+      editBtn.style.height = '24px';
+      editBtn.style.borderRadius = '50%';
+      editBtn.style.border = 'none';
+      editBtn.style.backgroundColor = '#007bff';
+      editBtn.style.color = 'white';
+      editBtn.style.fontSize = '14px';
+      editBtn.style.display = 'flex';
+      editBtn.style.alignItems = 'center';
+      editBtn.style.justifyContent = 'center';
+      editBtn.innerHTML = '<i class="bi bi-pencil"></i>';
+      // ボタン押下時のイベント伝播停止
+      editBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          // 機能は未実装（デザインのみ）
+      });
+
+      // 編集ボタン用ツールチップ
+      const editTooltip = document.createElement('span');
+      editTooltip.textContent = '編集';
+      editTooltip.style.position = 'absolute';
+      editTooltip.style.bottom = '100%';
+      editTooltip.style.left = '50%';
+      editTooltip.style.transform = 'translateX(-50%)';
+      editTooltip.style.marginBottom = '4px';
+      editTooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.75)';
+      editTooltip.style.color = 'white';
+      editTooltip.style.padding = '2px 4px';
+      editTooltip.style.borderRadius = '4px';
+      editTooltip.style.fontSize = '10px';
+      editTooltip.style.whiteSpace = 'nowrap';
+      editTooltip.style.opacity = '0';
+      editTooltip.style.transition = 'opacity 0.2s';
+
+      editContainer.addEventListener('mouseenter', () => {
+         editTooltip.style.opacity = '1';
+         editBtn.style.transform = 'scale(1.1)';
+      });
+      editContainer.addEventListener('mouseleave', () => {
+         editTooltip.style.opacity = '0';
+         editBtn.style.transform = '';
+      });
+
+      editContainer.appendChild(editBtn);
+      editContainer.appendChild(editTooltip);
+
+      // カードにボタンコンテナを追加
+      card.appendChild(deleteContainer);
+      card.appendChild(editContainer);
+    });
+
+
+
   } else {
+
+    document.querySelectorAll('.delete-container').forEach(container => container.remove());
+    document.querySelectorAll('.edit-container').forEach(container => container.remove());
+
     // 編集モード終了時：
     // チェックマークを押すと、完了として並び順を保存
     disableTaskDragAndDrop();
@@ -118,6 +254,17 @@ function disableTaskDragAndDrop() {
 // pointerdown イベント
 function onTaskPointerDown(e) {
   if (e.button !== 0) return;
+  if (
+    e.target.closest('.card-delete-btn') ||
+    e.target.closest('.card-edit-btn') ||
+    e.target.closest('.delete-container') ||
+    e.target.closest('.edit-container')
+  ) {
+    // 編集・削除ボタンが押された場合は何もせず終了
+    return;
+  }
+
+  
   draggingTask = e.currentTarget; // task-wrapper をドラッグ対象にする
   draggingTask.classList.add('dragging');
   const rect = draggingTask.getBoundingClientRect();

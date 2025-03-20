@@ -39,6 +39,8 @@ function loadTaskCards() {
         const card = document.createElement("div");
         card.className = "prompt-card";
         card.setAttribute("data-task", task.name);
+        card.setAttribute("data-input_examples", task.input_examples || "入力例がありません");
+        card.setAttribute("data-output_examples", task.output_examples || "出力例がありません");
 
         // ヘッダーコンテナ（タスク名とトグルボタン）
         const headerContainer = document.createElement("div");
@@ -137,6 +139,8 @@ function handleTaskCardClick(event) {
   }
   const aiModel = aiModelSelect.value;
   const task = card.getAttribute('data-task');
+  const inputExamples = card.getAttribute('data-input_examples');
+  const outputExamples = card.getAttribute('data-output_examples');
 
   // 新しいroomIdを作成し、ローカルストレージに保存
   const newRoomId = Date.now().toString();
@@ -149,7 +153,7 @@ function handleTaskCardClick(event) {
       showChatInterface();
       loadChatRooms();
       localStorage.removeItem(`chatHistory_${currentChatRoomId}`);
-      const firstMessage = `【状況・作業環境】${setupInfo}\n【リクエスト】${task}`;
+      const firstMessage = `【状況・作業環境】${setupInfo}\n【リクエスト】${task}\n\n入力例:\n${inputExamples}\n\n出力例:\n${outputExamples}`;
       generateResponse(firstMessage, aiModel);
     })
     .catch(err => {

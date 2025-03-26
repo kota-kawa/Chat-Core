@@ -4,6 +4,7 @@ from common import get_db_connection
 
 prompt_share_api_bp = Blueprint('prompt_share_api', __name__, url_prefix='/prompt_share/api')
 
+
 @prompt_share_api_bp.route('/prompts', methods=['GET'])
 def get_prompts():
     """

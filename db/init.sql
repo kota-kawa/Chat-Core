@@ -29,7 +29,7 @@ CREATE TABLE chat_history (
 
 
 
--- プロンプトとfew shot
+-- 個人ユーザーが管理するプロンプトとfew shot
 CREATE TABLE IF NOT EXISTS task_with_examples (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL UNIQUE,
@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS task_with_examples (
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;
 
+--プロンプト共有のためのテーブル
 CREATE TABLE IF NOT EXISTS prompts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,  -- ユーザーIDを追加

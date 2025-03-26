@@ -18,7 +18,7 @@ function initTaskOrderEditing() {
     editButton.remove();
     editButton = null;
   }
-  
+
   // ボタン作成
   editButton = document.createElement('button');
   editButton.id = 'edit-task-order-btn';
@@ -46,7 +46,7 @@ function toggleTaskOrderEditing() {
     // ボタンを押した瞬間にアイコンをチェックマークに変更し、タイトルを「完了」にする
     editButton.title = "完了";
     editButton.innerHTML = '<i class="bi bi-check"></i>';
-    
+
     // タスクカード表示の設定やドラッグ＆ドロップを有効化
     document.querySelectorAll('.task-selection .prompt-card').forEach(card => {
       card.style.display = 'flex';
@@ -76,6 +76,7 @@ function toggleTaskOrderEditing() {
 
       // 削除ボタン
       const deleteBtn = document.createElement('button');
+      deleteBtn.type = "button";  // 追加：フォーム送信を防ぐ
       deleteBtn.className = 'card-delete-btn';
       deleteBtn.style.width = '24px';
       deleteBtn.style.height = '24px';
@@ -89,10 +90,41 @@ function toggleTaskOrderEditing() {
       deleteBtn.style.justifyContent = 'center';
       deleteBtn.innerHTML = '<i class="bi bi-trash"></i>';
       // ボタン押下時にタスクカードのクリックイベントと区別するためイベント伝播を停止
-      deleteBtn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          // 機能は未実装（デザインのみ）
+      deleteBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (confirm("このタスクを削除してもよろしいですか？")) {
+          const card = this.closest('.prompt-card');
+          const taskName = card.getAttribute('data-task');
+          fetch('/api/delete_task', {
+            method: 'POST',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ task: taskName })
+          })
+            .then(response => {
+              if (!response.ok) {
+                return response.json().then(errorData => {
+                  throw new Error(errorData.error || "削除に失敗しました");
+                });
+              }
+              return response.json();
+            })
+            .then(data => {
+              // 削除が成功した場合、対応するラッパー要素を削除し、並び順保存のためのAPI呼び出しも非同期で行う
+              const wrapper = card.closest('.task-wrapper');
+              if (wrapper) {
+                wrapper.remove();
+              }
+              // 並び順の更新は非同期で行うので、ここでページ再読み込みは行わずにDOM上を更新
+              saveTaskOrder();
+            })
+            .catch(err => {
+              alert("削除に失敗しました: " + err.message);
+            });
+        }
       });
+
+
+
 
       // 削除ボタン用ツールチップ
       const deleteTooltip = document.createElement('span');
@@ -113,12 +145,12 @@ function toggleTaskOrderEditing() {
 
       // ホバー時の挙動（削除ボタン）
       deleteContainer.addEventListener('mouseenter', () => {
-         deleteTooltip.style.opacity = '1';
-         deleteBtn.style.transform = 'scale(1.1)';
+        deleteTooltip.style.opacity = '1';
+        deleteBtn.style.transform = 'scale(1.1)';
       });
       deleteContainer.addEventListener('mouseleave', () => {
-         deleteTooltip.style.opacity = '0';
-         deleteBtn.style.transform = '';
+        deleteTooltip.style.opacity = '0';
+        deleteBtn.style.transform = '';
       });
 
       deleteContainer.appendChild(deleteBtn);
@@ -134,6 +166,7 @@ function toggleTaskOrderEditing() {
 
       // 編集ボタン
       const editBtn = document.createElement('button');
+      editBtn.type = "button";  // 追加：フォーム送信を防ぐ
       editBtn.className = 'card-edit-btn';
       editBtn.style.width = '24px';
       editBtn.style.height = '24px';
@@ -146,11 +179,38 @@ function toggleTaskOrderEditing() {
       editBtn.style.alignItems = 'center';
       editBtn.style.justifyContent = 'center';
       editBtn.innerHTML = '<i class="bi bi-pencil"></i>';
-      // ボタン押下時のイベント伝播停止
-      editBtn.addEventListener('click', function(e) {
+
+
+
+      // 編集ボタン押下時の処理
+      // 編集ボタン押下時の処理
+      document.querySelectorAll('.card-edit-btn').forEach(function (editBtn) {
+        editBtn.addEventListener('click', function (e) {
           e.stopPropagation();
-          // 機能は未実装（デザインのみ）
+          var card = this.closest('.prompt-card');
+
+          // 対象カードの data 属性から値を取得してモーダルのフォームにセット
+          window.currentEditingCard = card;
+          document.getElementById('taskName').value = card.getAttribute('data-task') || "";
+          document.getElementById('inputExamples').value = card.getAttribute('data-input_examples') || "";
+          document.getElementById('outputExamples').value = card.getAttribute('data-output_examples') || "";
+
+          // プロンプトテンプレートの設定は不要のため削除
+
+          // カスタムモーダルを表示
+          var modalEl = document.getElementById('taskEditModal');
+          showModal(modalEl);
+        });
       });
+
+
+
+
+
+
+
+
+
 
       // 編集ボタン用ツールチップ
       const editTooltip = document.createElement('span');
@@ -170,12 +230,12 @@ function toggleTaskOrderEditing() {
       editTooltip.style.transition = 'opacity 0.2s';
 
       editContainer.addEventListener('mouseenter', () => {
-         editTooltip.style.opacity = '1';
-         editBtn.style.transform = 'scale(1.1)';
+        editTooltip.style.opacity = '1';
+        editBtn.style.transform = 'scale(1.1)';
       });
       editContainer.addEventListener('mouseleave', () => {
-         editTooltip.style.opacity = '0';
-         editBtn.style.transform = '';
+        editTooltip.style.opacity = '0';
+        editBtn.style.transform = '';
       });
 
       editContainer.appendChild(editBtn);
@@ -189,18 +249,15 @@ function toggleTaskOrderEditing() {
 
 
   } else {
-
+    // 編集モード終了時：各種ボタン要素を削除し、ドラッグ＆ドロップを無効化
     document.querySelectorAll('.delete-container').forEach(container => container.remove());
     document.querySelectorAll('.edit-container').forEach(container => container.remove());
 
-    // 編集モード終了時：
-    // チェックマークを押すと、完了として並び順を保存
     disableTaskDragAndDrop();
     saveTaskOrder();
-    if (typeof window.initToggleTasks === 'function') {
-      window.initToggleTasks();
-    }
-    // ボタンのアイコンとタイトルを元に戻す
+    // 画面全体の再読み込みは行わず、必要な部分のみDOMの更新を行う
+    // ※もしタスク一覧全体の更新が必要なら、非同期で新たにタスク一覧をfetchして再レンダリングする処理をここに追加
+
     editButton.title = "並び替え編集";
     editButton.innerHTML = '<i class="bi bi-arrows-move"></i>';
   }
@@ -264,7 +321,7 @@ function onTaskPointerDown(e) {
     return;
   }
 
-  
+
   draggingTask = e.currentTarget; // task-wrapper をドラッグ対象にする
   draggingTask.classList.add('dragging');
   const rect = draggingTask.getBoundingClientRect();
@@ -346,21 +403,21 @@ function saveTaskOrder() {
   const newOrder = Array.from(wrappers).map(wrapper => {
     return wrapper.querySelector('.prompt-card').getAttribute('data-task');
   });
-  
+
   fetch('/api/update_tasks_order', {
     method: 'POST',
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ order: newOrder })
   })
-  .then(res => res.json())
-  .then(data => {
-    if (data.error) {
-      alert("並び順の保存に失敗: " + data.error);
-    }
-  })
-  .catch(err => {
-    alert("並び順の保存に失敗: " + err.toString());
-  });
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) {
+        alert("並び順の保存に失敗: " + data.error);
+      }
+    })
+    .catch(err => {
+      alert("並び順の保存に失敗: " + err.toString());
+    });
 }
 
 

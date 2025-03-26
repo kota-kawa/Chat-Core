@@ -446,3 +446,52 @@ def update_tasks_order():
     finally:
         cursor.close()
         conn.close()
+
+@chat_bp.route("/api/delete_task", methods=["POST"])
+def delete_task():
+    data = request.get_json()
+    task_name = data.get("task")
+    if not task_name:
+        return jsonify({"error": "task is required"}), 400
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "DELETE FROM task_with_examples WHERE name = %s"
+        cursor.execute(query, (task_name,))
+        conn.commit()
+        return jsonify({"message": "Task deleted"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@chat_bp.route("/api/edit_task", methods=["POST"])
+def edit_task():
+    data = request.get_json()
+    old_task = data.get("old_task")
+    new_task = data.get("new_task")
+    prompt_template = data.get("prompt_template")
+    input_examples = data.get("input_examples")
+    output_examples = data.get("output_examples")
+    if not old_task or not new_task:
+        return jsonify({"error": "old_task と new_task は必須です"}), 400
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+            UPDATE task_with_examples 
+            SET name = %s, prompt_template = %s, input_examples = %s, output_examples = %s 
+            WHERE name = %s
+        """
+        cursor.execute(query, (new_task, prompt_template, input_examples, output_examples, old_task))
+        conn.commit()
+        return jsonify({"message": "Task updated"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+

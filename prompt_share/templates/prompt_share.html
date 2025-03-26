@@ -123,11 +123,16 @@
         <h2>新しいプロンプトを投稿</h2>
         <form class="post-form" id="postForm">
 
-          <!-- 新規項目: 公開設定スイッチ（Bootstrap版） -->
-          <div class="form-check form-switch my-3">
-            <input class="form-check-input" type="checkbox" id="publishToggle">
-            <label class="form-check-label" for="publishToggle"
-              id="publishLabel">自分専用</label>
+          <!-- 新規項目: 公開設定ラジオボタン -->
+          <div class="form-group my-3">
+            <div>
+              <input type="radio" name="publishSetting" id="privateRadio"
+                value="false" checked>
+              <label for="privateRadio">自分専用</label>
+              <input type="radio" name="publishSetting" id="publicRadio"
+                value="true">
+              <label for="publicRadio">公開する</label>
+            </div>
           </div>
 
           <div class="form-group">

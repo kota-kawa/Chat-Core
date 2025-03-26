@@ -103,17 +103,17 @@ document.addEventListener("DOMContentLoaded", function () {
                     output_examples: prompt.output_examples || ""
                   })
                 })
-                .then(response => response.json())
-                .then(result => {
-                  if (result.error) {
-                    console.error("ブックマーク保存エラー:", result.error);
-                  } else {
-                    console.log("ブックマークが保存されました:", result.message);
-                  }
-                })
-                .catch(err => {
-                  console.error("ブックマーク保存中にエラーが発生しました:", err);
-                });
+                  .then(response => response.json())
+                  .then(result => {
+                    if (result.error) {
+                      console.error("ブックマーク保存エラー:", result.error);
+                    } else {
+                      console.log("ブックマークが保存されました:", result.message);
+                    }
+                  })
+                  .catch(err => {
+                    console.error("ブックマーク保存中にエラーが発生しました:", err);
+                  });
               }
             });
 
@@ -272,8 +272,11 @@ document.addEventListener("DOMContentLoaded", function () {
       output_examples = document.getElementById("prompt-output-example").value;
     }
 
-    // 公開設定スイッチの状態取得
-    const isPublic = publishToggle.checked;
+
+    // 公開設定ラジオボタンの状態取得
+    const publishSetting = document.querySelector('input[name="publishSetting"]:checked').value;
+    const isPublic = (publishSetting === 'true');
+
 
     const postData = {
       title: title,
@@ -354,14 +357,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // ------------------------------
-  // 公開設定スイッチ（Bootstrap）の処理
-  // ------------------------------
-  const publishToggle = document.getElementById("publishToggle");
-  const publishLabel = document.getElementById("publishLabel");
-  publishToggle.addEventListener("change", function () {
-    publishLabel.textContent = publishToggle.checked ? "公開する" : "自分専用";
-  });
+
 
   // ------------------------------
   // ガードレールの表示切替処理

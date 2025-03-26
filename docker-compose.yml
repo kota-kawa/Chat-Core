@@ -12,8 +12,8 @@ services:
       - MYSQL_PASSWORD=chatpass
       - MYSQL_DATABASE=chat_db
       # Flask のホットリロード用（Dockerfile で ENV FLASK_ENV=development を設定しているので省略可）
-      # - FLASK_ENV=development
-      # - FLASK_DEBUG=1
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
     ports:
       - "5000:5000"
     volumes:

@@ -12,11 +12,9 @@ document.addEventListener("DOMContentLoaded", function () {
         if (data.prompts) {
           data.prompts.forEach(prompt => {
 
-            // 変更点①:
             // サーバーから返却された各プロンプトに、ブックマーク状態を示すフィールド（bookmarked）があると仮定
             const isBookmarked = prompt.bookmarked;
 
-            // 変更点②:
             // ブックマーク状態に応じて、アイコンのHTMLを切り替える
             const bookmarkIcon = isBookmarked
               ? `<i class="bi bi-bookmark-fill"></i>`
@@ -78,27 +76,25 @@ document.addEventListener("DOMContentLoaded", function () {
             `;
 
 
-            // 変更点④:
             // ブックマークボタンにクリックイベントを設定
             const bookmarkBtn = card.querySelector(".bookmark-btn");
             bookmarkBtn.addEventListener("click", function (e) {
               e.stopPropagation();
-              // ボタンのクラスをトグルし、ブックマーク状態を切り替える
+              // ブックマーク状態をトグル
               bookmarkBtn.classList.toggle("bookmarked");
               const isBookmarkedNow = bookmarkBtn.classList.contains("bookmarked");
               bookmarkBtn.innerHTML = isBookmarkedNow
                 ? `<i class="bi bi-bookmark-fill"></i>`
                 : `<i class="bi bi-bookmark"></i>`;
-
-              // 変更点⑤:
-              // ブックマーク状態が「オン」になった場合、サーバーに情報を送信して保存する
+            
               if (isBookmarkedNow) {
+                // ブックマーク追加（POSTリクエスト）
                 fetch('/prompt_share/api/bookmark', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    title: prompt.title,       // task_with_examples の name に対応
-                    content: prompt.content,   // task_with_examples の prompt_template に対応
+                    title: prompt.title,
+                    content: prompt.content,
                     input_examples: prompt.input_examples || "",
                     output_examples: prompt.output_examples || ""
                   })
@@ -114,10 +110,31 @@ document.addEventListener("DOMContentLoaded", function () {
                   .catch(err => {
                     console.error("ブックマーク保存中にエラーが発生しました:", err);
                   });
+              } else {
+                // ブックマーク削除（DELETEリクエスト）
+                fetch('/prompt_share/api/bookmark', {
+                  method: 'DELETE',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    title: prompt.title
+                  })
+                })
+                  .then(response => response.json())
+                  .then(result => {
+                    if (result.error) {
+                      console.error("ブックマーク削除エラー:", result.error);
+                    } else {
+                      console.log("ブックマークが削除されました:", result.message);
+                    }
+                  })
+                  .catch(err => {
+                    console.error("ブックマーク削除中にエラーが発生しました:", err);
+                  });
               }
             });
+            
 
-            // 変更点⑥:
+
             // 入力例または出力例がある場合、トグルボタンのクリックイベントを設定してポップアップ表示を切り替え
             if (prompt.input_examples || prompt.output_examples) {
               const toggleButton = card.querySelector(".toggle-guardrail");

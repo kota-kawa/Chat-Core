@@ -116,3 +116,29 @@ def add_bookmark():
     finally:
         cursor.close()
         conn.close()
+
+
+@prompt_share_api_bp.route('/bookmark', methods=['DELETE'])
+def remove_bookmark():
+    # ログイン状態のチェック
+    if 'user_id' not in session:
+        return jsonify({'error': 'ログインしていません'}), 401
+
+    data = request.get_json()
+    title = data.get('title')
+    if not title:
+        return jsonify({'error': '必要なフィールドが不足しています'}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # titleをキーにブックマークを削除（task_with_examples テーブル）
+        query = "DELETE FROM task_with_examples WHERE name = %s"
+        cursor.execute(query, (title,))
+        conn.commit()
+        return jsonify({'message': 'ブックマークが削除されました。'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()

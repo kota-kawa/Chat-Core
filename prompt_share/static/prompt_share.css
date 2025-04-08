@@ -322,34 +322,6 @@ main {
 }
 
 
-/* 公開設定スイッチのスタイル */
-
-.form-check-input:checked {
-  background-color: var(--accent-color); /* 既存のアクセントカラー（濃い緑）を利用 */
-  border-color: var(--accent-color);
-}
-
-.form-check-input:focus {
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 0.2rem rgba(39, 174, 96, 0.25); /* 緑色の影 */
-}
-
-.form-check.form-switch .form-check-input {
-  width: 40px;  /* デフォルトより小さく */
-  height: 20px;
-}
-
-.form-check.form-switch .form-check-input:focus {
-  box-shadow: none;
-}
-
-.form-check.form-switch .form-check-label {
-  font-size: 0.9rem;
-  margin-left: 0.5rem;
-}
-
-
-
 /* ==================== */
 /* 投稿ボタン */
 /* ==================== */

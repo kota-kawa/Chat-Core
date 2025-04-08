@@ -247,7 +247,6 @@ def chat():
             cursor.close()
             conn.close()
 
-        #save_message_to_db(chat_room_id, user_message, "user")
         formatted_user_message = user_message.replace("\n", "<br>")
         save_message_to_db(chat_room_id, formatted_user_message, "user")
        
@@ -257,7 +256,6 @@ def chat():
         if sid not in ephemeral_chats or chat_room_id not in ephemeral_chats[sid]:
             return jsonify({"error": "該当ルームが存在しません"}), 404
 
-        #ephemeral_chats[sid][chat_room_id]["messages"].append({"role": "user", "content": user_message})
         formatted_user_message = user_message.replace("\n", "<br>")
         ephemeral_chats[sid][chat_room_id]["messages"].append({"role": "user", "content": formatted_user_message})
         
@@ -416,7 +414,7 @@ def get_tasks():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         # display_order に基づいて並び替え
-        query = "SELECT name, input_examples, output_examples FROM task_with_examples ORDER BY display_order ASC"
+        query = "SELECT name, prompt_template, input_examples, output_examples FROM task_with_examples ORDER BY display_order ASC"
         cursor.execute(query)
         tasks = cursor.fetchall()  # 例: [{'name': 'メール作成'}, …]
         return jsonify({"tasks": tasks})

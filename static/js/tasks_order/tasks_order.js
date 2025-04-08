@@ -183,25 +183,25 @@ function toggleTaskOrderEditing() {
 
 
       // 編集ボタン押下時の処理
-      // 編集ボタン押下時の処理
       document.querySelectorAll('.card-edit-btn').forEach(function (editBtn) {
         editBtn.addEventListener('click', function (e) {
           e.stopPropagation();
           var card = this.closest('.prompt-card');
-
+      
           // 対象カードの data 属性から値を取得してモーダルのフォームにセット
           window.currentEditingCard = card;
           document.getElementById('taskName').value = card.getAttribute('data-task') || "";
+          // 追加：プロンプトテンプレート欄もセットする
+          document.getElementById('promptTemplate').value = card.getAttribute('data-prompt_template') || "";
           document.getElementById('inputExamples').value = card.getAttribute('data-input_examples') || "";
           document.getElementById('outputExamples').value = card.getAttribute('data-output_examples') || "";
-
-          // プロンプトテンプレートの設定は不要のため削除
-
+      
           // カスタムモーダルを表示
           var modalEl = document.getElementById('taskEditModal');
           showModal(modalEl);
         });
       });
+      
 
 
 

@@ -16,6 +16,7 @@ from chat import chat_bp
 from prompt_share import prompt_share_bp
 from prompt_share.prompt_share_api import prompt_share_api_bp
 from prompt_share.prompt_search import search_bp
+from prompt_share.prompt_manage_api import prompt_manage_api_bp
 
 # Blueprintを登録
 app.register_blueprint(auth_bp)
@@ -24,6 +25,7 @@ app.register_blueprint(chat_bp)
 app.register_blueprint(prompt_share_bp)
 app.register_blueprint(prompt_share_api_bp)
 app.register_blueprint(search_bp)
+app.register_blueprint(prompt_manage_api_bp)
 
 def periodic_cleanup():
     while True:

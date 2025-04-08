@@ -1,164 +1,205 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Assistant Pro</title>
-  <!-- Google Fonts: Noto Sans JP -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=IBM+Plex+Sans:wght@400;700&display=swap" rel="stylesheet">
-  <!-- Bootstrap -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/setup.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/tasks_order/tasks_order.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/tasks_order/task-edit-modal.css') }}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Assistant Pro</title>
+    <!-- Google Fonts: Noto Sans JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=IBM+Plex+Sans:wght@400;700&display=swap"
+      rel="stylesheet">
+    <!-- Bootstrap -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet">
+    <link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet"
+      href="{{ url_for('static', filename='css/variables.css') }}">
+    <link rel="stylesheet"
+      href="{{ url_for('static', filename='css/global.css') }}">
+    <link rel="stylesheet"
+      href="{{ url_for('static', filename='css/animations.css') }}">
+    <link rel="stylesheet"
+      href="{{ url_for('static', filename='css/buttons.css') }}">
+    <link rel="stylesheet"
+      href="{{ url_for('static', filename='css/setup.css') }}">
+    <link rel="stylesheet"
+      href="{{ url_for('static', filename='css/chat.css') }}">
+    <link rel="stylesheet"
+      href="{{ url_for('static', filename='css/tasks_order/tasks_order.css') }}">
+    <link rel="stylesheet"
+      href="{{ url_for('static', filename='css/tasks_order/task-edit-modal.css') }}">
 
-</head>
-<body>
-  <!-- ページ全体に固定表示する丸ボタン（セットアップカードの外） -->
-  <a href="/prompt_share" class="circle-button prompt-sharing" title="プロンプト共有サービス">
-    <i class="bi bi-share"></i>
-  </a>
-  <button id="settings-btn" class="circle-button settings-btn" title="設定"></button>
+  </head>
+  <body>
+    <!-- ページ全体に固定表示する丸ボタン（セットアップカードの外） -->
+    <a href="/prompt_share" class="circle-button prompt-sharing"
+      title="プロンプト共有サービス">
+      <i class="bi bi-share"></i>
+    </a>
+    <button id="settings-btn" class="circle-button settings-btn"
+      title="設定"></button>
 
-  <div id="setup-container">
-    <form class="setup-form" id="setup-form">
-      <h2 style="text-align: center; margin-bottom: 1.5rem;">AI Assistant セットアップ</h2>
-      <div class="form-group">
-        <label class="form-label">現在の状況・作業環境（入力なしでもOK）</label>
-        <textarea id="setup-info" rows="4" placeholder="例：大学生、リモートワーク中　／　自宅のデスク、周囲は静か"></textarea>
-      </div>
-      <div class="form-group">
-        <label class="form-label">AIモデル選択</label>
-        <select id="ai-model">
-          <option value="llama3-70b-8192">llama3-70b-8192</option>
-          <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
-          <option value="llama-3.3-70b-versatile" selected>llama-3.3-70b-versatile（デフォルト）</option>
-          <option value="gemma2-9b-it">gemma2-9b-it</option>
-          <option value="google-gemini">Google Gemini</option>
-        </select>
-      </div>
+    <div id="setup-container">
+      <form class="setup-form" id="setup-form">
+        <h2 style="text-align: center; margin-bottom: 1.5rem;">AI Assistant
+          セットアップ</h2>
+        <div class="form-group">
+          <label class="form-label">現在の状況・作業環境（入力なしでもOK）</label>
+          <textarea id="setup-info" rows="4"
+            placeholder="例：大学生、リモートワーク中　／　自宅のデスク、周囲は静か"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">AIモデル選択</label>
+          <select id="ai-model">
+            <option value="llama3-70b-8192">llama3-70b-8192</option>
+            <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+            <option value="llama-3.3-70b-versatile"
+              selected>llama-3.3-70b-versatile（デフォルト）</option>
+            <option value="gemma2-9b-it">gemma2-9b-it</option>
+            <option value="google-gemini">Google Gemini</option>
+          </select>
+        </div>
 
         <!-- 画面中央モーダル -->
-  <div id="io-modal" style="display: none;">
-    <div class="io-modal-content" id="io-modal-content">
-      <!-- JS で入出力例をここに挿入 -->
-    </div>
-  </div>
-      
-      <div class="task-selection-header" style="display: inline-flex; align-items: center;">
-        <p id="task-selection-text" style="margin: 0; color: var(--primary-color); font-weight: bold; margin-right: 0.5rem;">
-          実行したいタスクを選択（クリックで即実行）
-        </p>
-        <!-- 並び替え編集ボタンをここに挿入 -->
-      </div>
-      <div class="task-selection" id="task-selection"></div>
+        <div id="io-modal" style="display: none;">
+          <div class="io-modal-content" id="io-modal-content">
+            <!-- JS で入出力例をここに挿入 -->
+          </div>
+        </div>
 
-      <!-- これまでのチャットを見るボタン -->
-      <div style="text-align: center; margin-top: 0.2rem;">
-        <button id="access-chat-btn" type="button" class="primary-button">
-          <i class="bi bi-chat-left-text"></i> これまでのチャットを見る
-        </button>
-      </div>
-    </form>
-  </div>
+        <div class="task-selection-header"
+          style="display: inline-flex; align-items: center;">
+          <p id="task-selection-text"
+            style="margin: 0; color: var(--primary-color); font-weight: bold; margin-right: 0.5rem;">
+            実行したいタスクを選択（クリックで即実行）
+          </p>
+          <!-- 並び替え編集ボタンをここに挿入 -->
+        </div>
+        <div class="task-selection" id="task-selection"></div>
 
-  <div id="chat-container">
-    <div class="chat-header">
-      <div class="header-left">
-        <button id="back-to-setup" class="icon-button" title="設定変更">
-          <i class="bi bi-arrow-left"></i>
-        </button>
-        <span>AI Assistant Pro</span>
-      </div>
-      <div class="typing-indicator" id="typing-indicator" style="display: none;">
-        <div class="typing-dot"></div>
-        <div class="typing-dot" style="animation-delay: 0.2s"></div>
-        <div class="typing-dot" style="animation-delay: 0.4s"></div>
-      </div>
+        <!-- これまでのチャットを見るボタン -->
+        <div style="text-align: center; margin-top: 0.2rem;">
+          <button id="access-chat-btn" type="button" class="primary-button">
+            <i class="bi bi-chat-left-text"></i> これまでのチャットを見る
+          </button>
+        </div>
+      </form>
     </div>
-    <div class="chat-main">
-      <div class="sidebar" id="chat-room-sidebar">
-        <button id="new-chat-btn" class="new-chat-btn">
-          <i class="bi bi-plus-lg"></i> 新規チャット
-        </button>
-        <div id="chat-room-list"></div>
+
+    <div id="chat-container">
+      <div class="chat-header">
+        <div class="header-left">
+          <button id="back-to-setup" class="icon-button" title="設定変更">
+            <i class="bi bi-arrow-left"></i>
+          </button>
+          <span>AI Assistant Pro</span>
+        </div>
+        <div class="typing-indicator" id="typing-indicator"
+          style="display: none;">
+          <div class="typing-dot"></div>
+          <div class="typing-dot" style="animation-delay: 0.2s"></div>
+          <div class="typing-dot" style="animation-delay: 0.4s"></div>
+        </div>
       </div>
-      <div class="chat-area">
-        <div class="chat-messages" id="chat-messages"></div>
-        <div class="input-container">
-          <div class="input-wrapper">
-            <input type="text" id="user-input" placeholder="メッセージを入力..." />
-            <button class="primary-button" id="send-btn">
-              <i class="bi bi-send"></i>
-            </button>
+      <div class="chat-main">
+        <div class="sidebar" id="chat-room-sidebar">
+          <button id="new-chat-btn" class="new-chat-btn">
+            <i class="bi bi-plus-lg"></i> 新規チャット
+          </button>
+          <div id="chat-room-list"></div>
+        </div>
+        <div class="chat-area">
+          <div class="chat-messages" id="chat-messages"></div>
+          <div class="input-container">
+            <div class="input-wrapper">
+              <input type="text" id="user-input" placeholder="メッセージを入力..." />
+              <button class="primary-button" id="send-btn">
+                <i class="bi bi-send"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
+    <!-- Task Edit Modal -->
 
-  <!-- Task Edit Modal -->
+    <div id="taskEditModal" class="custom-modal" style="display: none;">
+      <div class="custom-modal-dialog">
+        <div class="custom-modal-content">
+          <div class="custom-modal-header">
+            <h5 class="custom-modal-title">タスク編集</h5>
+            <button type="button" class="custom-modal-close"
+              id="closeTaskEditModal">×</button>
+          </div>
+          <div class="custom-modal-body">
+            <form id="taskEditForm">
+              <!-- タスク名 -->
+              <!-- タスク名 -->
+              <div class="custom-form-group">
+                <label for="taskName" class="custom-form-label"><span
+                    style="color: green;">タイトル</span></label>
+                <input type="text" class="custom-form-control" id="taskName"
+                  name="name" placeholder="例：メール作成">
+                <div class="custom-form-text">タスクの名前を入力してください。</div>
+              </div>
+              <!-- プロンプトテンプレート -->
+              <div class="custom-form-group">
+                <label for="promptTemplate" class="custom-form-label"><span
+                    style="color: green;">プロンプトテンプレート</span></label>
+                <textarea class="custom-form-control" id="promptTemplate"
+                  name="prompt_template" rows="2"
+                  placeholder="例：メール本文の書き出し..."></textarea>
+                <div class="custom-form-text">タスク実行時に使用するプロンプトテンプレートです。</div>
+              </div>
+              <!-- 入力例 -->
+              <div class="custom-form-group">
+                <label for="inputExamples" class="custom-form-label"><span
+                    style="color: green;">入力例</span></label>
+                <textarea class="custom-form-control" id="inputExamples"
+                  name="input_examples" rows="2"
+                  placeholder="例：今日の天気は？"></textarea>
+                <div class="custom-form-text">ユーザーが入力する例です。</div>
+              </div>
+              <!-- 出力例 -->
+              <div class="custom-form-group">
+                <label for="outputExamples" class="custom-form-label"><span
+                    style="color: green;">出力例</span></label>
+                <textarea class="custom-form-control" id="outputExamples"
+                  name="output_examples" rows="2"
+                  placeholder="例：晴れです。"></textarea>
+                <div class="custom-form-text">タスク実行時の出力例です。</div>
+              </div>
 
-<div id="taskEditModal" class="custom-modal" style="display: none;">
-  <div class="custom-modal-dialog">
-    <div class="custom-modal-content">
-      <div class="custom-modal-header">
-        <h5 class="custom-modal-title">タスク編集</h5>
-        <button type="button" class="custom-modal-close" id="closeTaskEditModal">×</button>
-      </div>
-      <div class="custom-modal-body">
-        <form id="taskEditForm">
-          <!-- タスク名 -->
-          <div class="custom-form-group">
-            <label for="taskName" class="custom-form-label"><span style="color: green;">タイトル</span></label>
-            <input type="text" class="custom-form-control" id="taskName" name="name" placeholder="例：メール作成">
-            <div class="custom-form-text">タスクの名前を入力してください。</div>
+            </form>
           </div>
-          <!-- 入力例 -->
-          <div class="custom-form-group">
-            <label for="inputExamples" class="custom-form-label"><span style="color: green;">入力例</span></label>
-            <textarea class="custom-form-control" id="inputExamples" name="input_examples" rows="2" placeholder="例：今日の天気は？"></textarea>
-            <div class="custom-form-text">ユーザーが入力する例です。</div>
+          <div class="custom-modal-footer">
+            <button type="button" class="custom-btn-secondary"
+              id="cancelTaskEditModal">キャンセル</button>
+            <button type="button" class="custom-btn-primary"
+              id="saveTaskChanges">保存</button>
           </div>
-          <!-- 出力例 -->
-          <div class="custom-form-group">
-            <label for="outputExamples" class="custom-form-label"><span style="color: green;">出力例</span></label>
-            <textarea class="custom-form-control" id="outputExamples" name="output_examples" rows="2" placeholder="例：晴れです。"></textarea>
-            <div class="custom-form-text">タスク実行時の出力例です。</div>
-          </div>
-        </form>
-      </div>
-      <div class="custom-modal-footer">
-        <button type="button" class="custom-btn-secondary" id="cancelTaskEditModal">キャンセル</button>
-        <button type="button" class="custom-btn-primary" id="saveTaskChanges">保存</button>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
+    <!-- フロント側のメインJS -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/dom.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/setup.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script
+      src="{{ url_for('static', filename='js/tasks_order/tasks_order.js') }}"></script>
+    <script
+      src="{{ url_for('static', filename='js/tasks_order/tasks_name_update.js') }}"></script>
+    <script
+      src="{{ url_for('static', filename='js/tasks_order/tasks_edit_modal.js') }}"></script>
 
-  
-
-
-  <!-- フロント側のメインJS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="{{ url_for('static', filename='js/dom.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/setup.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/tasks_order/tasks_order.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/tasks_order/tasks_name_update.js') }}"></script>
-   <script src="{{ url_for('static', filename='js/tasks_order/tasks_edit_modal.js') }}"></script>
-
-    
-</body>
+  </body>
 </html>

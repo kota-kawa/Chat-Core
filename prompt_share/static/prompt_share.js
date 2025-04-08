@@ -290,10 +290,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // 公開設定ラジオボタンの状態取得
-    const publishSetting = document.querySelector('input[name="publishSetting"]:checked').value;
-    const isPublic = (publishSetting === 'true');
-
+    // すべての投稿を公開するため、常に true に設定
+    const isPublic = true;
 
     const postData = {
       title: title,

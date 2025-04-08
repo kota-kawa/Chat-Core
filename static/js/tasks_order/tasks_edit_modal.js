@@ -28,9 +28,11 @@ document.addEventListener('DOMContentLoaded', function() {
   if (saveBtn) {
     saveBtn.addEventListener('click', function() {
       // モーダル内の各入力値を取得
-      var taskName = document.getElementById('taskName').value.trim();
-      var inputExamples = document.getElementById('inputExamples').value.trim();
-      var outputExamples = document.getElementById('outputExamples').value.trim();
+      // モーダル内の各入力値を取得
+  var taskName = document.getElementById('taskName').value.trim();
+  var promptTemplate = document.getElementById('promptTemplate').value.trim();
+  var inputExamples = document.getElementById('inputExamples').value.trim();
+  var outputExamples = document.getElementById('outputExamples').value.trim();
       
       // 編集前のタスク名（data-task 属性）を取得
       var oldTask = window.currentEditingCard.getAttribute('data-task');
@@ -39,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
       var payload = {
         old_task: oldTask,
         new_task: taskName,
-        prompt_template: "",
+        prompt_template: promptTemplate,
         input_examples: inputExamples,
         output_examples: outputExamples
       };
@@ -61,6 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
       .then(function(data) {
         // 更新成功時：対象カードの属性を新しい内容に更新
         window.currentEditingCard.setAttribute('data-task', taskName);
+        window.currentEditingCard.setAttribute('data-prompt_template', promptTemplate);
         window.currentEditingCard.setAttribute('data-input_examples', inputExamples);
         window.currentEditingCard.setAttribute('data-output_examples', outputExamples);
         

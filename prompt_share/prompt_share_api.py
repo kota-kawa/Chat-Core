@@ -57,11 +57,8 @@ def create_prompt():
     author = data.get('author')
     input_examples = data.get('input_examples', '')
     output_examples = data.get('output_examples', '')
-    is_public = data.get('is_public', False)  # デフォルトは非公開（False）
-
-    # is_public の型が予期した bool でない場合は、適宜変換する
-    if not isinstance(is_public, bool):
-        is_public = str(is_public).lower() == 'true'
+    # すべて公開するため、is_public は常に True とする
+    is_public = True
 
     if not title or not category or not content or not author:
         return jsonify({'error': '必要なフィールドが不足しています。'}), 400

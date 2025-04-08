@@ -38,7 +38,9 @@ function loadTaskCards() {
         // カード本体
         const card = document.createElement("div");
         card.className = "prompt-card";
+        // タスク名、プロンプトテンプレート、入出力例を data 属性にセット
         card.setAttribute("data-task", task.name);
+        card.setAttribute("data-prompt_template", task.prompt_template || "プロンプトテンプレートはありません");
         card.setAttribute("data-input_examples", task.input_examples || "入力例がありません");
         card.setAttribute("data-output_examples", task.output_examples || "出力例がありません");
 
@@ -46,35 +48,40 @@ function loadTaskCards() {
         const headerContainer = document.createElement("div");
         headerContainer.className = "header-container";
 
-        // タスク名
+        // タスク名（長い場合は省略表示）
         const header = document.createElement("div");
         header.className = "task-header";
-        header.innerText = task.name;
+        header.innerText = task.name.length > 8 ? task.name.substring(0, 8) + "..." : task.name;
 
-        // トグルボタン(Bootstrapのクラスを使用: btn + btn-outline-success + btn-sm)
+        // トグルボタン（入出力例表示用）
         const toggleBtn = document.createElement("button");
         toggleBtn.type = "button";
         toggleBtn.classList.add("btn", "btn-outline-success", "btn-sm");
         toggleBtn.innerHTML = '<i class="bi bi-caret-down"></i>';
 
-        // 入出力例の文字列
-        const inputExamples = task.input_examples || "入力例がありません";
-        const outputExamples = task.output_examples || "出力例がありません";
-
-        // トグルボタンのクリック -> モーダルで入出力例を表示
+        // トグルボタンのクリックイベントでモーダルにタスク詳細を表示
         toggleBtn.addEventListener("click", (e) => {
-          e.stopPropagation(); // このクリックで document へ伝播して閉じないように
-          
-          // モーダルに入出力例を挿入
-          // 毎回クリアして、新しい内容を差し込む
+          e.stopPropagation(); // ドキュメントクリックへの伝播を停止
+
+          // カード内の各 data 属性から値を取得
+          const taskName = card.getAttribute("data-task");
+          const promptTemplate = card.getAttribute("data-prompt_template");
+          const inputExamples = card.getAttribute("data-input_examples");
+          const outputExamples = card.getAttribute("data-output_examples");
+
+          // モーダル内容を作成：タスク名、プロンプトテンプレート、入力例、出力例の順に表示
           ioModalContent.innerHTML = `
-            <h5 style="margin-bottom: 1rem;">入出力例</h5>
-            <div style="margin-bottom: 0.5rem; font-weight: bold;">入力例</div>
-            <div style="margin-bottom: 1rem;">${inputExamples}</div>
-            <div style="margin-bottom: 0.5rem; font-weight: bold;">出力例</div>
-            <div>${outputExamples}</div>
-          `;
-          
+        <h5 style="margin-bottom: 1rem;">タスク詳細</h5>
+        <div style="margin-bottom: 0.5rem; font-weight: bold;">タスク名</div>
+        <div style="margin-bottom: 1rem;">${taskName}</div>
+        <div style="margin-bottom: 0.5rem; font-weight: bold;">プロンプトテンプレート</div>
+        <div style="margin-bottom: 1rem;">${promptTemplate}</div>
+        <div style="margin-bottom: 0.5rem; font-weight: bold;">入力例</div>
+        <div style="margin-bottom: 1rem;">${inputExamples}</div>
+        <div style="margin-bottom: 0.5rem; font-weight: bold;">出力例</div>
+        <div>${outputExamples}</div>
+      `;
+
           // モーダルを表示
           ioModal.style.display = "block";
         });
@@ -84,23 +91,14 @@ function loadTaskCards() {
         headerContainer.appendChild(toggleBtn);
         card.appendChild(headerContainer);
 
-        // ラッパーにカードを入れて、最終的にコンテナに配置
+        // ラッパーにカードを入れて、コンテナに配置
         taskWrapper.appendChild(card);
         container.appendChild(taskWrapper);
       });
-      
-      
-      
-      
-      
 
-      
-
-      // タスクカード全体に対してクリックイベントを設定
+      // タスクカード全体に対してクリックイベントなどを設定
       initSetupTaskCards();
-      // 初期の「もっと見る」ボタン（タスクが6個以上なら）を設定
       initToggleTasks();
-      // タスク読み込み後に編集ボタンも再生成
       if (typeof initTaskOrderEditing === 'function') {
         initTaskOrderEditing();
       }
@@ -108,6 +106,7 @@ function loadTaskCards() {
     .catch(error => {
       console.error("タスク読み込みに失敗:", error);
     });
+
 }
 
 // セットアップ画面を表示する（チャット画面は非表示）
@@ -153,7 +152,7 @@ function handleTaskCardClick(event) {
       showChatInterface();
       loadChatRooms();
       localStorage.removeItem(`chatHistory_${currentChatRoomId}`);
-      const firstMessage = `【状況・作業環境】${setupInfo}\n【リクエスト】${task}\n\n入力例:\n${inputExamples}\n\n出力例:\n${outputExamples}`;
+      const firstMessage = `【状況・作業環境】${setupInfo}\n【リクエスト】${task}\n\n例:\n${inputExamples}\n\n例:\n${outputExamples}`;
       generateResponse(firstMessage, aiModel);
     })
     .catch(err => {

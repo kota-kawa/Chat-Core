@@ -33,6 +33,9 @@
     <link rel="stylesheet"
       href="{{ url_for('static', filename='css/tasks_order/task-edit-modal.css') }}">
 
+    <link rel="stylesheet"
+      href="{{ url_for('static', filename='css/new_prompt_modal.css') }}">
+
   </head>
   <body>
     <!-- ページ全体に固定表示する丸ボタン（セットアップカードの外） -->
@@ -71,14 +74,17 @@
           </div>
         </div>
 
-        <div class="task-selection-header"
-          style="display: inline-flex; align-items: center;">
-          <p id="task-selection-text"
-            style="margin: 0; color: var(--primary-color); font-weight: bold; margin-right: 0.5rem;">
-            実行したいタスクを選択（クリックで即実行）
-          </p>
-          <!-- 並び替え編集ボタンをここに挿入 -->
+        <!-- 修正後のHTML（該当部分） -->
+        <div class="task-selection-header">
+          <p id="task-selection-text">実行したいタスクを選択（クリックで即実行）</p>
+          <button id="openNewPromptModal"
+            class="circle-button new-prompt-modal-btn" type="button"
+            title="新しいプロンプトを投稿">
+            <i class="bi bi-plus-lg"></i>
+          </button>
+          <!-- タスク編集ボタンは tasks_order.js で後から追加され、CSSの order で中央に表示されます -->
         </div>
+
         <div class="task-selection" id="task-selection"></div>
 
         <!-- これまでのチャットを見るボタン -->
@@ -126,8 +132,78 @@
       </div>
     </div>
 
-    <!-- Task Edit Modal -->
+    <!-- デザインを同じにした 新しいプロンプト投稿モーダル -->
+    <div id="newPromptModal" class="new-prompt-modal">
+      <div class="new-prompt-modal-content">
+        <!-- 閉じるボタン -->
+        <span class="new-modal-close-btn" id="newModalCloseBtn">&times;</span>
+        <h2>新しいプロンプトを投稿</h2>
 
+        <form class="new-post-form" id="newPostForm">
+          <div class="form-group">
+            <label for="new-prompt-title">タイトル</label>
+            <input type="text" id="new-prompt-title"
+              placeholder="プロンプトのタイトルを入力" required />
+          </div>
+
+          <div class="form-group">
+            <label for="new-prompt-category">カテゴリ</label>
+            <select id="new-prompt-category" required>
+              <option value selected disabled>カテゴリを選択</option>
+              <option value="恋愛">恋愛</option>
+              <option value="勉強">勉強</option>
+              <option value="趣味">趣味</option>
+              <option value="仕事">仕事</option>
+              <option value="その他">その他</option>
+              <option value="スポーツ">スポーツ</option>
+              <option value="音楽">音楽</option>
+              <option value="旅行">旅行</option>
+              <option value="グルメ">グルメ</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="new-prompt-content">プロンプト内容</label>
+            <textarea id="new-prompt-content" rows="5"
+              placeholder="具体的なプロンプト内容を入力" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="new-prompt-author">投稿者名</label>
+            <input type="text" id="new-prompt-author" placeholder="ニックネームなど"
+              value="アイデア職人" required />
+          </div>
+
+          <!-- ガードレールチェック -->
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="new-guardrail-checkbox" />
+              入出力例を追加する
+            </label>
+          </div>
+
+          <!-- ガードレールがONのときだけ表示される部分 -->
+          <div id="new-guardrail-fields">
+            <div class="form-group">
+              <label for="new-prompt-input-example">入力例</label>
+              <textarea id="new-prompt-input-example" rows="3"
+                placeholder="例: 夏休みの思い出をテーマにした短いエッセイを書いてください。"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="new-prompt-output-example">出力例</label>
+              <textarea id="new-prompt-output-example" rows="3"
+                placeholder="例: 夏休みのある日、私は家族と一緒に海辺へ出かけました..."></textarea>
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn">
+            <i class="bi bi-upload"></i> 投稿する
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Task Edit Modal -->
     <div id="taskEditModal" class="custom-modal" style="display: none;">
       <div class="custom-modal-dialog">
         <div class="custom-modal-content">
@@ -200,6 +276,10 @@
       src="{{ url_for('static', filename='js/tasks_order/tasks_name_update.js') }}"></script>
     <script
       src="{{ url_for('static', filename='js/tasks_order/tasks_edit_modal.js') }}"></script>
+
+    <!-- 新規追加：新しいプロンプトモーダル用 JS -->
+    <script
+      src="{{ url_for('static', filename='js/new_prompt_modal.js') }}"></script>
 
   </body>
 </html>

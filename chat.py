@@ -491,5 +491,32 @@ def edit_task():
         cursor.close()
         conn.close()
 
+@chat_bp.route("/api/add_task", methods=["POST"])
+def add_task():
+    data = request.get_json()
+    title = data.get("title")
+    prompt_content = data.get("prompt_content")
+    input_examples = data.get("input_examples", "")
+    output_examples = data.get("output_examples", "")
+    
+    if not title or not prompt_content:
+        return jsonify({"error": "タイトルとプロンプト内容は必須です。"}), 400
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        # display_order については、必要に応じて最大値+1 をセットするなどの処理も考えられますが、ここでは省略
+        query = """
+            INSERT INTO task_with_examples (name, prompt_template, input_examples, output_examples)
+            VALUES (%s, %s, %s, %s)
+        """
+        cursor.execute(query, (title, prompt_content, input_examples, output_examples))
+        conn.commit()
+        return jsonify({"message": "タスクが追加されました"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 

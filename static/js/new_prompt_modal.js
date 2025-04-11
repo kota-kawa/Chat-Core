@@ -1,9 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const openModalBtn = document.getElementById("openNewPromptModal");       // ＋ボタン
-  const newPromptModal = document.getElementById("newPromptModal");         // モーダル全体（ラッパ）
-  const modalCloseBtn = document.getElementById("newModalCloseBtn");        // 閉じる(X)ボタン
+  const openModalBtn = document.getElementById("openNewPromptModal");
+  const newPromptModal = document.getElementById("newPromptModal");
+  const modalCloseBtn = document.getElementById("newModalCloseBtn");
   const guardrailCheckbox = document.getElementById("new-guardrail-checkbox");
   const guardrailFields = document.getElementById("new-guardrail-fields");
+  const newPostForm = document.getElementById("newPostForm");
 
   // ＋ボタンを押すとモーダル表示
   if (openModalBtn && newPromptModal) {
@@ -37,15 +38,55 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // モーダル内フォームの送信はデザインのみ（送信を止めてアラート表示）
-  const newPostForm = document.getElementById("newPostForm");
+  // モーダル内フォームの送信
   if (newPostForm) {
     newPostForm.addEventListener("submit", function (e) {
       e.preventDefault();
-      alert("（デザインのみ）投稿が完了しました。");
-      newPostForm.reset();
-      guardrailFields.style.display = "none";
-      newPromptModal.classList.remove("show");
+
+      // 各入力項目の値を取得
+      const title = document.getElementById("new-prompt-title").value;
+      const content = document.getElementById("new-prompt-content").value;
+      let inputExample = "";
+      let outputExample = "";
+      if (guardrailCheckbox.checked) {
+        inputExample = document.getElementById("new-prompt-input-example").value;
+        outputExample = document.getElementById("new-prompt-output-example").value;
+      }
+      
+      const data = {
+        title: title,
+        prompt_content: content,
+        input_examples: inputExample,
+        output_examples: outputExample
+      };
+
+      // POST リクエストでサーバーに送信
+      fetch("/api/add_task", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.message) {
+          alert(result.message);
+          newPostForm.reset();
+          guardrailFields.style.display = "none";
+          newPromptModal.classList.remove("show");
+          
+          // ここでタスク一覧を更新する
+          loadTaskCards();
+        } else {
+          alert("エラー: " + result.error);
+        }
+      })
+      .catch(error => {
+        alert("エラーが発生しました: " + error);
+      });
     });
   }
 });
+
+

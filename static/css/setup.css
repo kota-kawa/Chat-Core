@@ -1,6 +1,6 @@
-/* setup.css */
-/* セットアップ画面（#setup-container, .setup-formなど）関連 */
-
+/* setup.css
+  最初の画面（フォーム、モーダル、タスク選択ヘッダー）のレイアウトと入力要素スタイル
+*/
 #setup-container {
   background: rgba(255, 255, 255, 0.95);
   padding: 2rem;

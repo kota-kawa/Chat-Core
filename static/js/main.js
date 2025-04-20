@@ -1,49 +1,62 @@
-// main.js
+/**
+ * main.js
+ *
+ * ■ ページ初期化（DOMContentLoaded）
+ *   - ログイン状態を /api/current_user で確認し、設定ボタンを「ログイン／ユーザーアイコン」に切替
+ *   - localStorage から前回の currentChatRoomId を復元
+ *   - タスクカードと「もっと見る」ボタンの初期化 (initToggleTasks / initSetupTaskCards)
+ *   - 最初はセットアップ画面を表示し、チャットルーム一覧をロード
+ *   - 復帰時にチャット履歴をロード（ローカル＋サーバー）
+ *
+ * ■ UI 操作のイベント登録
+ *   - 新規チャット／これまでのチャットを見る／送信／Enter 送信
+ *   - テキストエリアの自動高さ調整
+ *   - 「戻る」ボタンでセットアップ画面へ
+ *   - 画面クリックでチャットルームの３点メニューを閉じる
+ *
+ * ■ ユーザーメニュー表示 toggleUserMenu()
+ *   - 「設定」「ログアウト」メニューを動的生成・表示・非表示
+ */
 
 
 document.addEventListener('DOMContentLoaded', () => {
-  // ログイン状態をAPIで確認し、左上ボタンの表示を切り替え
+
+  // ▼ログイン状態確認 ⇒ 左上ボタン切替
   fetch("/api/current_user")
     .then(res => res.json())
     .then(data => {
       const settingsBtn = document.getElementById("settings-btn");
       if (data.logged_in) {
-        // ログイン中の場合はユーザーアイコンを表示し、クリックでメニューをトグル
         settingsBtn.innerHTML = '<i class="bi bi-person-circle"></i>';
-        settingsBtn.title = "ユーザー";
-        settingsBtn.onclick = toggleUserMenu;
+        settingsBtn.title     = "ユーザー";
+        settingsBtn.onclick   = toggleUserMenu;
       } else {
-        // 未ログインの場合は「ログイン」と表示し、クリックでログインページへ遷移
         settingsBtn.innerHTML = "ログイン";
-        settingsBtn.title = "ログイン";
-        settingsBtn.onclick = () => {
-          window.location.href = "/login";
-        };
+        settingsBtn.title     = "ログイン";
+        settingsBtn.onclick   = () => { window.location.href = "/login"; };
       }
     })
     .catch(err => console.error("Error checking login status:", err));
 
-  // すでにlocalStorageに currentChatRoomId があれば復元
-  if (localStorage.getItem('currentChatRoomId')) {
+  // ▼ローカルに保存されていれば現在のチャットルームを復元
+  if (localStorage.getItem('currentChatRoomId'))
     currentChatRoomId = localStorage.getItem('currentChatRoomId');
-  }
 
-  // タスクカードや「もっと見る」ボタンの初期化
+  // ▼初期化
   initToggleTasks();
   initSetupTaskCards();
 
-  // 初期表示はセットアップフォーム
+  // 初期表示はセットアップ
   showSetupForm();
-  // サイドバーのチャットルーム一覧を更新
   loadChatRooms();
 
-  // ページ復帰時に currentChatRoomId があればチャット履歴をロード
+  // 復帰時に履歴ロード
   if (currentChatRoomId) {
     showChatInterface();
     loadLocalChatHistory();
   }
 
-  // 新規チャットボタン
+  // 新規チャット
   newChatBtn.addEventListener('click', () => {
     currentChatRoomId = null;
     localStorage.removeItem('currentChatRoomId');
@@ -51,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showSetupForm();
   });
 
-  // 「これまでのチャットを見る」ボタン
+  // 「これまでのチャットを見る」
   accessChatBtn.addEventListener('click', () => {
     showChatInterface();
     loadChatRooms();
@@ -59,10 +72,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loadChatHistory();
   });
 
-  // 送信ボタン
+  // 送信
   sendBtn.addEventListener('click', sendMessage);
 
-  // Enterキーで送信（Shift+Enterは改行）
+  // Enter 送信 (Shift+Enter で改行)
   userInput.addEventListener('keypress', e => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -70,111 +83,77 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // テキストエリアの自動高さ調整
+  // テキストエリア高さ自動調整
   userInput.addEventListener('input', () => {
     userInput.style.height = 'auto';
     userInput.style.height = userInput.scrollHeight + 'px';
   });
 
-  // 戻るボタン（セットアップ画面に戻る）
+  // 戻るボタン
   backToSetupBtn.addEventListener('click', showSetupForm);
 
-  // 画面クリック時に、他のアクションメニュー（3点アイコン）を閉じる
+  // 画面クリックでサイドメニューの 3 点メニューを閉じる
   document.addEventListener('click', () => {
-    document.querySelectorAll('.room-actions-menu').forEach(menu => {
-      menu.style.display = 'none';
-    });
+    document.querySelectorAll('.room-actions-menu')
+            .forEach(menu => menu.style.display = 'none');
   });
 });
 
-// ユーザーメニューの表示/非表示を切り替える関数
+/* ▼ユーザーメニュー（設定 / ログアウト） ---------------------------------------*/
 function toggleUserMenu() {
   let menu = document.getElementById("user-menu");
 
   if (!menu) {
-    // メニューコンテナの作成
     menu = document.createElement("div");
     menu.id = "user-menu";
-    menu.style.position = "absolute";
-    menu.style.top = "50px"; // 少し上に調整
-    menu.style.left = "10px";
-    menu.style.backgroundColor = "#fff";
-    menu.style.border = "1px solid #ddd";
-    menu.style.borderRadius = "6px";
-    menu.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)";
-    menu.style.zIndex = "1001";
-    menu.style.minWidth = "150px";
-    menu.style.overflow = "hidden";
+    Object.assign(menu.style, {
+      position:'absolute', top:'50px', left:'10px',
+      background:'#fff', border:'1px solid #ddd', borderRadius:'6px',
+      boxShadow:'0 2px 4px rgba(0,0,0,.1)', zIndex:'1001', minWidth:'150px',
+      overflow:'hidden'
+    });
 
-    // メニュー項目の作成（設定・ログアウト）
     menu.innerHTML = `
       <div id="menu-settings" style="
-          padding: 8px 16px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          color: #007bff;
-          font-weight: bold;
-          font-size: 14px;
-          border-bottom: 1px solid #ddd;
-          background-color: #f9f9f9;
-        ">
-        <i class="bi bi-gear" style="margin-right: 6px; font-size: 16px;"></i>
-        設定
+         padding:8px 16px; cursor:pointer; display:flex; align-items:center;
+         color:#007bff; font-weight:bold; font-size:14px; border-bottom:1px solid #ddd;
+         background:#f9f9f9;">
+        <i class="bi bi-gear" style="margin-right:6px;font-size:16px;"></i> 設定
       </div>
       <div id="menu-logout" style="
-          padding: 8px 16px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          color: #dc3545;
-          font-weight: bold;
-          font-size: 14px;
-          background-color: #f9f9f9;
-        ">
-        <i class="bi bi-box-arrow-right" style="margin-right: 6px; font-size: 16px;"></i>
-        ログアウト
-      </div>
-    `;
+         padding:8px 16px; cursor:pointer; display:flex; align-items:center;
+         color:#dc3545; font-weight:bold; font-size:14px; background:#f9f9f9;">
+        <i class="bi bi-box-arrow-right" style="margin-right:6px;font-size:16px;"></i> ログアウト
+      </div>`;
 
     document.body.appendChild(menu);
 
-    // 各項目のクリック処理
+    // クリック処理
     document.getElementById("menu-settings").addEventListener("click", () => {
       window.location.href = "/settings";
     });
-
     document.getElementById("menu-logout").addEventListener("click", () => {
       window.location.href = "/logout";
     });
 
-    // ホバー時のスタイル変更
-    const settingsItem = document.getElementById("menu-settings");
-    const logoutItem = document.getElementById("menu-logout");
+    // ホバーエフェクト
+    const [settingsItem, logoutItem] =
+      [document.getElementById("menu-settings"), document.getElementById("menu-logout")];
 
-    settingsItem.addEventListener("mouseover", function() {
-      settingsItem.style.backgroundColor = "#e6f0ff"; // ホバー時は淡い青
-    });
-    settingsItem.addEventListener("mouseout", function() {
-      settingsItem.style.backgroundColor = "#f9f9f9";
-    });
+    settingsItem.addEventListener("mouseover", () => settingsItem.style.background="#e6f0ff");
+    settingsItem.addEventListener("mouseout",  () => settingsItem.style.background="#f9f9f9");
 
-    logoutItem.addEventListener("mouseover", function() {
-      logoutItem.style.backgroundColor = "#ffe6e6"; // ホバー時は淡い赤
-    });
-    logoutItem.addEventListener("mouseout", function() {
-      logoutItem.style.backgroundColor = "#f9f9f9";
-    });
+    logoutItem.addEventListener("mouseover",  () => logoutItem.style.background="#ffe6e6");
+    logoutItem.addEventListener("mouseout",   () => logoutItem.style.background="#f9f9f9");
 
-    // 設定ボタンおよびメニュー外クリックでメニューを非表示にする
+    // メニュー外クリックで非表示
     document.addEventListener("click", function docClick(e) {
-      const settingsBtn = document.getElementById("settings-btn");
-      if (!menu.contains(e.target) && !settingsBtn.contains(e.target)) {
+      const btn = document.getElementById("settings-btn");
+      if (!menu.contains(e.target) && !btn.contains(e.target))
         menu.style.display = "none";
-      }
     });
   }
 
-  // メニューの表示／非表示をトグル
+  // 表示トグル
   menu.style.display = (menu.style.display === "block") ? "none" : "block";
 }

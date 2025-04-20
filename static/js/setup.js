@@ -1,203 +1,186 @@
-// setup.js
+/**
+ * setup.js
+ *
+ * ■ タスクカードの取得・表示 (loadTaskCards)
+ *   - /api/tasks からタスク一覧を取得し、.prompt-card を動的生成
+ *   - カード下向きアイコンでタスク詳細モーダル（プロンプトテンプレート／入出力例）を表示
+ *
+ * ■ セットアップ画面切替 (showSetupForm)
+ *   - チャット画面を隠し、セットアップ画面を再表示
+ *
+ * ■ タスク選択でチャット開始 (handleTaskCardClick)
+ *   - 「状況・作業環境」入力＋カードクリックで新規チャットルーム作成
+ *   - 最初のメッセージを Bot に投げてチャットを開始
+ *
+ * ■ 「もっと見る」折り畳み機能 (initToggleTasks)
+ *   - タスクが 6 件超えると 7 件目以降を折り畳み、展開／折り畳みボタンを生成
+ */
 
-// APIからタスクを取得してタスクカードを生成する
+
+// ▼ 1. タスクカード生成・詳細表示 -------------------------------------------------
 function loadTaskCards() {
-  // モーダル要素を取得（HTMLに書いた #io-modal, #io-modal-content）
-  const ioModal = document.getElementById("io-modal");
+  const ioModal        = document.getElementById("io-modal");
   const ioModalContent = document.getElementById("io-modal-content");
 
-  // モーダルを閉じる関数（モーダル全体を非表示に）
-  function closeIOModal() {
-    ioModal.style.display = "none";
-  }
+  // モーダルを閉じるヘルパ
+  function closeIOModal() { ioModal.style.display = "none"; }
 
-  // 画面のどこかをクリックした時にモーダルが開いていれば閉じる
+  // 画面クリックでモーダルを閉じる
   document.addEventListener("click", () => {
-    if (ioModal.style.display === "block") {
-      closeIOModal();
-    }
+    if (ioModal.style.display === "block") closeIOModal();
   });
+  // 内部クリックでは閉じない
+  ioModalContent.addEventListener("click", e => e.stopPropagation());
 
-  // モーダルの中身をクリックした時は閉じないようにする（バブリング停止）
-  ioModalContent.addEventListener("click", (e) => {
-    e.stopPropagation();
-  });
-
-  // タスク一覧を取得
+  // /api/tasks から取得
   fetch("/api/tasks")
-    .then(response => response.json())
+    .then(r => r.json())
     .then(data => {
       const container = document.getElementById("task-selection");
-      container.innerHTML = ""; // 既存をクリア
+      container.innerHTML = "";
 
       data.tasks.forEach(task => {
-        // 2列レイアウト用ラッパー
-        const taskWrapper = document.createElement("div");
-        taskWrapper.className = "task-wrapper";
+        // ラッパー
+        const wrapper     = document.createElement("div");
+        wrapper.className = "task-wrapper";
 
-        // カード本体
+        // カード
         const card = document.createElement("div");
         card.className = "prompt-card";
-        // タスク名、プロンプトテンプレート、入出力例を data 属性にセット
-        card.setAttribute("data-task", task.name);
-        card.setAttribute("data-prompt_template", task.prompt_template || "プロンプトテンプレートはありません");
-        card.setAttribute("data-input_examples", task.input_examples || "入力例がありません");
-        card.setAttribute("data-output_examples", task.output_examples || "出力例がありません");
+        card.dataset.task            = task.name;
+        card.dataset.prompt_template = task.prompt_template || "プロンプトテンプレートはありません";
+        card.dataset.input_examples  = task.input_examples  || "入力例がありません";
+        card.dataset.output_examples = task.output_examples || "出力例がありません";
 
-        // ヘッダーコンテナ（タスク名とトグルボタン）
+        // ヘッダー（タイトル＋▼ボタン）
         const headerContainer = document.createElement("div");
         headerContainer.className = "header-container";
 
-        // タスク名（長い場合は省略表示）
         const header = document.createElement("div");
         header.className = "task-header";
-        header.innerText = task.name.length > 8 ? task.name.substring(0, 8) + "..." : task.name;
+        header.innerText = task.name.length > 8 ? task.name.substring(0, 8) + "…" : task.name;
 
-        // トグルボタン（入出力例表示用）
         const toggleBtn = document.createElement("button");
         toggleBtn.type = "button";
         toggleBtn.classList.add("btn", "btn-outline-success", "btn-sm");
         toggleBtn.innerHTML = '<i class="bi bi-caret-down"></i>';
 
-        // トグルボタンのクリックイベントでモーダルにタスク詳細を表示
-        toggleBtn.addEventListener("click", (e) => {
-          e.stopPropagation(); // ドキュメントクリックへの伝播を停止
-
-          // カード内の各 data 属性から値を取得
-          const taskName = card.getAttribute("data-task");
-          const promptTemplate = card.getAttribute("data-prompt_template");
-          const inputExamples = card.getAttribute("data-input_examples");
-          const outputExamples = card.getAttribute("data-output_examples");
-
-          // モーダル内容を作成：タスク名、プロンプトテンプレート、入力例、出力例の順に表示
+        // ▼クリックで詳細モーダル
+        toggleBtn.addEventListener("click", e => {
+          e.stopPropagation();
           ioModalContent.innerHTML = `
-        <h5 style="margin-bottom: 1rem;">タスク詳細</h5>
-        <div style="margin-bottom: 0.5rem; font-weight: bold;">タスク名</div>
-        <div style="margin-bottom: 1rem;">${taskName}</div>
-        <div style="margin-bottom: 0.5rem; font-weight: bold;">プロンプトテンプレート</div>
-        <div style="margin-bottom: 1rem;">${promptTemplate}</div>
-        <div style="margin-bottom: 0.5rem; font-weight: bold;">入力例</div>
-        <div style="margin-bottom: 1rem;">${inputExamples}</div>
-        <div style="margin-bottom: 0.5rem; font-weight: bold;">出力例</div>
-        <div>${outputExamples}</div>
-      `;
-
-          // モーダルを表示
+            <h5 style="margin-bottom:1rem;">タスク詳細</h5>
+            <div style="margin-bottom:.5rem;font-weight:bold;">タスク名</div>
+            <div style="margin-bottom:1rem;">${card.dataset.task}</div>
+            <div style="margin-bottom:.5rem;font-weight:bold;">プロンプトテンプレート</div>
+            <div style="margin-bottom:1rem;">${card.dataset.prompt_template}</div>
+            <div style="margin-bottom:.5rem;font-weight:bold;">入力例</div>
+            <div style="margin-bottom:1rem;">${card.dataset.input_examples}</div>
+            <div style="margin-bottom:.5rem;font-weight:bold;">出力例</div>
+            <div>${card.dataset.output_examples}</div>`;
           ioModal.style.display = "block";
         });
 
-        // ヘッダーにタスク名とボタンを追加 -> カードに追加
-        headerContainer.appendChild(header);
-        headerContainer.appendChild(toggleBtn);
+        headerContainer.append(header, toggleBtn);
         card.appendChild(headerContainer);
-
-        // ラッパーにカードを入れて、コンテナに配置
-        taskWrapper.appendChild(card);
-        container.appendChild(taskWrapper);
+        wrapper.appendChild(card);
+        container.appendChild(wrapper);
       });
 
-      // タスクカード全体に対してクリックイベントなどを設定
+      // クリック／並び替え関係の初期化
       initSetupTaskCards();
       initToggleTasks();
-      if (typeof initTaskOrderEditing === 'function') {
-        initTaskOrderEditing();
-      }
+      if (typeof initTaskOrderEditing === 'function') initTaskOrderEditing();
     })
-    .catch(error => {
-      console.error("タスク読み込みに失敗:", error);
-    });
-
+    .catch(err => console.error("タスク読み込みに失敗:", err));
 }
 
-// セットアップ画面を表示する（チャット画面は非表示）
+// ▼ 2. セットアップ画面の表示 ------------------------------------------------------
 function showSetupForm() {
-  chatContainer.style.display = 'none';
+  chatContainer.style.display  = 'none';
   setupContainer.style.display = 'block';
-  setupInfoElement.value = ''; // 入力フォームをクリア
-  loadTaskCards(); // APIからタスクを取得してカードを生成
+  setupInfoElement.value = '';
+  loadTaskCards();
 }
 
-// タスクカードのクリックイベントをイベントデリゲーションでハンドリングする
+// ▼ 3. タスクカード選択処理 --------------------------------------------------------
 function initSetupTaskCards() {
   const container = document.getElementById('task-selection');
-  // （※不要な重複を避けるため、一度既存のリスナーを削除してもよい）
   container.removeEventListener('click', handleTaskCardClick);
-  container.addEventListener('click', handleTaskCardClick);
+  container.addEventListener('click',  handleTaskCardClick);
 }
 
-// タスクカードのクリックイベントハンドラー
-function handleTaskCardClick(event) {
-  // 編集モード中はクリックを無視（ドラッグ専用）
-  if (window.isEditingOrder) return;
-  const card = event.target.closest('.prompt-card');
+function handleTaskCardClick(e) {
+  if (window.isEditingOrder) return;          // 並び替え中は無視
+  const card = e.target.closest('.prompt-card');
   if (!card) return;
-  const setupInfo = setupInfoElement.value.trim();
-  if (!setupInfo) {
-    alert('「現在の状況・作業環境」を入力してください。');
-    return;
-  }
-  const aiModel = aiModelSelect.value;
-  const task = card.getAttribute('data-task');
-  const inputExamples = card.getAttribute('data-input_examples');
-  const outputExamples = card.getAttribute('data-output_examples');
 
-  // 新しいroomIdを作成し、ローカルストレージに保存
+  const setupInfo = setupInfoElement.value.trim();
+  if (!setupInfo) { alert('「現在の状況・作業環境」を入力してください。'); return; }
+
+  const aiModel       = aiModelSelect.value;
+  const prompt_template = card.dataset.prompt_template;
+  //const task          = card.dataset.task;
+  const inputExamples = card.dataset.input_examples;
+  const outputExamples= card.dataset.output_examples;
+
+  // 新チャットルーム作成
   const newRoomId = Date.now().toString();
   currentChatRoomId = newRoomId;
-  localStorage.setItem('currentChatRoomId', currentChatRoomId);
+  localStorage.setItem('currentChatRoomId', newRoomId);
 
-  // サーバーにチャットルーム作成リクエストを送信
   createNewChatRoom(newRoomId, setupInfo)
     .then(() => {
       showChatInterface();
       loadChatRooms();
-      localStorage.removeItem(`chatHistory_${currentChatRoomId}`);
-      const firstMessage = `【状況・作業環境】${setupInfo}\n【リクエスト】${task}\n\n例:\n${inputExamples}\n\n例:\n${outputExamples}`;
-      generateResponse(firstMessage, aiModel);
+      localStorage.removeItem(`chatHistory_${newRoomId}`);
+
+      const firstMsg =
+        `【状況・作業環境】${setupInfo}\n【リクエスト】${prompt_template}\n\n入力例:\n${inputExamples}\n\n出力例:\n${outputExamples}`;
+      generateResponse(firstMsg, aiModel);
     })
-    .catch(err => {
-      alert("チャットルーム作成に失敗: " + err);
-      console.error(err);
-    });
+    .catch(err => alert("チャットルーム作成に失敗: " + err));
 }
 
-// タスクカードが6個以上ある場合、「もっと見る」ボタンで折りたたみ/展開する処理
+// ▼ 4. 「もっと見る」ボタン生成 ----------------------------------------------------
 function initToggleTasks() {
-  // 既存の「もっと見る」ボタンがあれば削除する
-  const existingToggleBtn = document.getElementById('toggle-tasks-btn');
-  if (existingToggleBtn) {
-    existingToggleBtn.remove();
-  }
+  const oldBtn = document.getElementById('toggle-tasks-btn');
+  if (oldBtn) oldBtn.remove();
 
-  const taskCards = document.querySelectorAll('.task-selection .prompt-card');
-  if (taskCards.length > 6) {
-    // 6個目以降を初期状態で非表示にする
-    for (let i = 6; i < taskCards.length; i++) {
-      taskCards[i].style.display = 'none';
-    }
-    // 「もっと見る」ボタンを作成
-    const toggleBtn = document.createElement('button');
-    toggleBtn.id = 'toggle-tasks-btn';
-    toggleBtn.type = 'button';
-    toggleBtn.classList.add('primary-button');
-    toggleBtn.style.width = '100%';
-    toggleBtn.style.marginTop = '0.3rem';
-    toggleBtn.innerHTML = '<i class="bi bi-chevron-down"></i> もっと見る';
-    taskSelection.appendChild(toggleBtn);
+  const cards = document.querySelectorAll('.task-selection .prompt-card');
+  if (cards.length > 6) {
+    // 7枚目以降を非表示
+    [...cards].slice(6).forEach(c => c.style.display = 'none');
+
+    // ボタン生成
+    const btn = document.createElement('button');
+    btn.type = 'button';                     // ← これで submit 動作を防ぐ
+    btn.id   = 'toggle-tasks-btn';
+    btn.className     = 'primary-button';
+    btn.style.width   = '100%';
+    btn.style.marginTop = '.3rem';
+    btn.innerHTML     = '<i class="bi bi-chevron-down"></i> もっと見る';
 
     let expanded = false;
-    toggleBtn.addEventListener('click', () => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();                   // ← 念のためデフォルト動作もキャンセル
       expanded = !expanded;
-      for (let i = 6; i < taskCards.length; i++) {
-        taskCards[i].style.display = expanded ? 'flex' : 'none';
-      }
-      toggleBtn.innerHTML = expanded ? '<i class="bi bi-chevron-up"></i> 閉じる' : '<i class="bi bi-chevron-down"></i> もっと見る';
+      [...cards].slice(6).forEach(c =>
+        c.style.display = expanded ? 'flex' : 'none'
+      );
+      btn.innerHTML = expanded
+        ? '<i class="bi bi-chevron-up"></i> 閉じる'
+        : '<i class="bi bi-chevron-down"></i> もっと見る';
     });
+
+    // ボタンをリストの末尾に追加
+    taskSelection.appendChild(btn);
   }
 }
 
 
-// グローバルへエクスポート
-window.showSetupForm = showSetupForm;
-window.initToggleTasks = initToggleTasks;
-window.initSetupTaskCards = initSetupTaskCards;
+// ---- グローバル公開 -------------------------------------------------------------
+window.showSetupForm     = showSetupForm;
+window.initToggleTasks   = initToggleTasks;
+window.initSetupTaskCards= initSetupTaskCards;
+window.loadTaskCards     = loadTaskCards;

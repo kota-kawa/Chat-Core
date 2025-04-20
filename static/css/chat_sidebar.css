@@ -1,0 +1,22 @@
+/* chat_sidebar.css
+   サイドバー（チャットルームリスト／履歴カード）のレイアウトとカードスタイル
+*/
+.sidebar{
+  width:280px;background:var(--secondary-color);padding:1rem;border-right:1px solid #e0e0e0;overflow-y:auto;
+}
+/* ルームカード */
+.chat-room-card{
+  background:#fff;padding:.8rem 1rem;border-radius:10px;cursor:pointer;border:1px solid #e0e0e0;
+  margin-bottom:.5rem;transition:background .2s ease;position:relative;display:flex;align-items:center;justify-content:space-between;
+}
+.chat-room-card span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chat-room-card:hover{background:#f0f0f0;}
+.chat-room-card.active{background:var(--primary-color);color:#fff;}
+.room-actions-icon{cursor:pointer;margin-left:8px;font-size:1.2em;}
+.room-actions-menu{
+  position:absolute;top:50%;right:40px;transform:translateY(-50%);background:#fff;border:1px solid #ddd;border-radius:4px;
+  display:none;flex-direction:column;z-index:10;box-shadow:var(--shadow);
+}
+.chat-room-card.active .room-actions-menu{color:var(--text-dark);}
+.room-actions-menu .menu-item{padding:6px 12px;white-space:nowrap;cursor:pointer;}
+.room-actions-menu .menu-item:hover{background:#eee;}

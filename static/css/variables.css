@@ -1,6 +1,6 @@
-/* variables.css */
-/* カラーバリエーションなど共通で参照する変数を定義 */
-
+/* variables.css
+   共通のカラーバリアブル、テキストカラー、シャドウなど全体で参照する変数定義
+*/
 :root {
   --primary-color: #19c37d;
   --secondary-color: #f5f5f5;

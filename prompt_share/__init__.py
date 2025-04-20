@@ -20,4 +20,4 @@ def index():
 @prompt_share_bp.route('/manage_prompts')
 def manage_prompts():
     # prompt_share.html をレンダリング
-    return render_template('my_prompts.html')
+    return render_template('prompt_manage.html')

@@ -1,6 +1,6 @@
-/* global.css */
-/* 基本のリセットや、bodyの全体レイアウトなど */
-
+/* global.css
+   全体のリセット、bodyのベースレイアウトおよびレスポンシブ調整
+*/
 * {
   margin: 0;
   padding: 0;

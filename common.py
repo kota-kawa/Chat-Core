@@ -23,7 +23,7 @@ client = Groq(api_key=api_key)
 # MySQL 接続設定
 # --------------------------------------------------
 db_config = {
-    'host': os.environ.get('MYSQL_HOST', 'db'),
+    'host': os.environ.get('MYSQL_HOST', 'mysql_db'),
     'user': os.environ.get('MYSQL_USER', 'chatuser'),
     'password': os.environ.get('MYSQL_PASSWORD', 'chatpass'),
     'database': os.environ.get('MYSQL_DATABASE', 'chat_db')

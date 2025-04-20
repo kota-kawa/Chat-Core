@@ -18,15 +18,16 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
     <!-- メインのCSS -->
     <link rel="stylesheet"
-      href="{{ url_for('prompt_share.static', filename='prompt_share.css') }}">
+      href="{{ url_for('prompt_share.static', filename='css/prompt_share.css') }}">
   </head>
   <body>
+
+         <!-- 浮遊メニュー -->
+   <action-menu></action-menu>
+
     <!-- ヘッダー -->
     <header class="prompts-header">
-      <!-- チャットに戻るボタン（右上に配置、アイコンのみ） -->
-      <a href="/" class="back-to-chat-btn">
-        <i class="bi bi-chat-dots"></i>
-      </a>
+
       <!-- ヘッダー背景画像上に中央配置される検索フォーム -->
       <div class="search-section">
         <div class="search-box">
@@ -183,16 +184,18 @@
     </div>
 
     <!-- 新規投稿ボタン -->
-    <button id="openPostModal" class="new-prompt-btn">
-      <i class="bi bi-plus-lg"></i> 新しいプロンプトを投稿
-    </button>
+    <button id="openPostModal" class="new-prompt-btn" aria-label="新しいプロンプトを投稿">
+        <i class="bi bi-plus-lg"></i>
+      </button>
 
     <!-- メインのJavaScript -->
     <script
-      src="{{ url_for('prompt_share.static', filename='prompt_share.js') }}"></script>
+      src="{{ url_for('prompt_share.static', filename='js/prompt_share.js') }}"></script>
     <!-- 例: HTML の末尾に追加 -->
     <script
-      src="{{ url_for('prompt_share.static', filename='prompt_search.js') }}"></script>
+      src="{{ url_for('prompt_share.static', filename='js/prompt_search.js') }}"></script>
+
+    <script src="{{ url_for('static', filename='js/web_components/popup_menu.js') }}"></script>
 
   </body>
 </html>

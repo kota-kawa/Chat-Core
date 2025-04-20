@@ -349,26 +349,43 @@ main {
 /* ==================== */
 .new-prompt-btn {
   position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  background: var(--primary-color);
+  bottom: 40px;
+  left: 40px;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #56ab2f, #a8e063);
   color: #fff;
   border: none;
-  border-radius: 50px;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  box-shadow: var(--shadow);
-  display: inline-flex;
+  border-radius: 50%;
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: background 0.3s ease, transform 0.3s ease;
-  font-weight: 600;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  /* 回転アニメーションを長く＆大きく  */
+  transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1), box-shadow 0.3s ease;
+  z-index: 1000;
+}
+.new-prompt-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+.new-prompt-btn i {
+  font-size: 1.5rem;
+  transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 
-.new-prompt-btn:hover {
-  background: #27ae60;
-  transform: scale(1.05);
+/* モーダル表示時のボタン回転を2 回転に増やす */
+.post-modal.show + .new-prompt-btn {
+  transform: rotate(720deg);
 }
+.post-modal.show + .new-prompt-btn i {
+  transform: rotate(45deg);
+}
+
+
+
+
 
 @media (max-width: 768px) {
   .prompt-card {

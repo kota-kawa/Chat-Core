@@ -20,23 +20,49 @@
 
 
 document.addEventListener('DOMContentLoaded', () => {
-
-  // ▼ログイン状態確認 ⇒ 左上ボタン切替
+  // ▼ログイン状態確認とUI制御
   fetch("/api/current_user")
     .then(res => res.json())
     .then(data => {
-      const settingsBtn = document.getElementById("settings-btn");
-      if (data.logged_in) {
+      window.loggedIn = data.logged_in;
+
+      const settingsBtn    = document.getElementById("settings-btn");
+      const newPromptBtn   = document.getElementById("openNewPromptModal");
+      const accessChatBtn  = document.getElementById("access-chat-btn");  // 追加
+
+      if (window.loggedIn) {
+        // ── ログイン済み
         settingsBtn.innerHTML = '<i class="bi bi-person-circle"></i>';
         settingsBtn.title     = "ユーザー";
         settingsBtn.onclick   = toggleUserMenu;
+
+        // タスク並び替え編集ボタン初期化
+        if (typeof initTaskOrderEditing === 'function') {
+          initTaskOrderEditing();
+        }
+
+        // 新規プロンプト＆過去チャット閲覧ボタンを表示
+        newPromptBtn.style.display  = "";
+        accessChatBtn.style.display = "";  // 追加
+
       } else {
+        // ── 未ログイン
         settingsBtn.innerHTML = "ログイン";
         settingsBtn.title     = "ログイン";
         settingsBtn.onclick   = () => { window.location.href = "/login"; };
+
+        // 編集ボタンが残っていたら削除
+        const editBtn = document.getElementById('edit-task-order-btn');
+        if (editBtn) editBtn.remove();
+
+        // 新規プロンプト＆過去チャット閲覧ボタンを非表示
+        newPromptBtn.style.display  = "none";
+        accessChatBtn.style.display = "none";  // 追加
       }
     })
     .catch(err => console.error("Error checking login status:", err));
+
+    
 
   // ▼ローカルに保存されていれば現在のチャットルームを復元
   if (localStorage.getItem('currentChatRoomId'))
@@ -50,11 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
   showSetupForm();
   loadChatRooms();
 
-  // 復帰時に履歴ロード
-  if (currentChatRoomId) {
-    showChatInterface();
-    loadLocalChatHistory();
-  }
 
   // 新規チャット
   newChatBtn.addEventListener('click', () => {
@@ -66,10 +87,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 「これまでのチャットを見る」
   accessChatBtn.addEventListener('click', () => {
-    showChatInterface();
-    loadChatRooms();
-    loadLocalChatHistory();
-    loadChatHistory();
+    fetch('/api/get_chat_rooms')
+      .then(res => res.json())
+      .then(data => {
+        const rooms = data.rooms || [];
+        if (rooms.length > 0) {
+          // 1件目が最も新しいルームなので切り替え
+          switchChatRoom(rooms[0].id);
+        } else {
+          // ルームがない場合は空のチャット画面を表示
+          showChatInterface();
+          loadChatRooms();
+          chatMessages.innerHTML = '';
+        }
+      })
+      .catch(err => {
+        console.error('ルーム一覧取得失敗:', err);
+        showChatInterface();
+        loadChatRooms();
+        chatMessages.innerHTML = '';
+      });
   });
 
   // 送信

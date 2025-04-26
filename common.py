@@ -37,6 +37,48 @@ def get_db_connection():
 # ユーザー管理関連
 # =================================================================
 
+def copy_default_tasks_for_user(user_id):
+    """
+    user_id IS NULL の“共通タスク”を、指定ユーザー専用として複製する。
+    すでに同名タスクが存在する場合はスキップ。
+    """
+    conn   = get_db_connection()
+    cursor = conn.cursor()
+
+    # 共通タスクを取得
+    cursor.execute("""
+        SELECT name,
+               prompt_template,
+               input_examples,
+               output_examples,
+               display_order
+          FROM task_with_examples
+         WHERE user_id IS NULL
+    """)
+    defaults = cursor.fetchall()
+
+    # ユーザー専用タスクとして INSERT（重複名はスキップ）
+    for name, tmpl, inp, out, disp in defaults:
+        cursor.execute("""
+            SELECT 1
+              FROM task_with_examples
+             WHERE user_id = %s AND name = %s
+        """, (user_id, name))
+        if cursor.fetchone():
+            continue
+
+        cursor.execute("""
+            INSERT INTO task_with_examples
+                  (user_id, name, prompt_template,
+                   input_examples, output_examples, display_order)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (user_id, name, tmpl, inp, out, disp))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
 def get_user_by_email(email):
     """メールアドレスでユーザーを取得"""
     conn = get_db_connection()

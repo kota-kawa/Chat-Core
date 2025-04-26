@@ -30,19 +30,24 @@ CREATE TABLE chat_history (
 
 
 -- 個人ユーザーが管理するプロンプトとfew shot
-CREATE TABLE IF NOT EXISTS task_with_examples (
+CREATE TABLE task_with_examples (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL UNIQUE,
-  prompt_template TEXT,
+  -- 追加: タスクの所有ユーザー
+  user_id INT NULL,
+  name VARCHAR(255) NOT NULL,
+  prompt_template TEXT NOT NULL,
   input_examples TEXT,
   output_examples TEXT,
-  display_order INT NOT NULL DEFAULT 0,
+  display_order INT DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-)
-  ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci;
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  -- 外部キー制約
+  CONSTRAINT fk_task_user
+    FOREIGN KEY (user_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 -- プロンプト共有のためのテーブル
 CREATE TABLE IF NOT EXISTS prompts (

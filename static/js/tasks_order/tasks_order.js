@@ -9,15 +9,14 @@ let taskOffsetY = 0;
 
 // タスクカード読み込み後に並び替え編集ボタンを追加する処理
 function initTaskOrderEditing() {
+  if (!window.loggedIn) return;          // ★ 未ログインなら何もしない
+  
   // ヘッダー要素を取得
   const header = document.querySelector('.task-selection-header');
   if (!header) return;
 
   // 既存のボタンがあれば削除
-  if (editButton) {
-    editButton.remove();
-    editButton = null;
-  }
+  if (editButton) editButton.remove();
 
   // ボタン作成
   editButton = document.createElement('button');

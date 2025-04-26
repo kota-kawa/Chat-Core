@@ -1,5 +1,12 @@
 from flask import Blueprint, request, session, jsonify
-from common import send_email, create_user, get_user_by_email, set_user_verified, get_user_by_id
+from common import (
+    send_email,
+    create_user,
+    get_user_by_email,
+    set_user_verified,
+    get_user_by_id,
+    copy_default_tasks_for_user   
+)
 import random
 
 verification_bp = Blueprint('verification', __name__)
@@ -41,29 +48,33 @@ def api_send_verification_email():
 @verification_bp.route("/api/verify_registration_code", methods=["POST"])
 def api_verify_registration_code():
     """
-    register.html の「認証コードを入力→認証する」ボタンで呼ばれる
-    - session["verification_code"] と一致するか確認
-    - 一致すればDBのユーザーを is_verified=True にし、ログイン状態にしてトップページへ遷移できるようにする
+    register.html の「認証する」ボタンで呼ばれる。
+    ・セッション保存の認証コードと照合
+    ・一致すればユーザーを is_verified=True にしログイン状態へ
+    ・このタイミングで初期タスクをユーザー専用に複製
     """
-    data = request.get_json()
-    user_code = data.get("authCode")
-
-    session_code = session.get("verification_code")
-    user_id = session.get("temp_user_id")
+    data        = request.get_json()
+    user_code   = data.get("authCode")
+    session_code= session.get("verification_code")
+    user_id     = session.get("temp_user_id")
 
     if not session_code or not user_id:
         return jsonify({"status": "fail", "error": "セッション情報がありません。最初からやり直してください"}), 400
 
-    if user_code == session_code:
-        # OK → ユーザーを認証済みに
-        set_user_verified(user_id)
-        # ★ ログイン状態にする ★
-        session["user_id"] = user_id
-        user = get_user_by_id(user_id)
-        session["user_email"] = user["email"] if user else ""
-        # 一時セッション情報のクリア
-        session.pop("verification_code", None)
-        session.pop("temp_user_id", None)
-        return jsonify({"status": "success"})
-    else:
+    if user_code != session_code:
         return jsonify({"status": "fail", "error": "認証コードが違います。"}), 400
+
+    # ここから成功処理 ----------------------------------------------------
+    set_user_verified(user_id)                 # ユーザーを認証済みに
+    copy_default_tasks_for_user(user_id)       # ★ 共通タスクを複製 ★
+
+    # ログイン状態にセット
+    session["user_id"]    = user_id
+    user                  = get_user_by_id(user_id)
+    session["user_email"] = user["email"] if user else ""
+
+    # 一時セッション情報のクリア
+    session.pop("verification_code", None)
+    session.pop("temp_user_id", None)
+
+    return jsonify({"status": "success"})

@@ -9,73 +9,76 @@ function hideModal(modalEl) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  var modalEl = document.getElementById('taskEditModal');
-  var closeBtn = document.getElementById('closeTaskEditModal');
-  var cancelBtn = document.getElementById('cancelTaskEditModal');
-  var saveBtn = document.getElementById('saveTaskChanges');
+  const modalEl  = document.getElementById('taskEditModal');
+  const closeBtn = document.getElementById('closeTaskEditModal');
+  const cancelBtn= document.getElementById('cancelTaskEditModal');
+  const saveBtn  = document.getElementById('saveTaskChanges');
 
-  if (closeBtn) {
-    closeBtn.addEventListener('click', function() {
+  // モーダルの閉じる操作
+  closeBtn?.addEventListener('click',  () => hideModal(modalEl));
+  cancelBtn?.addEventListener('click', () => hideModal(modalEl));
+
+  if (!saveBtn) return;
+
+  saveBtn.addEventListener('click', () => {
+    // 1. モーダル内の入力値取得
+    const taskName       = document.getElementById('taskName').value.trim();
+    const promptTemplate = document.getElementById('promptTemplate').value.trim();
+    const inputExamples  = document.getElementById('inputExamples').value.trim();
+    const outputExamples = document.getElementById('outputExamples').value.trim();
+
+    // 2. 編集前のタスク名を dataset から取得
+    const oldTask = window.currentEditingCard.dataset.task;
+
+    // 3. サーバー送信用ペイロード
+    const payload = {
+      old_task:        oldTask,
+      new_task:        taskName,
+      prompt_template: promptTemplate,
+      input_examples:  inputExamples,
+      output_examples: outputExamples
+    };
+
+    // 4. API 呼び出し
+    fetch('/api/edit_task', {
+      method:      'POST',
+      credentials: 'same-origin',             // Cookie を送信
+      headers:     { 'Content-Type': 'application/json' },
+      body:        JSON.stringify(payload)
+    })
+    .then(response => {
+      const ct = response.headers.get('Content-Type') || '';
+      if (ct.includes('application/json')) {
+        // 正常 or JSON エラー(JSON.stringify された {"error":...})
+        return response.json().then(data => {
+          if (!response.ok) throw new Error(data.error || '更新に失敗しました');
+          return data;
+        });
+      } else {
+        // HTML の 500 ページなどが返ってきた場合
+        return response.text().then(text => {
+          console.error('非JSONレスポンス:', text);
+          throw new Error(`サーバーエラー: ${response.status}`);
+        });
+      }
+    })
+    .then(() => {
+      // 5. 成功したら data- 属性を更新
+      const card = window.currentEditingCard;
+      card.dataset.task            = taskName;
+      card.dataset.prompt_template = promptTemplate;
+      card.dataset.input_examples  = inputExamples;
+      card.dataset.output_examples = outputExamples;
+
+      // 6. タイトルを書き換え
+      updateTaskTitle(card, taskName);
+
+      // 7. モーダル閉じる
       hideModal(modalEl);
+    })
+    .catch(error => {
+      alert("更新に失敗しました: " + error.message);
+      console.error("edit_task error:", error);
     });
-  }
-  if (cancelBtn) {
-    cancelBtn.addEventListener('click', function() {
-      hideModal(modalEl);
-    });
-  }
-  
-  if (saveBtn) {
-    saveBtn.addEventListener('click', function() {
-      // モーダル内の各入力値を取得
-      // モーダル内の各入力値を取得
-  var taskName = document.getElementById('taskName').value.trim();
-  var promptTemplate = document.getElementById('promptTemplate').value.trim();
-  var inputExamples = document.getElementById('inputExamples').value.trim();
-  var outputExamples = document.getElementById('outputExamples').value.trim();
-      
-      // 編集前のタスク名（data-task 属性）を取得
-      var oldTask = window.currentEditingCard.getAttribute('data-task');
-      
-      // サーバーへ送信するペイロードを作成（prompt_template は空文字）
-      var payload = {
-        old_task: oldTask,
-        new_task: taskName,
-        prompt_template: promptTemplate,
-        input_examples: inputExamples,
-        output_examples: outputExamples
-      };
-      
-      // 非同期でサーバーの /api/edit_task エンドポイントにリクエスト
-      fetch('/api/edit_task', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-      .then(function(response) {
-        if (!response.ok) {
-          return response.json().then(data => { 
-            throw new Error(data.error || 'タスクの更新に失敗しました'); 
-          });
-        }
-        return response.json();
-      })
-      .then(function(data) {
-        // 更新成功時：対象カードの属性を新しい内容に更新
-        window.currentEditingCard.setAttribute('data-task', taskName);
-        window.currentEditingCard.setAttribute('data-prompt_template', promptTemplate);
-        window.currentEditingCard.setAttribute('data-input_examples', inputExamples);
-        window.currentEditingCard.setAttribute('data-output_examples', outputExamples);
-        
-        // 表示されているタスク名も更新（tasks_name_update.js の updateTaskTitle 関数を利用）
-        updateTaskTitle(window.currentEditingCard, taskName);
-        
-        // 更新が完了したらモーダルを閉じる
-        hideModal(modalEl);
-      })
-      .catch(function(error) {
-        alert("更新に失敗しました: " + error.message);
-      });
-    });
-  }
+  });
 });

@@ -27,39 +27,46 @@ document.addEventListener('DOMContentLoaded', () => {
       window.loggedIn = data.logged_in;
 
       const settingsBtn    = document.getElementById("settings-btn");
+      const authButtons    = document.getElementById("auth-buttons");
       const newPromptBtn   = document.getElementById("openNewPromptModal");
-      const accessChatBtn  = document.getElementById("access-chat-btn");  // 追加
+      const accessChatBtn  = document.getElementById("access-chat-btn");
 
       if (window.loggedIn) {
-        // ── ログイン済み
+        // ── ログイン済み：元のまま
+        settingsBtn.style.display = "";
         settingsBtn.innerHTML = '<i class="bi bi-person-circle"></i>';
         settingsBtn.title     = "ユーザー";
         settingsBtn.onclick   = toggleUserMenu;
 
-        // タスク並び替え編集ボタン初期化
-        if (typeof initTaskOrderEditing === 'function') {
-          initTaskOrderEditing();
-        }
+        // 認証ボタンは隠しておく
+        authButtons.style.display = "none";
 
-        // 新規プロンプト＆過去チャット閲覧ボタンを表示
         newPromptBtn.style.display  = "";
-        accessChatBtn.style.display = "";  // 追加
-
+        accessChatBtn.style.display = "";
+        // （その他既存の処理）
       } else {
-        // ── 未ログイン
-        settingsBtn.innerHTML = "ログイン";
-        settingsBtn.title     = "ログイン";
-        settingsBtn.onclick   = () => { window.location.href = "/login"; };
+        // ── 未ログイン：設定アイコンは非表示にして、認証ボタンを表示
+        settingsBtn.style.display  = "none";
+        authButtons.style.display  = "";
 
-        // 編集ボタンが残っていたら削除
+        // ログイン／アカウント作成への遷移
+        document.getElementById("login-btn").onclick = () => {
+          window.location.href = "/login";
+        };
+        document.getElementById("signup-btn").onclick = () => {
+          window.location.href = "/signup";
+        };
+
+        // タスク編集ボタンが残っていたら削除
         const editBtn = document.getElementById('edit-task-order-btn');
         if (editBtn) editBtn.remove();
 
         // 新規プロンプト＆過去チャット閲覧ボタンを非表示
         newPromptBtn.style.display  = "none";
-        accessChatBtn.style.display = "none";  // 追加
+        accessChatBtn.style.display = "none";
       }
     })
+
     .catch(err => console.error("Error checking login status:", err));
 
     
@@ -139,33 +146,55 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ▼ユーザーメニュー（設定 / ログアウト） ---------------------------------------*/
 function toggleUserMenu() {
   let menu = document.getElementById("user-menu");
+  const isMobile = window.matchMedia("(max-width:576px)").matches;
 
   if (!menu) {
+    // メニュー要素を生成
     menu = document.createElement("div");
     menu.id = "user-menu";
+    if (isMobile) {
+      menu.classList.add("mobile-user-menu");
+    }
+
+    // スタイル設定（モバイル時は static、PC時は右上絶対配置）
     Object.assign(menu.style, {
-      position:'absolute', top:'50px', left:'10px',
-      background:'#fff', border:'1px solid #ddd', borderRadius:'6px',
-      boxShadow:'0 2px 4px rgba(0,0,0,.1)', zIndex:'1001', minWidth:'150px',
-      overflow:'hidden'
+      position:    isMobile ? "static"   : "absolute",
+      top:         isMobile ? ""         : "60px",   // 設定ボタン(50px)＋余白10px
+      right:       isMobile ? ""         : "10px",
+      left:        isMobile ? ""         : "auto",
+      background:  "#fff",
+      border:      "1px solid #ddd",
+      borderRadius:"6px",
+      boxShadow:   "0 2px 4px rgba(0,0,0,.1)",
+      zIndex:      "1001",
+      minWidth:    "150px",
+      overflow:    "hidden"
     });
 
+    // 挿入先を切り替え
+    let parent;
+    if (isMobile) {
+      parent = document.getElementById("setup-container");
+    } else {
+      parent = document.body;
+    }
+    parent.appendChild(menu);
+
+    // メニュー内容
     menu.innerHTML = `
       <div id="menu-settings" style="
-         padding:8px 16px; cursor:pointer; display:flex; align-items:center;
-         color:#007bff; font-weight:bold; font-size:14px; border-bottom:1px solid #ddd;
-         background:#f9f9f9;">
+           padding:8px 16px; cursor:pointer; display:flex; align-items:center;
+           color:#007bff; font-weight:bold; font-size:14px; border-bottom:1px solid #ddd;
+           background:#f9f9f9;">
         <i class="bi bi-gear" style="margin-right:6px;font-size:16px;"></i> 設定
       </div>
       <div id="menu-logout" style="
-         padding:8px 16px; cursor:pointer; display:flex; align-items:center;
-         color:#dc3545; font-weight:bold; font-size:14px; background:#f9f9f9;">
+           padding:8px 16px; cursor:pointer; display:flex; align-items:center;
+           color:#dc3545; font-weight:bold; font-size:14px; background:#f9f9f9;">
         <i class="bi bi-box-arrow-right" style="margin-right:6px;font-size:16px;"></i> ログアウト
       </div>`;
 
-    document.body.appendChild(menu);
-
-    // クリック処理
+    // イベント登録
     document.getElementById("menu-settings").addEventListener("click", () => {
       window.location.href = "/settings";
     });
@@ -173,24 +202,33 @@ function toggleUserMenu() {
       window.location.href = "/logout";
     });
 
-    // ホバーエフェクト
-    const [settingsItem, logoutItem] =
-      [document.getElementById("menu-settings"), document.getElementById("menu-logout")];
-
-    settingsItem.addEventListener("mouseover", () => settingsItem.style.background="#e6f0ff");
-    settingsItem.addEventListener("mouseout",  () => settingsItem.style.background="#f9f9f9");
-
-    logoutItem.addEventListener("mouseover",  () => logoutItem.style.background="#ffe6e6");
-    logoutItem.addEventListener("mouseout",   () => logoutItem.style.background="#f9f9f9");
+    const [settingsItem, logoutItem] = [
+      document.getElementById("menu-settings"),
+      document.getElementById("menu-logout")
+    ];
+    settingsItem.addEventListener("mouseover", () => {
+      settingsItem.style.background = "#e6f0ff";
+    });
+    settingsItem.addEventListener("mouseout", () => {
+      settingsItem.style.background = "#f9f9f9";
+    });
+    logoutItem.addEventListener("mouseover", () => {
+      logoutItem.style.background = "#ffe6e6";
+    });
+    logoutItem.addEventListener("mouseout", () => {
+      logoutItem.style.background = "#f9f9f9";
+    });
 
     // メニュー外クリックで非表示
     document.addEventListener("click", function docClick(e) {
       const btn = document.getElementById("settings-btn");
-      if (!menu.contains(e.target) && !btn.contains(e.target))
+      if (!menu.contains(e.target) && !btn.contains(e.target)) {
         menu.style.display = "none";
+      }
     });
   }
 
-  // 表示トグル
+  // 表示/非表示トグル
   menu.style.display = (menu.style.display === "block") ? "none" : "block";
 }
+

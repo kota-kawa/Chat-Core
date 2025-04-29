@@ -25,10 +25,15 @@
   right: 10px;
 }
 
-.settings-btn {
+#settings-btn {
+  /* 既存の left を解除して右寄せ */
   top: 10px;
-  left: 10px;
-  border: none;
+  right: 10px;
+  left: auto;
+
+  /* サイズを大きく */
+  width: 50px;
+  height: 50px;
 }
 
 /* 新規チャットボタン */
@@ -80,3 +85,68 @@
   background: #16a367;
   transform: scale(0.98);
 }
+
+
+/* 認証ボタンの共通スタイル */
+#auth-buttons .auth-btn {
+  padding: 0.5rem 1rem;
+  margin-left: 0.5rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 0.5rem; /* 角丸の半径 */
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+/* ログインボタン */
+#login-btn.auth-btn {
+  background-color: #0c4b8f; /* ブルー */
+  color: #ffffff;            /* 白文字 */
+}
+
+/* アカウント作成ボタン */
+#signup-btn.auth-btn {
+  background-color: #28a745; /* グリーン */
+  color: #ffffff;            /* 白文字 */
+}
+
+/* ホバー時のエフェクト */
+#auth-buttons .auth-btn:hover {
+  opacity: 0.85;
+}
+
+/* ─────────────────────────────────────
+   ユーザーメニューを右寄せ
+───────────────────────────────────── */
+#user-menu {
+  right: 10px !important;
+  left:  auto !important;
+}
+
+/* ─────────────────────────────────────
+   モバイル表示時の調整 (幅576px以下)
+───────────────────────────────────── */
+   @media (max-width: 576px) {
+    #user-menu.mobile-user-menu {
+      position: static !important;
+      top:      auto    !important;
+      right:    auto    !important;
+      left:     auto    !important;
+      margin:   1rem 0;          /* セットアップ内での余白 */
+      box-shadow: none !important;
+      border:     none !important;
+      background: transparent !important;
+      min-width:  auto !important;
+    }
+    /* 内部のメニュー項目は必要に応じて幅を100%に */
+    #user-menu.mobile-user-menu > div {
+      width: 100%;
+      background: #fff;
+      margin-bottom: .5rem;
+      border-radius: 6px;
+    }
+    #user-menu.mobile-user-menu > div:last-child {
+      margin-bottom: 0;
+    }
+  }
+  

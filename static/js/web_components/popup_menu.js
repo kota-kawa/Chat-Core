@@ -183,8 +183,8 @@ template.innerHTML = `
     .btn--comment:hover svg { transform: rotate(-20deg) scale(1.2); }
   
   
-  /* スマホ表示時の調整（画面幅600px以下） */
-    @media (max-width: 600px) {
+  /* スマホ表示時の調整（画面幅768px以下） */
+    @media (max-width: 768px) {
       /* メニュー全体の位置とサイズ */
       .actions-menu {
         bottom: 75px;   /* 下から70px */

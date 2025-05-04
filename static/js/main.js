@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(data => {
       window.loggedIn = data.logged_in;
 
-      const settingsBtn    = document.getElementById("settings-btn");
+      //const settingsBtn    = document.getElementById("settings-btn");
       const authButtons    = document.getElementById("auth-buttons");
       const newPromptBtn   = document.getElementById("openNewPromptModal");
       const accessChatBtn  = document.getElementById("access-chat-btn");
@@ -34,11 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       
       if (window.loggedIn) {
-        // ── ログイン済み：元のまま
-        settingsBtn.style.display = "null";
-        settingsBtn.innerHTML = '<img src="./static/user-icon.png" alt="ユーザーアイコン" class="user-icon-img">';
-        settingsBtn.title     = "ユーザー";
-        settingsBtn.onclick   = toggleUserMenu;
 
         // 認証ボタンは隠しておく
         authButtons.style.display = "none";
@@ -52,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
       } else {
         // ── 未ログイン：設定アイコンは非表示にして、認証ボタンを表示
-        settingsBtn.style.display  = "none";
+        //settingsBtn.style.display  = "none";
         authButtons.style.display  = "";
 
         document.getElementById("login-btn").onclick = () => {

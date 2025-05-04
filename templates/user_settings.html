@@ -1,0 +1,136 @@
+<!-- user_settings.html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ユーザー設定</title>
+
+  <!-- Google Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Bootstrap & Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    rel="stylesheet"
+  />
+
+  <!-- 既存スタイル -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+
+  <!-- 新規追加 -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/user_settings/user_settings.css') }}">
+</head>
+<body>
+  <div class="settings-container">
+    <div class="settings-card">
+      <h2>ユーザープロフィール設定</h2>
+      <form id="userSettingsForm">
+        <!-- アバター -->
+        <div class="form-group avatar-group">
+          <label class="form-label" for="avatarInput">プロフィール画像</label>
+          <div class="avatar-preview-wrapper">
+            <img
+              id="avatarPreview"
+              src="/static/user-icon.png"
+              alt="Avatar Preview"
+              class="avatar-preview"
+            />
+            <button
+              type="button"
+              class="icon-button change-avatar-btn"
+              id="changeAvatarBtn"
+              title="画像を変更"
+            >
+              <i class="bi bi-pencil"></i>
+            </button>
+          </div>
+          <input type="file" id="avatarInput" accept="image/*" hidden />
+        </div>
+
+        <!-- ユーザー名 -->
+        <div class="form-group">
+          <label class="form-label" for="username">ユーザー名</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            class="custom-form-control"
+            placeholder="ユーザー名を入力"
+          />
+        </div>
+
+        <!-- メールアドレス -->
+        <div class="form-group">
+          <label class="form-label" for="email">メールアドレス</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            class="custom-form-control"
+            placeholder="example@domain.com"
+          />
+        </div>
+
+        <!-- パスワード -->
+        <div class="form-group password-group">
+          <label class="form-label" for="password">パスワード</label>
+          <div class="password-wrapper">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="custom-form-control"
+              placeholder="パスワードを入力"
+            />
+            <button
+              type="button"
+              class="icon-button toggle-password-btn"
+              id="togglePasswordBtn"
+              title="表示/非表示切替"
+            >
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 自己紹介 -->
+        <div class="form-group">
+          <label class="form-label" for="bio">自己紹介</label>
+          <textarea
+            id="bio"
+            name="bio"
+            rows="4"
+            class="custom-form-control"
+            placeholder="自己紹介を入力"
+          ></textarea>
+        </div>
+
+        <!-- ボタン -->
+        <div class="button-group">
+          <button type="submit" class="primary-button">保存</button>
+          <button
+            type="button"
+            class="icon-button secondary-button"
+            id="cancelBtn"
+            title="キャンセル"
+          >
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/user_settings/user_settings.js') }}"></script>
+</body>
+</html>

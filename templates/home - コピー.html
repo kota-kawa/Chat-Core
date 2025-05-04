@@ -47,10 +47,8 @@
   <!-- 既存の settings-btn のすぐ下あたりに追加 -->
   <!-- 未ログイン時の認証ボタン -->
   <div id="auth-buttons" style="display:none; position:absolute; top:10px; right:10px;">
-   <button id="login-btn" class="auth-btn">
-    <i class="bi bi-person-circle"></i>
-    <span>ログイン</span>
-    </button>
+    <button id="login-btn" class="btn rounded auth-btn">ログイン</button>
+    <button id="signup-btn" class="btn rounded auth-btn">アカウント作成</button>
   </div>
 
 
@@ -86,7 +84,7 @@
           </div>
         </div>
 
-    
+        <!-- 修正後のHTML（該当部分） -->
         <div class="task-selection-header">
           <p id="task-selection-text">実行したいタスクを選択（クリックで即実行）</p>
           <button id="openNewPromptModal"

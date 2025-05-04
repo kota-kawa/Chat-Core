@@ -18,8 +18,6 @@
 }
 
 
-
-
 /* タスクラッパーが編集状態の場合、内部のカードに振動アニメーションを適用 */
 .task-wrapper.editable .prompt-card {
   animation: shake 0.5s infinite;

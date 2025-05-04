@@ -141,3 +141,29 @@
   width: 90%;
   text-align: center;
 }
+
+
+
+
+/* タスク選択ヘッダーを横並びに */
+.task-selection-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;       /* ボタン間の隙間 */
+  flex-wrap: nowrap; /* 折り返し禁止 */
+}
+
+/* 「新しいプロンプトを投稿」ボタンを左側のテキストから右へ押し出す */
+.task-selection-header #openNewPromptModal {
+  margin-left: auto;
+}
+
+/* タスク編集ボタンとの間に適度な隙間を */
+.task-selection-header #edit-task-order-btn {
+  margin-left: 0.5rem;
+}
+
+.task-selection-header p#task-selection-text {
+  flex: 1;           /* テキスト部分を伸縮させてボタンを右側に押し出す */
+  margin: 0;         /* デフォルトの余白をリセット */
+}

@@ -2,22 +2,37 @@
    丸ボタン、新規チャットボタン、アイコンボタン、プライマリーボタンなどボタン全般のスタイル
 */
 
-/* 固定表示する丸ボタン */
-.circle-button {
-  position: fixed;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: var(--primary-color);
-  color: white;
-  display: flex;
+
+/* ログイン前のボタンと同じ右上固定表示に */
+.settings-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 9999;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  text-decoration: none;
-  z-index: 1000;
-  cursor: pointer; /* 追加 */
+  /* 固定サイズを除去 */
+  width: auto;
+  height: auto;
+  /* 余白を増量 */
+  padding: 0.25rem;             
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  /* padding を含めた box サイズに */
+  box-sizing: content-box;
 }
 
+.settings-btn .user-icon-img {
+  /* 画像サイズはそのまま */
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  /* 画像自体に余白を入れたい場合はこちらでも可 */
+  /* margin: 0.1rem; */
+}
 
 /* prompt-sharing / settings-btn は .circle-button を継承 */
 .prompt-sharing {
@@ -25,16 +40,7 @@
   right: 10px;
 }
 
-#settings-btn {
-  /* 既存の left を解除して右寄せ */
-  top: 10px;
-  right: 10px;
-  left: auto;
 
-  /* サイズを大きく */
-  width: 50px;
-  height: 50px;
-}
 
 /* 新規チャットボタン */
 .new-chat-btn {
@@ -87,32 +93,53 @@
 }
 
 
-/* 認証ボタンの共通スタイル */
+/* ── 未ログイン時のログインボタン ── */
 #auth-buttons .auth-btn {
+  background: transparent;
+  border: 1px solid rgba(56,161,105,0.5);  /* 緑を基調とした薄めの枠 */
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   padding: 0.5rem 1rem;
-  margin-left: 0.5rem;
-  font-weight: bold;
-  border: none;
-  border-radius: 0.5rem; /* 角丸の半径 */
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: background-color 0.2s, border-color 0.2s;
 }
 
-/* ログインボタン */
-#login-btn.auth-btn {
-  background-color: #0c4b8f; /* ブルー */
-  color: #ffffff;            /* 白文字 */
+#auth-buttons .auth-btn i {
+  font-size: 1.4rem;
+  color: #38a169;  /* アイコンも緑 */
 }
 
-/* アカウント作成ボタン */
-#signup-btn.auth-btn {
-  background-color: #28a745; /* グリーン */
-  color: #ffffff;            /* 白文字 */
+#auth-buttons .auth-btn span {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #38a169;  /* 文字も緑 */
 }
 
-/* ホバー時のエフェクト */
 #auth-buttons .auth-btn:hover {
-  opacity: 0.85;
+  background-color: rgba(56,161,105,0.1);  /* ホバー時に淡い緑背景 */
+  border-color: rgba(56,161,105,0.8);      /* ホバー時に濃い緑枠 */
+}
+@media (max-width: 768px) {
+  /* セットアップ画面より手前に表示 */
+  #auth-buttons {
+    z-index: 9999 !important;
+  }
+
+  /* モバイルではアイコンのみ＆円形 */
+  #auth-buttons .auth-btn {
+    padding: 0;                     /* 余白はなし */
+    width: 2.5rem;                  /* 高さと同じに */
+    height: 2.5rem;                 /* 幅と同じに */
+    justify-content: center;        /* アイコンを中央寄せ */
+    border-radius: 50%;             /* 完全な円形 */
+  }
+
+  /* 文字は非表示 */
+  #auth-buttons .auth-btn span {
+    display: none;
+  }
 }
 
 /* ─────────────────────────────────────

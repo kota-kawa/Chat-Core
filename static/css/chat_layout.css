@@ -2,8 +2,15 @@
    チャットコンテナ全体、ヘッダー、メインの２カラムレイアウト
 */
 #chat-container{
-  display:none;width:100%;max-width:1200px;height:90vh;background:#fff;border-radius:20px;
-  box-shadow:var(--shadow);overflow:hidden;flex-direction:column;
+  display:none;
+  width:100%;
+  max-width:1200px;
+  height:90vh;                 /* PC 高さは従来通り */
+  background:#fff;
+  border-radius:20px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  flex-direction:column;
 }
 /* ヘッダー */
 .chat-header{
@@ -15,3 +22,92 @@
 .header-left span{font-size:1.4rem;font-weight:bold;}
 /* メイン 2 カラム */
 .chat-main{flex:1;display:flex;overflow:hidden;}
+
+
+@media (max-width:576px){
+
+  .chat-area {
+    /* 既存のプロパティはそのまま */
+    position: relative;  /* 追加 */
+  }
+
+  
+  /* 画面全高を使い、角丸をOFF */
+  #chat-container{
+    height:100vh;
+    border-radius:0;
+  }
+
+  /* 見出しを固定しスクロール時も常に表示 */
+  .chat-header{
+    position:sticky;
+    top:0;
+    z-index:1000;
+  }
+
+  /* 2カラム → 1カラム縦並び */
+  .chat-main{
+    flex-direction:column;
+  }
+
+  .chat-sidebar-toggle {
+    position: absolute;
+    color: #000 !important;
+    top: 0.25rem;
+    left: 0.25rem;       /* 左上に配置 */
+    right: auto;      /* 念のためリセット */
+    display: inline-flex;
+    font-size: 1.4rem;
+    z-index: 1400;
+  }
+
+  /* サイドバーを下部に移し高さを抑える */
+  .sidebar{
+    position: fixed;
+    top: 0;
+    bottom: 0;        /* 画面下端まで */
+    left: -100%;
+    width: 75vw;      /* 画面の4分の3 */
+    background: var(--secondary-color);
+    transition: left .3s ease;
+    z-index: 1500;
+    height: auto;     /* height:100vh を解除 */
+  }
+
+  /* チャットエリアを最上段にして縦に伸ばす */
+  .chat-area{
+    order:1;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    min-height:0;            /* Safari 対応 */
+  }
+}
+
+
+@media (max-width:576px){
+
+  /* サイドバーを画面外に隠し、open クラスでスライドイン */
+  .sidebar{
+    position:fixed;
+    top:0;
+    left:-100%;
+    width:75vw;              /* 画面の 3/4 */
+    height:100vh;
+    background:var(--secondary-color);
+    transition:left .3s ease;
+    z-index:1500;            /* ヘッダーより上 */
+  }
+  .sidebar.open{
+    left:0;
+  }
+
+  /* サイドバー表示中は背面を少し暗く（簡易オーバーレイ）*/
+  body.sidebar-visible::after{
+    content:'';
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.25);
+    z-index:1490;
+  }
+}

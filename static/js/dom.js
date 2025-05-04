@@ -19,6 +19,7 @@ const backToSetupBtn = document.getElementById('back-to-setup');
 const newChatBtn     = document.getElementById('new-chat-btn');
 const chatRoomListEl = document.getElementById('chat-room-list');
 
+
 // グローバル登録
 window.setupContainer   = setupContainer;
 window.chatContainer    = chatContainer;

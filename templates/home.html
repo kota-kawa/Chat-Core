@@ -37,7 +37,10 @@
 
     <link rel="stylesheet"
       href="{{ url_for('static', filename='css/new_prompt_modal.css') }}">
-
+<!-- 
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat_responsive.css') }}">
+  -->
+  
   </head>
   <body>
 
@@ -110,12 +113,15 @@
 
     <div id="chat-container">
       <div class="chat-header">
-        <div class="header-left">
-          <button id="back-to-setup" class="icon-button" title="設定変更">
-            <i class="bi bi-arrow-left"></i>
-          </button>
-          <span>AI Assistant Pro</span>
-        </div>
+
+<div class="header-left">
+  <button id="back-to-setup" class="icon-button" title="設定変更">
+    <i class="bi bi-arrow-left"></i>
+  </button>
+
+  <span>AI Assistant Pro</span>
+</div>
+
         <div class="typing-indicator" id="typing-indicator"
           style="display: none;">
           <div class="typing-dot"></div>
@@ -131,6 +137,11 @@
           <div id="chat-room-list"></div>
         </div>
         <div class="chat-area">
+          
+          <button id="sidebar-toggle" class="icon-button sidebar-toggle chat-sidebar-toggle" title="チャットルーム">
+            <i class="bi bi-arrow-bar-right"></i>
+          </button>
+
           <div class="chat-messages" id="chat-messages"></div>
           <div class="input-container">
             <div class="input-wrapper">

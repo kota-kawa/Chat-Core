@@ -366,34 +366,77 @@ main {
   transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1), box-shadow 0.3s ease;
   z-index: 1000;
 }
+
 .new-prompt-btn:hover {
   transform: scale(1.05);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
 }
+
 .new-prompt-btn i {
   font-size: 1.5rem;
-  transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+  /* アイコン単体のトランジションも長めに */
+  transition: transform 1s cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 
-/* モーダル表示時のボタン回転を2 回転に増やす */
-.post-modal.show + .new-prompt-btn {
-  transform: rotate(720deg);
-}
-.post-modal.show + .new-prompt-btn i {
-  transform: rotate(45deg);
-}
+/* モーダル表示時（.post-modal.show の直後）に、
+   ボタン本体はそのまま 2 回転（720°）、アイコンだけ 3 回転（1080°）に */
+   .post-modal.show + .new-prompt-btn {
+    transform: rotate(720deg);
+  }
+  .post-modal.show + .new-prompt-btn i {
+    transform: rotate(1080deg);
+  }
 
 
-
+  .rotate-on-load {
+    /* ボタン本体を 2 回転 */
+    transform: rotate(360deg);
+  }
+  .rotate-on-load i {
+    /* アイコンだけ 3 回転 */
+    transform: rotate(360deg);
+  }
 
 
 @media (max-width: 768px) {
+  .new-prompt-btn {
+    bottom: 70px;
+  }
+
   .prompt-card {
     flex: 1 1 100%;
   }
-  .search-box input {
-    width: 160px;
+  /* ヘッダー内の検索フォーム幅を90%に */
+  .prompts-header .search-section {
+    width: 90%;
+    max-width: none;
   }
+  
+  /* ─── ボタンを円形に戻す ─── */
+  .search-box {
+    display: flex;
+    align-items: center;
+  }
+
+  .search-box input {
+    flex: 1;
+    width: auto;
+    /* 左だけ丸めてフォームとつなげる */
+    border-radius: 30px 0 0 30px;
+  }
+
+  .search-box button {
+    flex: none;
+    /* 高さに合わせた正方形に */
+    width: 3.0rem;
+    height: 3.0rem;
+    padding: 0;
+    margin-left: 0.5rem;
+    /* 完全な円形に */
+    border-radius: 50%;
+    font-size: 1.25rem;
+  }
+
 }
 
 /* ==================== */

@@ -37,9 +37,7 @@
 
     <link rel="stylesheet"
       href="{{ url_for('static', filename='css/new_prompt_modal.css') }}">
-<!-- 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat_responsive.css') }}">
-  -->
+
   
   </head>
   <body>
@@ -57,9 +55,8 @@
   </div>
 
 
-
-    <button id="settings-btn" class="circle-button settings-btn"
-      title="設定"></button>
+  <!-- ログイン後のユーザーアイコン -->
+  <user-icon></user-icon>
 
     <div id="setup-container">
       <form class="setup-form" id="setup-form">
@@ -283,6 +280,7 @@
     <script src="{{ url_for('static', filename='js/new_prompt_modal.js') }}"></script>
 
     <script src="{{ url_for('static', filename='js/web_components/popup_menu.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/web_components/user_icon.js') }}"></script>
 
   </body>
 </html>

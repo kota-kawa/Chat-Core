@@ -383,4 +383,22 @@ document.addEventListener("DOMContentLoaded", function () {
   guardrailCheckbox.addEventListener("change", function () {
     guardrailFields.style.display = guardrailCheckbox.checked ? "block" : "none";
   });
+
+
+});
+
+
+
+window.addEventListener('load', () => {
+  const btn = document.querySelector('.new-prompt-btn');
+  if (!btn) return;
+
+  // ロード時の回転
+  btn.classList.add('rotate-on-load');
+
+  // （オプション）一定時間後にクラスを外すと、
+  // 再度モーダルオープン時の回転に影響しません
+  setTimeout(() => {
+    btn.classList.remove('rotate-on-load');
+  }, 1100); // CSSのtransition時間＋ちょっと余裕
 });

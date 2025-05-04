@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (window.loggedIn) {
         // ── ログイン済み：元のまま
         settingsBtn.style.display = "";
-        settingsBtn.innerHTML = '<i class="bi bi-person-circle"></i>';
+        settingsBtn.innerHTML = '<img src="./static/user-icon.png" alt="ユーザーアイコン" class="user-icon-img">';
         settingsBtn.title     = "ユーザー";
         settingsBtn.onclick   = toggleUserMenu;
 
@@ -43,18 +43,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         newPromptBtn.style.display  = "";
         accessChatBtn.style.display = "";
-        // （その他既存の処理）
+        
+        if (window.initTaskOrderEditing) {
+          window.initTaskOrderEditing();
+        }
+        
       } else {
         // ── 未ログイン：設定アイコンは非表示にして、認証ボタンを表示
         settingsBtn.style.display  = "none";
         authButtons.style.display  = "";
 
-        // ログイン／アカウント作成への遷移
         document.getElementById("login-btn").onclick = () => {
           window.location.href = "/login";
-        };
-        document.getElementById("signup-btn").onclick = () => {
-          window.location.href = "/signup";
         };
 
         // タスク編集ボタンが残っていたら削除
@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 新規プロンプト＆過去チャット閲覧ボタンを非表示
         newPromptBtn.style.display  = "none";
         accessChatBtn.style.display = "none";
+        
       }
     })
 

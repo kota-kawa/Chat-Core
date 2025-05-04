@@ -51,11 +51,13 @@ ephemeral_chats = {}
 
 @chat_bp.route("/")
 def index():
-    """トップページ (チャット画面)
-    ログインしていなくても利用可能とする。
-    """
     cleanup_ephemeral_chats()
     return render_template("home.html")
+
+
+@chat_bp.route("/settings")
+def settings():
+    return render_template("user_settings.html")
 
 @chat_bp.route("/api/new_chat_room", methods=["POST"])
 def new_chat_room():

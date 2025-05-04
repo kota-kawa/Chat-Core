@@ -1,0 +1,109 @@
+/* user_settings.css */
+.settings-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    min-height: 100vh;
+  }
+  
+  .settings-card {
+    background: var(--secondary-color, #fff);
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    max-width: 500px;
+    width: 100%;
+  }
+  
+  .settings-card h2 {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+  }
+  
+  /* 共通フォーム要素 */
+  .custom-form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  
+  .custom-form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(25, 195, 125, 0.2);
+    outline: none;
+  }
+  
+  /* アバタープレビュー */
+  .avatar-group {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .avatar-preview-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .avatar-preview {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary-color);
+  }
+  
+  .change-avatar-btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: var(--primary-color);
+    color: #fff;
+    padding: 0.4rem;
+    border-radius: 50%;
+    box-shadow: var(--shadow);
+    transition: background 0.2s;
+  }
+  
+  .change-avatar-btn:hover {
+    background: var(--accent-color);
+  }
+  
+  /* パスワード表示切替 */
+  .password-wrapper {
+    position: relative;
+  }
+  
+  .toggle-password-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 0.5rem;
+    background: transparent;
+    color: var(--text-dark);
+  }
+  
+  /* ボタン配置 */
+  .button-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  
+  .secondary-button {
+    background: transparent;
+    color: var(--accent-color);
+    border: 1px solid var(--accent-color);
+    transition: background 0.2s, color 0.2s;
+  }
+  
+  .secondary-button:hover {
+    background: var(--accent-color);
+    color: #fff;
+  }
+  

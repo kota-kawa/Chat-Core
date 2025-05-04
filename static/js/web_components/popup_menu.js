@@ -55,7 +55,7 @@ template.innerHTML = `
       width: 60px;
       height: 60px;
       animation: popIn 0.6s ease;
-      z-index: 1000;  
+      z-index: 9999;  
     }
 
     @keyframes popIn {
@@ -181,7 +181,35 @@ template.innerHTML = `
     .btn--share:hover svg { transform: rotate(-20deg) scale(1.2); }
     .btn--star:hover svg  { transform: rotate(20deg)  scale(1.2); }
     .btn--comment:hover svg { transform: rotate(-20deg) scale(1.2); }
-  </style>
+  
+  
+  /* スマホ表示時の調整（画面幅600px以下） */
+    @media (max-width: 600px) {
+      /* メニュー全体の位置とサイズ */
+      .actions-menu {
+        bottom: 75px;   /* 下から70px */
+        right: 25px;    /* 右から20px */
+        width: 50px;    /* 全体幅を少し小さく */
+        height: 50px;   /* 全体高さを少し小さく */
+      }
+      /* 丸ボタン全般のサイズ */
+      .btn {
+        width: 45px;    /* ボタンを少し小さく */
+        height: 45px;
+      }
+      /* ハンバーガーボタンだけ少し大きめ */
+      .btn--menu {
+        width: 50px;
+        height: 50px;
+      }
+      /* アイコンもボタンに合わせて縮小 */
+      .btn svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    </style>
 
   <!-- チェックボックス（メニュー開閉用） -->
   <input type="checkbox" id="actionMenuButton" />
@@ -212,6 +240,14 @@ class ActionMenu extends HTMLElement {
     super();
     const shadow = this.attachShadow({ mode: 'open' });
     shadow.appendChild(template.content.cloneNode(true));
+    //  メニュー外クリックで自動クローズ
+    const toggle = shadow.querySelector('#actionMenuButton');
+    document.addEventListener('click', (e) => {
+      // メニューが開いていて，クリック先がこのコンポーネント外なら閉じる
+      if (toggle.checked && !e.composedPath().includes(this)) {
+        toggle.checked = false;
+      }
+    });
   }
 }
 

@@ -43,6 +43,33 @@ function formatLLMOutput(text) {
   return result;
 }
 
+
+/*  サイドバートグル処理  */
+
+function toggleSidebar(){
+  const sb = document.querySelector('.sidebar');
+  sb.classList.toggle('open');
+  document.body.classList.toggle('sidebar-visible', sb.classList.contains('open'));
+}
+// ボタンクリックで開閉
+document.addEventListener('DOMContentLoaded', ()=>{
+  const sbBtn = document.getElementById('sidebar-toggle');
+  if(sbBtn) sbBtn.addEventListener('click', e=>{
+    e.stopPropagation();
+    toggleSidebar();
+  });
+  // オーバーレイ／リンクタップで閉じる
+  document.addEventListener('click', e=>{
+    if(document.body.classList.contains('sidebar-visible') &&
+       !e.target.closest('.sidebar') &&
+       !e.target.closest('#sidebar-toggle')){
+      toggleSidebar();
+    }
+  });
+});
+
+
+
 // ---- window へ公開 -------------------------------
 window.showChatInterface = showChatInterface;
 window.showTypingIndicator = showTypingIndicator;

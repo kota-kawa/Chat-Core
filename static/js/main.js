@@ -31,9 +31,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const newPromptBtn   = document.getElementById("openNewPromptModal");
       const accessChatBtn  = document.getElementById("access-chat-btn");
 
+
+      
       if (window.loggedIn) {
         // ── ログイン済み：元のまま
-        settingsBtn.style.display = "";
+        settingsBtn.style.display = "null";
         settingsBtn.innerHTML = '<img src="./static/user-icon.png" alt="ユーザーアイコン" class="user-icon-img">';
         settingsBtn.title     = "ユーザー";
         settingsBtn.onclick   = toggleUserMenu;
@@ -147,22 +149,17 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ▼ユーザーメニュー（設定 / ログアウト） ---------------------------------------*/
 function toggleUserMenu() {
   let menu = document.getElementById("user-menu");
-  const isMobile = window.matchMedia("(max-width:576px)").matches;
 
   if (!menu) {
     // メニュー要素を生成
     menu = document.createElement("div");
     menu.id = "user-menu";
-    if (isMobile) {
-      menu.classList.add("mobile-user-menu");
-    }
 
     // スタイル設定（モバイル時は static、PC時は右上絶対配置）
     Object.assign(menu.style, {
-      position:    isMobile ? "static"   : "absolute",
-      top:         isMobile ? ""         : "60px",   // 設定ボタン(50px)＋余白10px
-      right:       isMobile ? ""         : "10px",
-      left:        isMobile ? ""         : "auto",
+      position:    "absolute",
+      top:         "60px",    // 設定アイコン下に 10px マージン
+      right:       "10px",
       background:  "#fff",
       border:      "1px solid #ddd",
       borderRadius:"6px",
@@ -172,14 +169,7 @@ function toggleUserMenu() {
       overflow:    "hidden"
     });
 
-    // 挿入先を切り替え
-    let parent;
-    if (isMobile) {
-      parent = document.getElementById("setup-container");
-    } else {
-      parent = document.body;
-    }
-    parent.appendChild(menu);
+    document.body.appendChild(menu);
 
     // メニュー内容
     menu.innerHTML = `

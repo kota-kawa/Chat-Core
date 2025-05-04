@@ -33,3 +33,10 @@ body {
     max-width: 90%;
   }
 }
+
+@media (max-width:576px){
+  body{
+    display:block;      /* 中央寄せを解除し自然なスクロール */
+    padding:0;
+  }
+}

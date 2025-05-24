@@ -56,7 +56,7 @@
 
 
   <!-- ログイン後のユーザーアイコン -->
-  <user-icon></user-icon>
+  <user-icon id="userIcon" style="display: none;"></user-icon>
 
     <div id="setup-container">
       <form class="setup-form" id="setup-form">
@@ -177,7 +177,7 @@
       <!-- ガードレールがONのときだけ表示される部分 -->
       <div id="new-guardrail-fields">
         <div class="form-group">
-          <label for="new-prompt-input-example">入力例</label>
+          <label for="new-prompt-input-example">入力例（プロンプト内容とは別にしてください）</label>
           <textarea id="new-prompt-input-example" rows="3" placeholder="例: 夏休みの思い出をテーマにした短いエッセイを書いてください。"></textarea>
         </div>
         <div class="form-group">

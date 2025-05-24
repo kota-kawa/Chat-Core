@@ -94,18 +94,22 @@ def add_bookmark():
     input_examples = data.get('input_examples', '')
     output_examples = data.get('output_examples', '')
 
-    # 必須項目のチェック（title, content が必須とする例）
+    # 必須項目チェック
     if not title or not content:
         return jsonify({'error': '必要なフィールドが不足しています'}), 400
 
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        query = """
-            INSERT INTO task_with_examples (name, prompt_template, input_examples, output_examples, created_at)
-            VALUES (%s, %s, %s, %s, NOW())
-        """
-        cursor.execute(query, (title, content, input_examples, output_examples))       
+        # user_id を必ず INSERT して、自分のタスクとして登録
+        cursor.execute(
+            """
+            INSERT INTO task_with_examples
+                (user_id, name, prompt_template, input_examples, output_examples)
+            VALUES (%s,      %s,   %s,               %s,             %s)
+            """,
+            (user_id, title, content, input_examples, output_examples)
+        )
         conn.commit()
         return jsonify({'message': 'ブックマークが保存されました。'}), 201
     except Exception as e:
@@ -115,11 +119,13 @@ def add_bookmark():
         conn.close()
 
 
+
 @prompt_share_api_bp.route('/bookmark', methods=['DELETE'])
 def remove_bookmark():
-    # ログイン状態のチェック
+    # ログイン状態チェック
     if 'user_id' not in session:
         return jsonify({'error': 'ログインしていません'}), 401
+    user_id = session['user_id']
 
     data = request.get_json()
     title = data.get('title')
@@ -129,9 +135,11 @@ def remove_bookmark():
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        # titleをキーにブックマークを削除（task_with_examples テーブル）
-        query = "DELETE FROM task_with_examples WHERE name = %s"
-        cursor.execute(query, (title,))
+        # 自分のブックマークだけを削除
+        cursor.execute(
+            "DELETE FROM task_with_examples WHERE user_id = %s AND name = %s",
+            (user_id, title)
+        )
         conn.commit()
         return jsonify({'message': 'ブックマークが削除されました。'})
     except Exception as e:
@@ -139,3 +147,4 @@ def remove_bookmark():
     finally:
         cursor.close()
         conn.close()
+

@@ -111,35 +111,42 @@ function initSetupTaskCards() {
 }
 
 function handleTaskCardClick(e) {
-  if (window.isEditingOrder) return;          // 並び替え中は無視
+  if (window.isEditingOrder) return;                // 並び替え中は無視
+
   const card = e.target.closest('.prompt-card');
   if (!card) return;
 
-  const setupInfo = setupInfoElement.value.trim();
-  if (!setupInfo) { alert('「現在の状況・作業環境」を入力してください。'); return; }
+  // 入力フォームの値（空欄可）
+  const setupInfo = setupInfoElement.value.trim();  // ← ここは空でも OK
+  const aiModel   = aiModelSelect.value;
 
-  const aiModel       = aiModelSelect.value;
   const prompt_template = card.dataset.prompt_template;
-  //const task          = card.dataset.task;
-  const inputExamples = card.dataset.input_examples;
-  const outputExamples= card.dataset.output_examples;
+  const inputExamples   = card.dataset.input_examples;
+  const outputExamples  = card.dataset.output_examples;
 
-  // 新チャットルーム作成
-  const newRoomId = Date.now().toString();
+  // 新チャットルーム ID とタイトル（空欄ならデフォルト名）
+  const newRoomId   = Date.now().toString();
+  const roomTitle   = setupInfo || '新規チャット';
+
   currentChatRoomId = newRoomId;
   localStorage.setItem('currentChatRoomId', newRoomId);
 
-  createNewChatRoom(newRoomId, setupInfo)
+  // ① ルームをサーバーに作成
+  createNewChatRoom(newRoomId, roomTitle)
     .then(() => {
       showChatInterface();
       loadChatRooms();
       localStorage.removeItem(`chatHistory_${newRoomId}`);
 
-      const firstMsg =
-        `【状況・作業環境】${setupInfo}\n【リクエスト】${prompt_template}\n\n入力例:\n${inputExamples}\n\n出力例:\n${outputExamples}`;
+      // ② 最初のメッセージ（setupInfo が空ならラベルごと省略）
+      const firstMsg = setupInfo
+        ? `【状況・作業環境】${setupInfo}\n【リクエスト】${prompt_template}\n\n入力例:\n${inputExamples}\n\n出力例:\n${outputExamples}`
+        : `【リクエスト】${prompt_template}\n\n入力例:\n${inputExamples}\n\n出力例:\n${outputExamples}`;
+
+      // ③ Bot 応答生成
       generateResponse(firstMsg, aiModel);
     })
-    .catch(err => alert("チャットルーム作成に失敗: " + err));
+    .catch(err => alert('チャットルーム作成に失敗: ' + err));
 }
 
 // ▼ 4. 「もっと見る」ボタン生成 ----------------------------------------------------

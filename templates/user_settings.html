@@ -1,4 +1,3 @@
-<!-- user_settings.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -6,13 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ユーザー設定</title>
 
-  <!-- Google Fonts -->
   <link
     href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
     rel="stylesheet"
   />
 
-  <!-- Bootstrap & Icons -->
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
     rel="stylesheet"
@@ -22,113 +19,103 @@
     rel="stylesheet"
   />
 
-  <!-- 既存スタイル -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
 
-  <!-- 新規追加 -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/user_settings/user_settings.css') }}">
 </head>
-<body>
-  <div class="settings-container">
-    <div class="settings-card">
-      <h2>ユーザープロフィール設定</h2>
-      <form id="userSettingsForm">
-        <!-- アバター -->
-        <div class="form-group avatar-group">
-          <label class="form-label" for="avatarInput">プロフィール画像</label>
-          <div class="avatar-preview-wrapper">
-            <img
-              id="avatarPreview"
-              src="/static/user-icon.png"
-              alt="Avatar Preview"
-              class="avatar-preview"
-            />
-            <button
-              type="button"
-              class="icon-button change-avatar-btn"
-              id="changeAvatarBtn"
-              title="画像を変更"
-            >
-              <i class="bi bi-pencil"></i>
-            </button>
+<body class="user-settings-body">
+  <div class="user-settings-layout">
+    <nav class="settings-sidebar">
+      <div class="sidebar-header">
+        <h3>設定</h3>
+      </div>
+      <ul class="nav-menu">
+        <li><a href="#" class="nav-link active"><i class="bi bi-person-circle"></i> プロフィール設定</a></li>
+        <li><a href="#" class="nav-link"><i class="bi bi-shield-lock"></i> プロンプト管理</a></li>
+        <li><a href="#" class="nav-link"><i class="bi bi-bell"></i> 通知設定</a></li>
+        <li><a href="#" class="nav-link"><i class="bi bi-key"></i> セキュリティ</a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <p>&copy; 2025 YourApp</p>
+      </div>
+    </nav>
+
+    <main class="settings-content">
+      <div class="settings-card">
+        <h2>ユーザープロフィール設定</h2>
+        <form id="userSettingsForm">
+          <div class="form-group avatar-group">
+            <label class="form-label" for="avatarInput">プロフィール画像</label>
+            <div class="avatar-preview-wrapper">
+              <img
+                id="avatarPreview"
+                src="/static/user-icon.png"
+                alt="Avatar Preview"
+                class="avatar-preview"
+              />
+              <button
+                type="button"
+                class="icon-button change-avatar-btn"
+                id="changeAvatarBtn"
+                title="画像を変更"
+              >
+                <i class="bi bi-pencil-fill"></i>
+              </button>
+            </div>
+            <input type="file" id="avatarInput" accept="image/*" hidden />
           </div>
-          <input type="file" id="avatarInput" accept="image/*" hidden />
-        </div>
 
-        <!-- ユーザー名 -->
-        <div class="form-group">
-          <label class="form-label" for="username">ユーザー名</label>
-          <input
-            type="text"
-            id="username"
-            name="username"
-            class="custom-form-control"
-            placeholder="ユーザー名を入力"
-          />
-        </div>
-
-        <!-- メールアドレス -->
-        <div class="form-group">
-          <label class="form-label" for="email">メールアドレス</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            class="custom-form-control"
-            placeholder="example@domain.com"
-          />
-        </div>
-
-        <!-- パスワード -->
-        <div class="form-group password-group">
-          <label class="form-label" for="password">パスワード</label>
-          <div class="password-wrapper">
+          <div class="form-group">
+            <label class="form-label" for="username">ユーザー名</label>
             <input
-              type="password"
-              id="password"
-              name="password"
+              type="text"
+              id="username"
+              name="username"
               class="custom-form-control"
-              placeholder="パスワードを入力"
+              placeholder="ユーザー名を入力"
             />
-            <button
-              type="button"
-              class="icon-button toggle-password-btn"
-              id="togglePasswordBtn"
-              title="表示/非表示切替"
-            >
-              <i class="bi bi-eye"></i>
-            </button>
           </div>
-        </div>
 
-        <!-- 自己紹介 -->
-        <div class="form-group">
-          <label class="form-label" for="bio">自己紹介</label>
-          <textarea
-            id="bio"
-            name="bio"
-            rows="4"
-            class="custom-form-control"
-            placeholder="自己紹介を入力"
-          ></textarea>
-        </div>
+          <div class="form-group">
+            <label class="form-label" for="email">メールアドレス</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="custom-form-control"
+              placeholder="example@domain.com"
+            />
+          </div>
 
-        <!-- ボタン -->
-        <div class="button-group">
-          <button type="submit" class="primary-button">保存</button>
-          <button
+          
+
+          <div class="form-group">
+            <label class="form-label" for="bio">自己紹介</label>
+            <textarea
+              id="bio"
+              name="bio"
+              rows="4"
+              class="custom-form-control"
+              placeholder="自己紹介を入力 (例: 趣味、好きなことなど)"
+            ></textarea>
+          </div>
+
+          <div class="button-group">
+            <button
             type="button"
-            class="icon-button secondary-button"
+            class="secondary-button"
             id="cancelBtn"
             title="キャンセル"
           >
-            <i class="bi bi-x-lg"></i>
+            キャンセル
           </button>
-        </div>
-      </form>
-    </div>
+            <button type="submit" class="primary-button">変更を保存</button>
+          </div>
+        </form>
+      </div>
+    </main>
   </div>
 
   <script src="{{ url_for('static', filename='js/user_settings/user_settings.js') }}"></script>

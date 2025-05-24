@@ -3,11 +3,14 @@ SET NAMES utf8mb4;
 
 -- usersテーブル
 CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    is_verified BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    id          INT             AUTO_INCREMENT PRIMARY KEY,
+    email       VARCHAR(255)    NOT NULL UNIQUE,
+    username    VARCHAR(255)    NOT NULL DEFAULT 'トマト',
+    bio         TEXT            NULL,
+    avatar_url  VARCHAR(255)    NOT NULL DEFAULT '/static/user-icon.png',
+    is_verified BOOLEAN         DEFAULT FALSE,
+    created_at  TIMESTAMP       DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- chat_roomsテーブル
 CREATE TABLE chat_rooms (

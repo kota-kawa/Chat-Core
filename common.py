@@ -95,11 +95,17 @@ def get_user_by_id(user_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+        cursor.execute("""
+            SELECT id, email, is_verified, created_at,
+                   username, bio, avatar_url
+              FROM users
+             WHERE id = %s
+        """, (user_id,))
         return cursor.fetchone()
     finally:
         cursor.close()
         conn.close()
+
 
 def create_user(email):
     """未認証ユーザーを新規作成 (is_verified=False)"""

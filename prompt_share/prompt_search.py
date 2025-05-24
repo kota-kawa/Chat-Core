@@ -15,13 +15,32 @@ def search_prompts():
     try:
         if query:
             sql = """
-                SELECT id, title, category, content, author, few_shot_examples, created_at
+                SELECT
+                  id,
+                  title,
+                  category,
+                  content,
+                  author,
+                  input_examples,
+                  output_examples,
+                  created_at
                 FROM prompts
-                WHERE title LIKE %s OR content LIKE %s OR category LIKE %s OR author LIKE %s
+                WHERE is_public = TRUE
+                  AND (
+                    title   LIKE %s OR
+                    content LIKE %s OR
+                    category LIKE %s OR
+                    author  LIKE %s
+                  )
                 ORDER BY created_at DESC
             """
             like_query = f"%{query}%"
-            cursor.execute(sql, (like_query, like_query, like_query, like_query))
+            cursor.execute(sql, (
+                like_query,
+                like_query,
+                like_query,
+                like_query
+            ))
             prompts = cursor.fetchall()
         else:
             prompts = []

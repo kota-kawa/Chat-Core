@@ -35,8 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if (window.loggedIn) {
 
-        // 認証ボタンは隠しておく
+         // ログイン時：認証ボタンは隠し、ユーザーアイコンを表示
         authButtons.style.display = "none";
+        userIcon.style.display    = "";  
 
         newPromptBtn.style.display  = "";
         accessChatBtn.style.display = "";
@@ -46,9 +47,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
       } else {
-        // ── 未ログイン：設定アイコンは非表示にして、認証ボタンを表示
-        //settingsBtn.style.display  = "none";
+        // 未ログイン時：認証ボタンだけ表示、ユーザーアイコンは隠す
         authButtons.style.display  = "";
+        userIcon.style.display     = "none";
 
         document.getElementById("login-btn").onclick = () => {
           window.location.href = "/login";

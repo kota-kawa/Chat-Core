@@ -95,8 +95,11 @@
 
 /* ── 未ログイン時のログインボタン ── */
 #auth-buttons .auth-btn {
-  background-color: var(--secondary-color);  /* 透過させず淡い背景色を使用 */
-  border: 1px solid rgba(56,161,105,0.5);  /* 緑を基調とした薄めの枠 */
+  /* ログインボタンの背景が透過していたため、
+     通常の色付き背景になるよう修正 */
+  background-color: var(--primary-color);
+  color: var(--text-light);
+  border: none;
 
   border-radius: 9999px;
   display: inline-flex;
@@ -104,24 +107,24 @@
   gap: 0.4rem;
   padding: 0.5rem 1rem;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition: background-color 0.2s;
 }
 
 #auth-buttons .auth-btn i {
   font-size: 1.4rem;
-  color: #38a169;  /* アイコンも緑 */
+  color: #000000;  /* アイコンも緑 */
 }
 
 #auth-buttons .auth-btn span {
   font-size: 1rem;
   font-weight: bold;
-  color: #38a169;  /* 文字も緑 */
+  color: #000000;  /* 文字も緑 */
 }
 
 #auth-buttons .auth-btn:hover {
-  background-color: rgba(56,161,105,0.1);  /* ホバー時に淡い緑背景 */
-  border-color: rgba(56,161,105,0.8);      /* ホバー時に濃い緑枠 */
+  background-color: #16a367;  /* ホバー時は少し濃い緑 */
 }
+
 @media (max-width: 768px) {
   /* セットアップ画面より手前に表示 */
   #auth-buttons {

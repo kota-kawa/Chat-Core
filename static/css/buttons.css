@@ -95,8 +95,9 @@
 
 /* ── 未ログイン時のログインボタン ── */
 #auth-buttons .auth-btn {
-  background: transparent;
+  background-color: var(--secondary-color);  /* 透過させず淡い背景色を使用 */
   border: 1px solid rgba(56,161,105,0.5);  /* 緑を基調とした薄めの枠 */
+
   border-radius: 9999px;
   display: inline-flex;
   align-items: center;

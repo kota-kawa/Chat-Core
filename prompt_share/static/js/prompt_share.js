@@ -20,13 +20,11 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     })
 
-    .catch(err => {
+   .catch(err => { // 修正後：catchブロックを一つにまとめ、エラー発生時もUIを非ログイン状態にフォールバックさせる
       console.error('Error checking login status:', err);
       if (authButtons) authButtons.style.display = '';
       if (userIcon) userIcon.style.display = 'none';
     });
-
-    .catch(err => console.error('Error checking login status:', err));
 
 
   // ------------------------------

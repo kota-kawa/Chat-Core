@@ -2,12 +2,10 @@ document.addEventListener("DOMContentLoaded", function () {
   // ログイン状態の確認とUI切り替え
   const userIcon = document.getElementById('userIcon');
   const authButtons = document.getElementById('auth-buttons');
-  fetch('/api/current_user')
 
+fetch('/api/current_user')
     .then(res => res.ok ? res.json() : { logged_in: false })
-
-    .then(res => res.json())
-
+    
     .then(data => {
       if (data.logged_in) {
         if (authButtons) authButtons.style.display = 'none';

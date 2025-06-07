@@ -1,4 +1,22 @@
 document.addEventListener("DOMContentLoaded", function () {
+  // ログイン状態の確認とUI切り替え
+  const userIcon = document.getElementById('userIcon');
+  const authButtons = document.getElementById('auth-buttons');
+  fetch('/api/current_user')
+    .then(res => res.json())
+    .then(data => {
+      if (data.logged_in) {
+        if (authButtons) authButtons.style.display = 'none';
+        if (userIcon) userIcon.style.display = '';
+      } else {
+        if (authButtons) authButtons.style.display = '';
+        if (userIcon) userIcon.style.display = 'none';
+        const loginBtn = document.getElementById('login-btn');
+        if (loginBtn) loginBtn.onclick = () => { window.location.href = '/login'; };
+      }
+    })
+    .catch(err => console.error('Error checking login status:', err));
+
   // ------------------------------
   // サーバーからプロンプト一覧を取得して表示する関数（Promise を返す）
   // ------------------------------

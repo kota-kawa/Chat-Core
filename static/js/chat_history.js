@@ -10,8 +10,10 @@ function loadChatHistory() {
       chatMessages.innerHTML = '';
       const msgs = data.messages || [];
       msgs.forEach(m => displayMessage(m.message, m.sender));
+
       if (chatMessages.lastElementChild)
         scrollMessageToTop(chatMessages.lastElementChild);
+
       localStorage.setItem(
         `chatHistory_${currentChatRoomId}`,
         JSON.stringify(msgs.map(m => ({ text: m.message, sender: m.sender })))
@@ -28,8 +30,10 @@ function loadLocalChatHistory() {
   catch { history = []; }
   chatMessages.innerHTML = '';
   history.forEach(item => displayMessage(item.text, item.sender));
+
   if (chatMessages.lastElementChild)
     scrollMessageToTop(chatMessages.lastElementChild);
+
 }
 
 /* メッセージ1件をローカル保存 */

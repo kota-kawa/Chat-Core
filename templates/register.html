@@ -156,6 +156,19 @@
       margin-top: 20px;
     }
 
+        /* スマホ表示時にボタンのフォントサイズを調整 */
+    @media (max-width: 600px) {
+      .submit-btn {
+        font-size: 1rem;
+        /* ログインボタンの字体を若干小さく */
+      }
+
+      .google-btn {
+        font-size: 1rem;
+        /* Googleボタンの字体をさらに小さく */
+      }
+    }
+    
     .bot-icon {
       font-size: 4rem;
       color: #00ff88;
@@ -318,6 +331,16 @@
       }
     }
 
+     /* --- 下から上に消えるスライドアップアニメーション --- */
+      @keyframes slideUp {
+    from { transform: translateY(0); opacity: 1; }
+    to   { transform: translateY(-100%); opacity: 0; }
+  }
+  /* --- スライドアップ非表示用クラス --- */
+  .modal.hide-animation .modal-content {
+    animation: slideUp 0.5s forwards;
+  }
+  
     .close {
       position: absolute;
       /* 変更: 絶対配置 */
@@ -391,27 +414,48 @@
     const codeSection = document.getElementById('codeSection');
     const spinner = document.getElementById('spinner');
 
-    // カスタムモーダルの表示関数
-    function showModalMessage(msg) {
-      document.getElementById('modalMessage').textContent = msg;
-      document.getElementById('messageModal').style.display = 'block';
-    }
+  /* --- 変更後：2秒後に自動でスライドアップ非表示 --- */
+  function showModalMessage(msg) {
+    document.getElementById('modalMessage').textContent = msg;
+    const modal = document.getElementById('messageModal');
+    modal.style.display = 'block';
+    setTimeout(hideModal, 2000);
+  }
 
-    // モーダルの閉じるボタンと外部クリックでモーダルを閉じる
-    var modal = document.getElementById("messageModal");
-    var closeBtn = modal.querySelector(".close");
+  /* --- モーダルの閉じるボタンと外部クリックの挙動をアニメーション付きに変更 --- */
+  const modal = document.getElementById("messageModal");
+  const closeBtn = modal.querySelector(".close");
 
-    closeBtn.addEventListener("click", function () {
-      modal.style.display = "none";
+
+
+
+  closeBtn.addEventListener("click", hideModal);
+  window.addEventListener("click", function (event) {
+    if (event.target == modal) hideModal();
+  });
+
+  
+// モーダル外クリックのみで非表示に
+document.addEventListener("click", function (event) {
+  if (modal.style.display === "block"
+      && !event.target.closest('.modal-content')) {
+    hideModal();
+  }
+});
+
+
+
+
+      /* ---  モーダルをスライドアップで非表示にする関数 --- */
+  function hideModal() {
+    const modal = document.getElementById('messageModal');
+    modal.classList.add('hide-animation');
+    modal.querySelector('.modal-content').addEventListener('animationend', function handler() {
+      modal.style.display = 'none';
+      modal.classList.remove('hide-animation');
+      this.removeEventListener('animationend', handler);
     });
-
-    window.addEventListener("click", function (event) {
-      if (event.target == modal) {
-        modal.style.display = "none";
-      }
-    });
-
-
+  }
     // 「確認メール送信」ボタンの処理
     document.getElementById('sendEmailBtn').addEventListener('click', async () => {
       const email = document.getElementById('email').value.trim();

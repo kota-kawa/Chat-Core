@@ -51,8 +51,8 @@ function renderUserMessage(text) {
   const copyBtn = createCopyBtn(() => text);
 
   wrapper.append(copyBtn, msg);
-  chatMessages.appendChild(wrapper);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+  chatMessages.prepend(wrapper);
+  chatMessages.scrollTop = 0;
 
   saveMessageToLocalStorage(text, 'user');
 }
@@ -67,7 +67,8 @@ function animateBotMessage(originalText) {
 
   const copyBtn = createCopyBtn(() => msg.dataset.fullText || '');
   wrapper.append(copyBtn, msg);
-  chatMessages.appendChild(wrapper);
+  chatMessages.prepend(wrapper);
+  chatMessages.scrollTop = 0;
 
   let raw = '', idx = 0;
   const chunk = 7, interval = 100;
@@ -82,7 +83,7 @@ function animateBotMessage(originalText) {
     idx += chunk;
     renderSanitizedHTML(msg, formatLLMOutput(raw));
     msg.dataset.fullText = raw;
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    chatMessages.scrollTop = 0;
   }, interval);
 }
 
@@ -106,7 +107,8 @@ function displayMessage(text, sender) {
     renderSanitizedHTML(msg, formatLLMOutput(text));
     wrapper.append(copyBtn, msg);
   }
-  chatMessages.appendChild(wrapper);
+  chatMessages.prepend(wrapper);
+  chatMessages.scrollTop = 0;
 }
 
 /* 汎用コピーアイコン */

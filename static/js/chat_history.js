@@ -10,6 +10,7 @@ function loadChatHistory() {
       chatMessages.innerHTML = '';
       const msgs = data.messages || [];
       msgs.forEach(m => displayMessage(m.message, m.sender));
+      chatMessages.scrollTop = 0;
       localStorage.setItem(
         `chatHistory_${currentChatRoomId}`,
         JSON.stringify(msgs.map(m => ({ text: m.message, sender: m.sender })))
@@ -26,6 +27,7 @@ function loadLocalChatHistory() {
   catch { history = []; }
   chatMessages.innerHTML = '';
   history.forEach(item => displayMessage(item.text, item.sender));
+  chatMessages.scrollTop = 0;
 }
 
 /* メッセージ1件をローカル保存 */

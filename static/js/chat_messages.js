@@ -36,6 +36,12 @@ function setTextWithLineBreaks(element, text) {
   });
 }
 
+// 新しいメッセージを表示領域の先頭に配置
+function scrollMessageToTop(element) {
+  const max = chatMessages.scrollHeight - chatMessages.clientHeight;
+  chatMessages.scrollTop = Math.min(element.offsetTop, max);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // 2. メッセージ描画
 ////////////////////////////////////////////////////////////////////////////////
@@ -62,9 +68,11 @@ function renderUserMessage(text) {
 
   const copyBtn = createCopyBtn(() => text);
 
+
   wrapper.append(copyBtn, msg);
-  chatMessages.prepend(wrapper);
-  chatMessages.scrollTop = 0;
+  chatMessages.appendChild(wrapper);
+  scrollMessageToTop(wrapper);
+
 
   // ローカル保存は <br> 付き HTML で互換維持
   saveMessageToLocalStorage(htmlText, 'user');
@@ -78,10 +86,12 @@ function animateBotMessage(originalText) {
   const msg = document.createElement('div');
   msg.className = 'bot-message';
 
+
   const copyBtn = createCopyBtn(() => msg.dataset.fullText || '');
   wrapper.append(copyBtn, msg);
-  chatMessages.prepend(wrapper);
-  chatMessages.scrollTop = 0;
+  chatMessages.appendChild(wrapper);
+  scrollMessageToTop(wrapper);
+
 
   let raw = '', idx = 0;
   const chunk = 7, interval = 100;
@@ -103,17 +113,11 @@ function animateBotMessage(originalText) {
     raw += originalText.substr(idx, chunk);
     idx += chunk;
 
-    // ----- 変更前 --------------------------------------------------------
-    // msg.innerHTML = formatLLMOutput(raw);
-    // --------------------------------------------------------------------
-
-    // ----- 変更後 --------------------------------------------------------
     renderSanitizedHTML(msg, formatLLMOutput(raw));
-
     msg.dataset.fullText = raw;
-    chatMessages.scrollTop = 0;
   }, interval);
 }
+
 
 
 /* ローカル／サーバ履歴共通描画 */
@@ -148,10 +152,11 @@ function displayMessage(text, sender) {
     // Bot はマークアップ済み → 広めのタグ許可でサニタイズ
     renderSanitizedHTML(msg, formatLLMOutput(text));
     wrapper.append(copyBtn, msg);
+
   }
-  chatMessages.prepend(wrapper);
-  chatMessages.scrollTop = 0;
+  chatMessages.appendChild(wrapper);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // 3. 汎用コピーアイコン
@@ -170,10 +175,9 @@ function createCopyBtn(getText) {
   return btn;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// 4. window へ公開
-////////////////////////////////////////////////////////////////////////////////
-
+// ---- window へ公開 ------------------------------
 window.renderUserMessage   = renderUserMessage;
 window.animateBotMessage   = animateBotMessage;
 window.displayMessage      = displayMessage;
+window.scrollMessageToTop  = scrollMessageToTop;
+

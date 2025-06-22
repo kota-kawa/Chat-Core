@@ -1,29 +1,30 @@
 // chat_messages.js – メッセージ描画／コピー／ボットアニメ
 // --------------------------------------------------
-// XSS 対策: DOMPurify を利用するため、事前に
-// <script src="https://unpkg.com/dompurify@2.4.0/dist/purify.min.js"></script>
-// を HTML 側で読み込んでおくこと。
+// ※ DOMPurify を必ず先にロードしておくこと
+// <script src="https://unpkg.com/dompurify@2.4.0/dist/purify.min.js" defer></script>
 
-/* ---------- 追加: ユーティリティ ---------- */
+////////////////////////////////////////////////////////////////////////////////
+// 1. 便利関数
+////////////////////////////////////////////////////////////////////////////////
 
 /**
- * 信頼できる HTML 文字列をサニタイズして挿入する
- * @param {HTMLElement} element
- * @param {string} dirtyHtml
+ * HTML をサニタイズして挿入する
+ * @param {HTMLElement} element   挿入先
+ * @param {string}      dirtyHtml サニタイズ前 HTML
+ * @param {string[]}    allowed   許可タグ（省略時はデフォルト）
  */
-function renderSanitizedHTML(element, dirtyHtml) {
+function renderSanitizedHTML(element, dirtyHtml, allowed = [
+  'a','strong','em','code','pre','br','p','ul','ol','li','blockquote','img'
+]) {
   const clean = DOMPurify.sanitize(dirtyHtml, {
-    ALLOWED_TAGS : [
-      'a','strong','em','code','pre','br',
-      'p','ul','ol','li','blockquote','img'
-    ],
+    ALLOWED_TAGS : allowed,
     ALLOWED_ATTR : ['href','src','alt','title','target']
   });
   element.innerHTML = clean;
 }
 
 /**
- * テキストを安全に挿入し、\n を <br> に置換
+ * テキストを \n→<br> に変換しつつ安全に挿入
  * @param {HTMLElement} element
  * @param {string} text
  */
@@ -35,7 +36,9 @@ function setTextWithLineBreaks(element, text) {
   });
 }
 
-/* ---------- メッセージ描画 ---------- */
+////////////////////////////////////////////////////////////////////////////////
+// 2. メッセージ描画
+////////////////////////////////////////////////////////////////////////////////
 
 /* ユーザーメッセージを即時描画 */
 function renderUserMessage(text) {
@@ -44,7 +47,16 @@ function renderUserMessage(text) {
 
   const msg = document.createElement('div');
   msg.className = 'user-message';
-  setTextWithLineBreaks(msg, text);
+
+  // ----- 変更前 ------------------------------------------------------------
+  // msg.innerHTML = text.replace(/\n/g, '<br>');
+  // ------------------------------------------------------------------------
+
+  // ----- 変更後 ------------------------------------------------------------
+  // テキスト → <br> 置換後、<br> だけ許可してサニタイズ描画
+  const htmlText = text.replace(/\n/g, '<br>');
+  renderSanitizedHTML(msg, htmlText, ['br']);
+  // ------------------------------------------------------------------------
 
   msg.style.animation = 'floatUp 0.5s ease-out';
 
@@ -54,7 +66,8 @@ function renderUserMessage(text) {
   chatMessages.appendChild(wrapper);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 
-  saveMessageToLocalStorage(text, 'user');
+  // ローカル保存は <br> 付き HTML で互換維持
+  saveMessageToLocalStorage(htmlText, 'user');
 }
 
 /* Bot メッセージをタイプアニメーションで描画 */
@@ -74,13 +87,29 @@ function animateBotMessage(originalText) {
   const timer = setInterval(() => {
     if (idx >= originalText.length) {
       clearInterval(timer);
+
+      // ----- 変更前 --------------------------------------------------------
+      // msg.innerHTML = formatLLMOutput(raw);
+      // --------------------------------------------------------------------
+
+      // ----- 変更後 --------------------------------------------------------
       renderSanitizedHTML(msg, formatLLMOutput(raw));
+      // --------------------------------------------------------------------
+
       saveMessageToLocalStorage(raw, 'bot');
       return;
     }
     raw += originalText.substr(idx, chunk);
     idx += chunk;
+
+    // ----- 変更前 --------------------------------------------------------
+    // msg.innerHTML = formatLLMOutput(raw);
+    // --------------------------------------------------------------------
+
+    // ----- 変更後 --------------------------------------------------------
     renderSanitizedHTML(msg, formatLLMOutput(raw));
+    // --------------------------------------------------------------------
+
     msg.dataset.fullText = raw;
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }, interval);
@@ -95,21 +124,37 @@ function displayMessage(text, sender) {
     wrapper.className = 'message-wrapper user-message-wrapper';
     const msg = document.createElement('div');
     msg.className = 'user-message';
-    // 旧: msg.innerHTML = text;
-    setTextWithLineBreaks(msg, text);
+
+    // ----- 変更前 --------------------------------------------------------
+    // setTextWithLineBreaks(msg, text);
+    // --------------------------------------------------------------------
+
+    // ----- 変更後 --------------------------------------------------------
+    // 既存履歴は <br> が含まれているため、<br> だけ許可して描画
+    if (text.includes('<')) {
+      renderSanitizedHTML(msg, text, ['br']);
+    } else {
+      setTextWithLineBreaks(msg, text);
+    }
+    // --------------------------------------------------------------------
+
     wrapper.append(copyBtn, msg);
   } else {
     wrapper.className = 'message-wrapper bot-message-wrapper';
     const msg = document.createElement('div');
     msg.className = 'bot-message';
- 
+
+    // Bot はマークアップ済み → 広めのタグ許可でサニタイズ
     renderSanitizedHTML(msg, formatLLMOutput(text));
     wrapper.append(copyBtn, msg);
   }
   chatMessages.appendChild(wrapper);
 }
 
-/* 汎用コピーアイコン */
+////////////////////////////////////////////////////////////////////////////////
+// 3. 汎用コピーアイコン
+////////////////////////////////////////////////////////////////////////////////
+
 function createCopyBtn(getText) {
   const btn = document.createElement('button');
   btn.className = 'copy-btn';
@@ -123,7 +168,10 @@ function createCopyBtn(getText) {
   return btn;
 }
 
-// ---- window へ公開 ------------------------------
+////////////////////////////////////////////////////////////////////////////////
+// 4. window へ公開
+////////////////////////////////////////////////////////////////////////////////
+
 window.renderUserMessage   = renderUserMessage;
 window.animateBotMessage   = animateBotMessage;
 window.displayMessage      = displayMessage;

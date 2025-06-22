@@ -135,6 +135,8 @@ function handleTaskCardClick(e) {
   createNewChatRoom(newRoomId, roomTitle)
     .then(() => {
       showChatInterface();
+      // 新しいチャットではメッセージ表示をリセット
+      chatMessages.innerHTML = '';
       loadChatRooms();
       localStorage.removeItem(`chatHistory_${newRoomId}`);
 

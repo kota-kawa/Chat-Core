@@ -25,8 +25,8 @@ function generateResponse(message, aiModel) {
   spinner.className = 'bot-message';
   spinner.innerHTML = '<div class="spinner"></div>';
   spinnerWrap.appendChild(spinner);
-  chatMessages.appendChild(spinnerWrap);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+  chatMessages.insertBefore(spinnerWrap, chatMessages.children[1] || null);
+  chatMessages.scrollTop = 0;
 
   fetch('/api/chat',{
     method:'POST', headers:{'Content-Type':'application/json'},

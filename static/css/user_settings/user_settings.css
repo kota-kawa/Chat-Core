@@ -9,6 +9,63 @@
   --input-bg: #ffffff; /* 入力フィールドの背景 */
 }
 
+/* ───────── 戻るボタン（.settings-btn）基本スタイル ───────── */
+.settings-btn {
+  background: var(--primary-color) !important; /* 緑色 */
+  color: var(--text-light);
+  width: 3rem;           /* 正円サイズ */
+  height: 3rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;    /* まん丸 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  /* 影など任意で */
+  /* box-shadow: 0 2px 4px rgba(0,0,0,0.15); */
+}
+
+/* ───────── 画面幅 577px 以上（PC/タブレット）─────────
+   サイドバー幅 260px ＋ コンテンツの内側余白 1rem だけ右へ寄せ、
+   ヘッダ行の少し下 (top: 1rem) に固定配置します。
+*/
+@media (min-width: 577px) {
+  .settings-btn {
+    position: fixed;
+    top: 1rem;
+    left: calc(260px + 1rem); /* サイドバー幅 + 余白 */
+    right: auto;              /* 右固定を解除 */
+    z-index: 10000;
+  }
+}
+
+/* ───────── 画面幅 576px 以下（スマホ）─────────
+   見出し「設定」の左側に来るよう、左上に固定します。
+*/
+@media (max-width: 576px) {
+  .settings-btn {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    right: auto;              /* 右固定を解除 */
+    z-index: 10000;
+  }
+}
+
+
+/* ── モバイル時：画面右上に固定 ── */
+@media (max-width: 576px) {
+  .settings-btn {
+    position: fixed !important;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10000;
+  }
+}
+
+
+
 /* global.css の body スタイルをこのページ専用に上書き */
 .user-settings-body {
   background: var(--content-bg); /* ページ全体の背景 */
@@ -350,4 +407,17 @@
         padding: 0.75rem;
         font-size: 0.9rem;
     }
+}
+
+
+/* ───────── スマホ版のみ「設定」テキストを中央揃え ───────── */
+@media (max-width: 576px) {
+  .settings-sidebar .sidebar-header h3 {
+    /* 変更前（左寄せ・何も書かれていない状態） */
+    /* text-align: left; */
+
+    /* 変更後：中央揃え */
+    text-align: center;
+    width: 100%;   /* 幅いっぱいにして中央寄せを有効化 */
+  }
 }

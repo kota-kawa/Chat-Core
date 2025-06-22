@@ -1,6 +1,6 @@
-<!-- login.html -->
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,6 +20,7 @@
       align-items: center;
       overflow: hidden;
     }
+
     .login-container {
       position: relative;
       z-index: 1;
@@ -30,13 +31,31 @@
       text-align: center;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
       animation: float 5s ease-in-out infinite;
-      width: 90%;
-      max-width: 400px;
+      /*width: 90%;
+      max-width: 400px;*/
     }
+
+    @media (max-width: 600px) {
+      .login-container {
+        width: calc(100% - 32px);
+        /* 画面幅から左右16pxずつマージン分を引いた幅 */
+        margin: 0 16px;
+        /* 左右に16pxの余白を設定 */
+      }
+    }
+
     @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
     }
+
     .title {
       font-size: 2rem;
       color: #00ff88;
@@ -44,16 +63,24 @@
       text-shadow: 2px 2px 5px #008844;
       animation: pulse 1.5s ease-in-out infinite;
     }
+
     @keyframes pulse {
-      0% { text-shadow: 2px 2px 5px #008844; }
-      100% { text-shadow: 4px 4px 20px #00ff88; }
+      0% {
+        text-shadow: 2px 2px 5px #008844;
+      }
+
+      100% {
+        text-shadow: 4px 4px 20px #00ff88;
+      }
     }
+
     .email-label {
       display: block;
       font-size: 1.2rem;
       color: #00ff88;
       margin-bottom: 10px;
     }
+
     .email-input {
       width: 100%;
       padding: 10px;
@@ -66,10 +93,12 @@
       transition: all 0.3s ease;
       margin-bottom: 20px;
     }
+
     .email-input:focus {
       background: rgba(0, 0, 0, 0.3);
       box-shadow: 0 0 10px #00ff88;
     }
+
     .submit-btn {
       background-color: #00ff88;
       color: #ffffff;
@@ -84,10 +113,12 @@
       display: block;
       text-align: center;
     }
+
     .submit-btn:hover {
       background-color: #008844;
       box-shadow: 0 0 15px #00ff88;
     }
+
     .google-btn {
       background-color: #4285F4;
       color: #ffffff;
@@ -105,23 +136,48 @@
       width: 80%;
       margin: 20px auto 0;
     }
+
     .google-btn:hover {
       background-color: #357AE8;
       box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
     }
+
     .google-container {
       margin-top: 20px;
     }
+
+    /* スマホ表示時にボタンのフォントサイズを調整 */
+    @media (max-width: 600px) {
+      .submit-btn {
+        font-size: 1rem;
+        /* ログインボタンの字体を若干小さく */
+      }
+
+      .google-btn {
+        font-size: 1rem;
+        /* Googleボタンの字体をさらに小さく */
+      }
+    }
+
     .bot-icon {
       font-size: 4rem;
       color: #00ff88;
       margin-bottom: 20px;
       animation: botBlink 3s ease-in-out infinite;
     }
+
     @keyframes botBlink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
     }
+
     .chat-background {
       position: absolute;
       top: 0;
@@ -132,10 +188,11 @@
       opacity: 0.2;
       z-index: 0;
     }
-    
+
     /* --- モーダルのスタイル --- */
     .modal {
-      display: none; /* 初期は非表示 */
+      display: none;
+      /* 初期は非表示 */
       position: fixed;
       z-index: 1000;
       left: 0;
@@ -145,6 +202,7 @@
       overflow: auto;
       background-color: rgba(0, 0, 0, 0.5);
     }
+
     .modal-content {
       background-color: #0e401e;
       margin: 15% auto;
@@ -155,13 +213,40 @@
       border-radius: 10px;
       text-align: center;
       color: #fff;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
       animation: modalFadeIn 0.5s;
     }
+
     @keyframes modalFadeIn {
-      from { opacity: 0; transform: scale(0.9); }
-      to { opacity: 1; transform: scale(1); }
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
+
+    /* 追加: 下から上に消えるスライドアップアニメーション */
+    @keyframes slideUp {
+      from {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      to {
+        transform: translateY(-100%);
+        opacity: 0;
+      }
+    }
+
+    /* 追加: スライドアップ非表示用クラス */
+    .modal.hide-animation .modal-content {
+      animation: slideUp 0.5s forwards;
+    }
+
     .close {
       color: #aaa;
       float: right;
@@ -169,6 +254,7 @@
       font-weight: bold;
       cursor: pointer;
     }
+
     .close:hover,
     .close:focus {
       color: #fff;
@@ -176,6 +262,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="chat-background"></div>
   <div class="login-container">
@@ -184,7 +271,7 @@
     <div id="error-message" style="color: red; margin-bottom: 10px;"></div>
 
     <!-- スピナー表示エリア（Web Componentを利用） -->
-<my-spinner id="spinner"></my-spinner>
+    <my-spinner id="spinner"></my-spinner>
 
     <!-- メールアドレス入力部 -->
     <div id="email-section">
@@ -204,7 +291,7 @@
       </button>
     </div>
     <p style="margin-top: 20px; color: #00ff88; text-shadow: 1px 1px 3px #008844;">
-      アカウントをお持ちでない場合は 
+      アカウントをお持ちでない場合は
       <a href="/register" style="color: #ffefef;">登録ページへ</a>
     </p>
   </div>
@@ -218,52 +305,68 @@
   </div>
 
   <script>
+    // モーダルをスライドアップで非表示にする関数
+    function hideModal() {
+      var m = document.getElementById("codeSentModal");
+      // 非表示用クラスを付与してスライドアップ
+      m.classList.add('hide-animation');
+      // アニメーション終了後に完全に非表示に
+      m.querySelector('.modal-content').addEventListener('animationend', function handler() {
+        m.style.display = 'none';
+        m.classList.remove('hide-animation');
+        this.removeEventListener('animationend', handler);
+      });
+    }
+
     // 「認証コード送信」ボタン押下時の処理
-    document.getElementById('sendCodeBtn').addEventListener('click', function() {
+    document.getElementById('sendCodeBtn').addEventListener('click', function () {
       var email = document.getElementById('email').value;
       var errorMessage = document.getElementById('error-message');
       errorMessage.textContent = "";
-      
+
       if (!email) {
         errorMessage.textContent = "メールアドレスを入力してください。";
         return;
       }
-      
+
       // メール送信中はスピナーを表示
       document.getElementById('spinner').show();
-      
+
       fetch('/api/send_login_code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email })
       })
-      .then(response => response.json())
-      .then(data => {
-        // 通信完了後はスピナーを非表示に
-        document.getElementById('spinner').hide();
-        if (data.status === "success") {
-          // メールアドレス入力部を隠し、認証コード入力部を表示
-          document.getElementById('email-section').style.display = 'none';
-          document.getElementById('code-section').style.display = 'block';
-          // アイコンを変更して画面進行を表現
-          document.querySelector('.bot-icon').textContent = "🌳";
-          
-          // モーダルを表示
-          var modal = document.getElementById("codeSentModal");
-          modal.style.display = "block";
-        } else {
-          errorMessage.textContent = data.error || "認証コード送信に失敗しました。";
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        document.getElementById('spinner').hide();
-        errorMessage.textContent = "サーバーエラーが発生しました。";
-      });
+        .then(response => response.json())
+        .then(data => {
+          // 通信完了後はスピナーを非表示に
+          document.getElementById('spinner').hide();
+          if (data.status === "success") {
+            // メールアドレス入力部を隠し、認証コード入力部を表示
+            document.getElementById('email-section').style.display = 'none';
+            document.getElementById('code-section').style.display = 'block';
+            // アイコンを変更して画面進行を表現
+            document.querySelector('.bot-icon').textContent = "🌳";
+
+            // モーダルを表示
+            var modalElement = document.getElementById("codeSentModal");
+            modalElement.style.display = "block";
+
+            // 追加: 2秒後に自動でモーダルをアニメーション付きで非表示
+            setTimeout(hideModal, 2000);
+          } else {
+            errorMessage.textContent = data.error || "認証コード送信に失敗しました。";
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          document.getElementById('spinner').hide();
+          errorMessage.textContent = "サーバーエラーが発生しました。";
+        });
     });
 
     // 「ログイン」ボタン押下時の処理（認証コードチェック）
-    document.getElementById('verifyCodeBtn').addEventListener('click', function() {
+    document.getElementById('verifyCodeBtn').addEventListener('click', function () {
       var authCode = document.getElementById('authCode').value;
       var errorMessage = document.getElementById('error-message');
       errorMessage.textContent = "";
@@ -276,34 +379,44 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ authCode: authCode })
       })
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === "success") {
-          window.location.href = "/";
-        } else {
-          errorMessage.textContent = data.error || "認証に失敗しました。";
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        errorMessage.textContent = "サーバーエラーが発生しました。";
-      });
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === "success") {
+            window.location.href = "/";
+          } else {
+            errorMessage.textContent = data.error || "認証に失敗しました。";
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          errorMessage.textContent = "サーバーエラーが発生しました。";
+        });
     });
 
     // モーダルの閉じるボタンの処理
-    var modal = document.getElementById("codeSentModal");
     var closeBtn = document.querySelector(".modal .close");
-
-    closeBtn.addEventListener("click", function(){
-      modal.style.display = "none";
+    closeBtn.addEventListener("click", function () {
+      // 追加: アニメーション付きで非表示
+      hideModal();
     });
 
     // モーダル外をクリックした場合も閉じる
-    window.addEventListener("click", function(event) {
-      if (event.target == modal) {
-        modal.style.display = "none";
+    window.addEventListener("click", function (event) {
+      var m = document.getElementById("codeSentModal");
+      if (event.target == m) {
+        // 追加: アニメーション付きで非表示
+        hideModal();
+      }
+    });
+
+    // 追加: どこかをクリックしたときにもモーダルをアニメーション付きで非表示にする
+    document.addEventListener("click", function (event) {
+      var m = document.getElementById("codeSentModal");
+      if (m.style.display === "block") {
+        hideModal();
       }
     });
   </script>
 </body>
+
 </html>

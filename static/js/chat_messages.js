@@ -1,5 +1,41 @@
 // chat_messages.js – メッセージ描画／コピー／ボットアニメ
 // --------------------------------------------------
+// XSS 対策: DOMPurify を利用するため、事前に
+// <script src="https://unpkg.com/dompurify@2.4.0/dist/purify.min.js"></script>
+// を HTML 側で読み込んでおくこと。
+
+/* ---------- 追加: ユーティリティ ---------- */
+
+/**
+ * 信頼できる HTML 文字列をサニタイズして挿入する
+ * @param {HTMLElement} element
+ * @param {string} dirtyHtml
+ */
+function renderSanitizedHTML(element, dirtyHtml) {
+  const clean = DOMPurify.sanitize(dirtyHtml, {
+    ALLOWED_TAGS : [
+      'a','strong','em','code','pre','br',
+      'p','ul','ol','li','blockquote','img'
+    ],
+    ALLOWED_ATTR : ['href','src','alt','title','target']
+  });
+  element.innerHTML = clean;
+}
+
+/**
+ * テキストを安全に挿入し、\n を <br> に置換
+ * @param {HTMLElement} element
+ * @param {string} text
+ */
+function setTextWithLineBreaks(element, text) {
+  element.textContent = '';
+  text.split('\n').forEach((line, idx, arr) => {
+    element.appendChild(document.createTextNode(line));
+    if (idx < arr.length - 1) element.appendChild(document.createElement('br'));
+  });
+}
+
+/* ---------- メッセージ描画 ---------- */
 
 /* ユーザーメッセージを即時描画 */
 function renderUserMessage(text) {
@@ -8,7 +44,8 @@ function renderUserMessage(text) {
 
   const msg = document.createElement('div');
   msg.className = 'user-message';
-  msg.innerHTML  = text.replace(/\n/g, '<br>');
+  setTextWithLineBreaks(msg, text);
+
   msg.style.animation = 'floatUp 0.5s ease-out';
 
   const copyBtn = createCopyBtn(() => text);
@@ -17,7 +54,7 @@ function renderUserMessage(text) {
   chatMessages.appendChild(wrapper);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 
-  saveMessageToLocalStorage(text.replace(/\n/g,'<br>'), 'user');
+  saveMessageToLocalStorage(text, 'user');
 }
 
 /* Bot メッセージをタイプアニメーションで描画 */
@@ -37,13 +74,13 @@ function animateBotMessage(originalText) {
   const timer = setInterval(() => {
     if (idx >= originalText.length) {
       clearInterval(timer);
-      msg.innerHTML = formatLLMOutput(raw);
+      renderSanitizedHTML(msg, formatLLMOutput(raw));
       saveMessageToLocalStorage(raw, 'bot');
       return;
     }
     raw += originalText.substr(idx, chunk);
     idx += chunk;
-    msg.innerHTML = formatLLMOutput(raw);
+    renderSanitizedHTML(msg, formatLLMOutput(raw));
     msg.dataset.fullText = raw;
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }, interval);
@@ -58,13 +95,15 @@ function displayMessage(text, sender) {
     wrapper.className = 'message-wrapper user-message-wrapper';
     const msg = document.createElement('div');
     msg.className = 'user-message';
-    msg.innerHTML  = text;
+    // 旧: msg.innerHTML = text;
+    setTextWithLineBreaks(msg, text);
     wrapper.append(copyBtn, msg);
   } else {
     wrapper.className = 'message-wrapper bot-message-wrapper';
     const msg = document.createElement('div');
     msg.className = 'bot-message';
-    msg.innerHTML  = formatLLMOutput(text);
+ 
+    renderSanitizedHTML(msg, formatLLMOutput(text));
     wrapper.append(copyBtn, msg);
   }
   chatMessages.appendChild(wrapper);

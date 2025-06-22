@@ -40,6 +40,7 @@ function setTextWithLineBreaks(element, text) {
 function scrollMessageToTop(element) {
   const max = chatMessages.scrollHeight - chatMessages.clientHeight;
   chatMessages.scrollTop = Math.min(element.offsetTop, max);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

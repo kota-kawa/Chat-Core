@@ -35,6 +35,12 @@ function setTextWithLineBreaks(element, text) {
   });
 }
 
+// 新しいメッセージを表示領域の先頭に配置
+function scrollMessageToTop(element) {
+  const max = chatMessages.scrollHeight - chatMessages.clientHeight;
+  chatMessages.scrollTop = Math.min(element.offsetTop, max);
+}
+
 /* ---------- メッセージ描画 ---------- */
 
 /* ユーザーメッセージを即時描画 */
@@ -52,7 +58,7 @@ function renderUserMessage(text) {
 
   wrapper.append(copyBtn, msg);
   chatMessages.appendChild(wrapper);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+  scrollMessageToTop(wrapper);
 
   saveMessageToLocalStorage(text, 'user');
 }
@@ -68,6 +74,7 @@ function animateBotMessage(originalText) {
   const copyBtn = createCopyBtn(() => msg.dataset.fullText || '');
   wrapper.append(copyBtn, msg);
   chatMessages.appendChild(wrapper);
+  scrollMessageToTop(wrapper);
 
   let raw = '', idx = 0;
   const chunk = 7, interval = 100;
@@ -82,7 +89,6 @@ function animateBotMessage(originalText) {
     idx += chunk;
     renderSanitizedHTML(msg, formatLLMOutput(raw));
     msg.dataset.fullText = raw;
-    chatMessages.scrollTop = chatMessages.scrollHeight;
   }, interval);
 }
 
@@ -127,3 +133,4 @@ function createCopyBtn(getText) {
 window.renderUserMessage   = renderUserMessage;
 window.animateBotMessage   = animateBotMessage;
 window.displayMessage      = displayMessage;
+window.scrollMessageToTop  = scrollMessageToTop;

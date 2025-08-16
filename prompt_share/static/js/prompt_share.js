@@ -49,6 +49,8 @@ fetch('/api/current_user')
 
             const card = document.createElement("div");
             card.classList.add("prompt-card");
+            // カテゴリフィルタ用に data-category 属性を設定
+            card.setAttribute("data-category", prompt.category);
 
             // カード内で position: absolute; を使うため、相対配置を設定
             card.style.position = "relative";

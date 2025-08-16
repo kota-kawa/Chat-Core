@@ -254,6 +254,16 @@ function toggleTaskOrderEditing() {
 
     disableTaskDragAndDrop();
     saveTaskOrder();
+
+    // 編集モードで変更した表示をリセットし、折り畳みボタンを再生成
+    document.querySelectorAll('.task-selection .prompt-card').forEach(card => {
+      card.style.display = '';
+      card.style.position = '';
+    });
+    if (typeof initToggleTasks === 'function') {
+      initToggleTasks();
+    }
+
     // 画面全体の再読み込みは行わず、必要な部分のみDOMの更新を行う
     // ※もしタスク一覧全体の更新が必要なら、非同期で新たにタスク一覧をfetchして再レンダリングする処理をここに追加
 

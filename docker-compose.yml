@@ -15,7 +15,7 @@ services:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
     ports:
-      - "5000:5000"
+      - "5004:5004"
     volumes:
       - .:/app           # ホストのカレントディレクトリをコンテナ内 /app にマウント
     depends_on:

@@ -35,6 +35,8 @@ document.addEventListener("DOMContentLoaded", function () {
           data.prompts.forEach(prompt => {
             const card = document.createElement("div");
             card.classList.add("prompt-card");
+            // カテゴリフィルタ用に data-category 属性を設定
+            card.setAttribute("data-category", prompt.category);
             card.innerHTML = `
               <h3>${prompt.title}</h3>
               <p>${prompt.content}</p>

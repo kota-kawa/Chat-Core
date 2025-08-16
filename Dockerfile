@@ -31,6 +31,6 @@ ENV FLASK_DEBUG=1
 
 # アプリケーションの起動コマンド（MySQLが準備できるまで待機してから実行）
 # --reload を付けてホットリロードを有効にする
-CMD ["./wait-for-it.sh", "db:3306", "--", "flask", "run", "--port=5000", "--reload"]
+CMD ["./wait-for-it.sh", "db:3306", "--", "flask", "run", "--port=5004", "--reload"]
 
 

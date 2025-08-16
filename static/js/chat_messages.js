@@ -38,7 +38,7 @@ function setTextWithLineBreaks(element, text) {
 
 // 新しいメッセージを表示領域の先頭に配置
 function scrollMessageToTop(element) {
-  const offset = 150; // px, how far from the bottom the newest message should appear
+  const offset = -1050; // px, how far from the bottom the newest message should appear
   const max = chatMessages.scrollHeight - chatMessages.clientHeight;
   const target = Math.min(element.offsetTop, max) - offset;
   chatMessages.scrollTop = Math.max(target, 0);

@@ -1,7 +1,9 @@
+import os
 from flask import Blueprint, request, session, render_template, redirect, url_for, jsonify
 import random
 import requests
 from google_auth_oauthlib.flow import Flow
+from dotenv import load_dotenv
 from common import (
     get_user_by_email,
     get_user_by_id,
@@ -9,6 +11,12 @@ from common import (
     create_user,
     set_user_verified,
     copy_default_tasks_for_user,
+)
+
+load_dotenv()
+
+GOOGLE_REDIRECT_URI = os.getenv(
+    "GOOGLE_REDIRECT_URI", "http://localhost:5000/google-callback"
 )
 
 GOOGLE_CLIENT_CONFIG = {
@@ -19,7 +27,7 @@ GOOGLE_CLIENT_CONFIG = {
         "token_uri": "https://oauth2.googleapis.com/token",
         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
         "client_secret": "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",
-        "redirect_uris": ["http://localhost:5000/google-callback"],
+        "redirect_uris": [GOOGLE_REDIRECT_URI],
     }
 }
 
@@ -61,7 +69,7 @@ def google_login():
     flow = Flow.from_client_config(
         GOOGLE_CLIENT_CONFIG,
         scopes=GOOGLE_SCOPES,
-        redirect_uri=url_for("auth.google_callback", _external=True),
+        redirect_uri=GOOGLE_REDIRECT_URI,
     )
     authorization_url, state = flow.authorization_url(prompt="consent")
     session["google_oauth_state"] = state
@@ -77,7 +85,7 @@ def google_callback():
         GOOGLE_CLIENT_CONFIG,
         scopes=GOOGLE_SCOPES,
         state=state,
-        redirect_uri=url_for("auth.google_callback", _external=True),
+        redirect_uri=GOOGLE_REDIRECT_URI,
     )
     flow.fetch_token(authorization_response=request.url)
     session.pop("google_oauth_state", None)

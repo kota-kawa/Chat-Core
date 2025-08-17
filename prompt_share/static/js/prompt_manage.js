@@ -1,6 +1,11 @@
 // my_prompts.js
 document.addEventListener("DOMContentLoaded", function() {
   // ユーザーが投稿したプロンプト一覧を取得して表示する関数
+  function truncateTitle(title) {
+    const chars = Array.from(title);
+    return chars.length > 17 ? chars.slice(0, 17).join('') + '...' : title;
+  }
+
   function loadMyPrompts() {
     fetch('/prompt_manage/api/my_prompts')
       .then(response => response.json())
@@ -12,7 +17,7 @@ document.addEventListener("DOMContentLoaded", function() {
             const card = document.createElement("div");
             card.classList.add("prompt-card");
             card.innerHTML = `
-              <h3>${prompt.title}</h3>
+              <h3>${truncateTitle(prompt.title)}</h3>
               <p>${prompt.content}</p>
               <div class="meta">
                 <span>カテゴリ: ${prompt.category}</span><br>

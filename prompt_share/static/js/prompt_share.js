@@ -1,7 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-  function truncateText(text, maxLength) {
-    return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
-  }
 
   // ログイン状態の確認とUI切り替え
   const userIcon = document.getElementById('userIcon');
@@ -67,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function () {
                   </button>
               
               <h3>${prompt.title}</h3>
-              <p>${truncateText(prompt.content, 65)}</p>
+              <p>${prompt.content}</p>
 
               <!-- カテゴリと投稿者情報 ＋ （必要なら）トグルボタン＋ポップアップ -->
               <div class="prompt-meta" style="text-align: center; margin-top: 10px; position: relative;">
@@ -237,7 +234,7 @@ document.addEventListener("DOMContentLoaded", function () {
             card.setAttribute("data-category", prompt.category);
             card.innerHTML = `
               <h3>${prompt.title}</h3>
-              <p>${truncateText(prompt.content, 65)}</p>
+              <p>${prompt.content}</p>
               <div class="prompt-meta">
                 <span>カテゴリ: ${prompt.category}</span>
                 <span>投稿者: ${prompt.author}</span>

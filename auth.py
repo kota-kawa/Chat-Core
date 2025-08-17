@@ -1,6 +1,33 @@
 from flask import Blueprint, request, session, render_template, redirect, url_for, jsonify
 import random
-from common import get_user_by_email, get_user_by_id, send_email
+import requests
+from google_auth_oauthlib.flow import Flow
+from common import (
+    get_user_by_email,
+    get_user_by_id,
+    send_email,
+    create_user,
+    set_user_verified,
+    copy_default_tasks_for_user,
+)
+
+GOOGLE_CLIENT_CONFIG = {
+    "web": {
+        "client_id": "1059688188980-2h0drsbofjge33t0aev54vqrihoes7id.apps.googleusercontent.com",
+        "project_id": "chatcore-ai-469306",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_secret": "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",
+        "redirect_uris": ["http://localhost:5000/google-callback"],
+    }
+}
+
+GOOGLE_SCOPES = [
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/userinfo.profile",
+    "openid",
+]
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -27,6 +54,52 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for("auth.login"))
+
+
+@auth_bp.route("/google-login")
+def google_login():
+    flow = Flow.from_client_config(
+        GOOGLE_CLIENT_CONFIG,
+        scopes=GOOGLE_SCOPES,
+        redirect_uri=url_for("auth.google_callback", _external=True),
+    )
+    authorization_url, state = flow.authorization_url(prompt="consent")
+    session["google_oauth_state"] = state
+    return redirect(authorization_url)
+
+
+@auth_bp.route("/google-callback")
+def google_callback():
+    state = session.get("google_oauth_state")
+    if not state:
+        return redirect(url_for("auth.login"))
+    flow = Flow.from_client_config(
+        GOOGLE_CLIENT_CONFIG,
+        scopes=GOOGLE_SCOPES,
+        state=state,
+        redirect_uri=url_for("auth.google_callback", _external=True),
+    )
+    flow.fetch_token(authorization_response=request.url)
+    session.pop("google_oauth_state", None)
+
+    credentials = flow.credentials
+    user_info = requests.get(
+        "https://www.googleapis.com/oauth2/v2/userinfo",
+        headers={"Authorization": f"Bearer {credentials.token}"},
+    ).json()
+    email = user_info.get("email")
+    if not email:
+        return redirect(url_for("auth.login"))
+    user = get_user_by_email(email)
+    if not user:
+        user_id = create_user(email)
+        set_user_verified(user_id)
+        copy_default_tasks_for_user(user_id)
+    else:
+        user_id = user["id"]
+    session["user_id"] = user_id
+    session["user_email"] = email
+    return redirect(url_for("chat.index"))
 
 @auth_bp.route("/api/send_login_code", methods=["POST"])
 def api_send_login_code():

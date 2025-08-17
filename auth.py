@@ -16,18 +16,19 @@ from common import (
 load_dotenv()
 
 GOOGLE_REDIRECT_URI = os.getenv(
-    "GOOGLE_REDIRECT_URI", "http://localhost:5000/google-callback"
+    "GOOGLE_REDIRECT_URI", "https://chatcore-ai.com/google-callback"
 )
 
 GOOGLE_CLIENT_CONFIG = {
     "web": {
-        "client_id": "1059688188980-2h0drsbofjge33t0aev54vqrihoes7id.apps.googleusercontent.com",
+        "client_id": "1059688188980-g1v3g4gmrhnr19pcdh94su969811pk4v.apps.googleusercontent.com",
         "project_id": "chatcore-ai-469306",
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token",
         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_secret": "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",
+        "client_secret": "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",
         "redirect_uris": [GOOGLE_REDIRECT_URI],
+        "javascript_origins": ["https://chatcore-ai.com"],
     }
 }
 

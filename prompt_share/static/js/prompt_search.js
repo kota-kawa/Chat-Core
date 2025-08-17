@@ -1,4 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
+  function truncateText(text, maxLength) {
+    return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
+  }
+
   const searchButton = document.getElementById("searchButton");
   const searchInput = document.getElementById("searchInput");
   const promptCardsSection = document.querySelector(".prompt-cards");
@@ -39,7 +43,7 @@ document.addEventListener("DOMContentLoaded", function () {
             card.setAttribute("data-category", prompt.category);
             card.innerHTML = `
               <h3>${prompt.title}</h3>
-              <p>${prompt.content}</p>
+              <p>${truncateText(prompt.content, 65)}</p>
               <div class="prompt-meta">
                 <span>カテゴリ: ${prompt.category}</span>
                 <span>投稿者: ${prompt.author}</span>

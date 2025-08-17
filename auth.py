@@ -15,6 +15,10 @@ from common import (
 
 load_dotenv()
 
+# Allow OAuth over HTTP in non-production environments
+if os.getenv("FLASK_ENV") != "production":
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
 GOOGLE_REDIRECT_URI = os.getenv(
     "GOOGLE_REDIRECT_URI", "https://chatcore-ai.com/google-callback"
 )

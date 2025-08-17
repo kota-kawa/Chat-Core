@@ -2,11 +2,12 @@ document.addEventListener("DOMContentLoaded", function () {
   // ログイン状態の確認とUI切り替え
   const userIcon = document.getElementById('userIcon');
   const authButtons = document.getElementById('auth-buttons');
+  let isLoggedIn = false; // ログイン状態を保持
 
-fetch('/api/current_user')
+  fetch('/api/current_user')
     .then(res => res.ok ? res.json() : { logged_in: false })
-    
     .then(data => {
+      isLoggedIn = data.logged_in;
       if (data.logged_in) {
         if (authButtons) authButtons.style.display = 'none';
         if (userIcon) userIcon.style.display = '';
@@ -17,8 +18,7 @@ fetch('/api/current_user')
         if (loginBtn) loginBtn.onclick = () => { window.location.href = '/login'; };
       }
     })
-
-   .catch(err => { // 修正後：catchブロックを一つにまとめ、エラー発生時もUIを非ログイン状態にフォールバックさせる
+    .catch(err => { // 修正後：catchブロックを一つにまとめ、エラー発生時もUIを非ログイン状態にフォールバックさせる
       console.error('Error checking login status:', err);
       if (authButtons) authButtons.style.display = '';
       if (userIcon) userIcon.style.display = 'none';
@@ -108,6 +108,10 @@ fetch('/api/current_user')
             const bookmarkBtn = card.querySelector(".bookmark-btn");
             bookmarkBtn.addEventListener("click", function (e) {
               e.stopPropagation();
+              if (!isLoggedIn) {
+                alert("ブックマークするにはログインが必要です。");
+                return;
+              }
               // ブックマーク状態をトグル
               bookmarkBtn.classList.toggle("bookmarked");
               const isBookmarkedNow = bookmarkBtn.classList.contains("bookmarked");
@@ -366,6 +370,10 @@ fetch('/api/current_user')
   const closeModalBtn = document.querySelector(".close-btn");
 
   openModalBtn.addEventListener("click", function () {
+    if (!isLoggedIn) {
+      alert("プロンプトを投稿するにはログインが必要です。");
+      return;
+    }
     postModal.classList.add("show");
   });
 
@@ -392,6 +400,10 @@ fetch('/api/current_user')
 
       bookmarkBtn.addEventListener("click", function (e) {
         e.stopPropagation();
+        if (!isLoggedIn) {
+          alert("ブックマークするにはログインが必要です。");
+          return;
+        }
         bookmarkBtn.classList.toggle("bookmarked");
         bookmarkBtn.innerHTML = bookmarkBtn.classList.contains("bookmarked")
           ? `<i class="bi bi-bookmark-fill"></i>`

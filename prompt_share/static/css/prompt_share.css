@@ -203,6 +203,8 @@ main {
   transition: 0.3s ease;
   cursor: pointer;
   position: relative;
+  max-height: 260px;
+  overflow: hidden;
 }
 
 .prompt-card:hover {
@@ -215,6 +217,11 @@ main {
   margin-bottom: 0.5rem;
   font-weight: 600;
   color: var(--accent-color);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .prompt-card p {

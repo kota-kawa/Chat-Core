@@ -26,6 +26,11 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
+  function truncateTitle(title) {
+    const chars = Array.from(title);
+    return chars.length > 17 ? chars.slice(0, 17).join('') + '...' : title;
+  }
+
   // ------------------------------
   // サーバーからプロンプト一覧を取得して表示する関数（Promise を返す）
   // ------------------------------
@@ -63,7 +68,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     ${bookmarkIcon}
                   </button>
               
-              <h3>${prompt.title}</h3>
+              <h3>${truncateTitle(prompt.title)}</h3>
               <p>${prompt.content}</p>
 
               <!-- カテゴリと投稿者情報 ＋ （必要なら）トグルボタン＋ポップアップ -->
@@ -233,7 +238,7 @@ document.addEventListener("DOMContentLoaded", function () {
             card.classList.add("prompt-card");
             card.setAttribute("data-category", prompt.category);
             card.innerHTML = `
-              <h3>${prompt.title}</h3>
+              <h3>${truncateTitle(prompt.title)}</h3>
               <p>${prompt.content}</p>
               <div class="prompt-meta">
                 <span>カテゴリ: ${prompt.category}</span>

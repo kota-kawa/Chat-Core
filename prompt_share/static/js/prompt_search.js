@@ -9,6 +9,11 @@ document.addEventListener("DOMContentLoaded", function () {
   const originalCardsHTML = promptCardsSection.innerHTML;
   const originalHeaderText = selectedCategoryTitle.textContent;
 
+  function truncateTitle(title) {
+    const chars = Array.from(title);
+    return chars.length > 17 ? chars.slice(0, 17).join('') + '...' : title;
+  }
+
   function searchPromptsServer() {
     const query = searchInput.value.trim();
 
@@ -39,7 +44,7 @@ document.addEventListener("DOMContentLoaded", function () {
             // カテゴリフィルタ用に data-category 属性を設定
             card.setAttribute("data-category", prompt.category);
             card.innerHTML = `
-              <h3>${prompt.title}</h3>
+              <h3>${truncateTitle(prompt.title)}</h3>
               <p>${prompt.content}</p>
               <div class="prompt-meta">
                 <span>カテゴリ: ${prompt.category}</span>

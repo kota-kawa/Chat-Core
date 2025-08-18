@@ -1,11 +1,11 @@
 from flask import Blueprint, request, session, jsonify
-from common import (
-    send_email,
+from services.email_service import send_email
+from services.users import (
     create_user,
     get_user_by_email,
     set_user_verified,
     get_user_by_id,
-    copy_default_tasks_for_user   
+    copy_default_tasks_for_user,
 )
 import random
 

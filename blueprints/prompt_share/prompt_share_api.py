@@ -1,6 +1,6 @@
 # prompt_share/prompt_share_api.py
 from flask import Blueprint, request, jsonify, session
-from common import get_db_connection
+from services.db import get_db_connection
 
 prompt_share_api_bp = Blueprint('prompt_share_api', __name__, url_prefix='/prompt_share/api')
 

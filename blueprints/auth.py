@@ -4,14 +4,14 @@ import random
 import requests
 from google_auth_oauthlib.flow import Flow
 from dotenv import load_dotenv
-from common import (
+from services.users import (
     get_user_by_email,
     get_user_by_id,
-    send_email,
     create_user,
     set_user_verified,
     copy_default_tasks_for_user,
 )
+from services.email_service import send_email
 
 load_dotenv()
 

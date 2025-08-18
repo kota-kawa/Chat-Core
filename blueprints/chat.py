@@ -1,14 +1,14 @@
 # chat.py
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session, current_app, send_from_directory
-from common import (
-    get_db_connection,
+from services.db import get_db_connection
+from services.chat_service import (
     save_message_to_db,
     get_chat_room_messages,
-    get_groq_response,
     create_chat_room_in_db,
     rename_chat_room_in_db,
-    get_user_by_id   
 )
+from services.llm import get_groq_response
+from services.users import get_user_by_id
 from werkzeug.utils import secure_filename
 import re
 import json
@@ -426,7 +426,7 @@ def chat():
 
 
     if model == "google-gemini":
-        from gemini import get_gemini_response
+        from services.gemini import get_gemini_response
         bot_reply = get_gemini_response(conversation_messages, model)
     else:
         bot_reply = get_groq_response(conversation_messages, model)

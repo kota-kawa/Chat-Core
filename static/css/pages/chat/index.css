@@ -1,10 +1,12 @@
-/* Chat page style imports */
+/* index.css
+   Entry point for the chat page. Imports base styles, shared components,
+   and page-specific modules. */
 @import url('../../base/base.css');
+@import url('../../components/sidebar.css');
+@import url('../../components/new_prompt_modal.css');
 @import url('setup.css');
 @import url('chat_layout.css');
-@import url('chat_sidebar.css');
 @import url('chat_messages.css');
 @import url('chat_input.css');
 @import url('tasks_order/tasks_order.css');
 @import url('tasks_order/task-edit-modal.css');
-@import url('new_prompt_modal.css');

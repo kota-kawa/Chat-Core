@@ -1,6 +1,6 @@
 /* new_prompt_modal.css
-   新しいプロンプト投稿モーダル全体のレイアウトとフォーム要素のスタイル
-*/
+   Modal component for submitting new prompts. Relies on variables defined in
+   base/variables.css. */
 :root {
   --primary-color: #168d48;      /* 明るい緑 */
   --accent-color: #27ae60;       /* 濃い緑 */

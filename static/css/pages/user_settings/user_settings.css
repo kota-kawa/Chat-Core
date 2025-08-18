@@ -1,6 +1,6 @@
-@import url('../../base/base.css');
-
-/* user_settings.css */
+/* user_settings.css
+   Styles specific to the user settings page. Base styles are imported via
+   index.css. */
 :root {
   --primary-color-light: #e8f9f3; /* Primary color の薄い版 */
   --sidebar-bg: #ffffff;

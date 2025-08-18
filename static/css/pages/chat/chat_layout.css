@@ -45,11 +45,6 @@
     z-index:1000;
   }
 
-  /* 2カラム → 1カラム縦並び */
-  .chat-main{
-    flex-direction:column;
-  }
-
   .chat-sidebar-toggle {
     position: absolute;
     color: #000 !important;

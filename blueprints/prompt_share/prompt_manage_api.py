@@ -1,6 +1,6 @@
 # prompt_manage_api.py
 from flask import Blueprint, request, jsonify, session
-from common import get_db_connection  # 既存の DB 接続関数を利用
+from services.db import get_db_connection  # 既存の DB 接続関数を利用
 
 prompt_manage_api_bp = Blueprint('prompt_manage_api', __name__, url_prefix='/prompt_manage/api')
 

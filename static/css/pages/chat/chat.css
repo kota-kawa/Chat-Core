@@ -1,5 +1,5 @@
 /* Chat page style imports */
-@import url('base.css');
+@import url('../../base/base.css');
 @import url('setup.css');
 @import url('chat_layout.css');
 @import url('chat_sidebar.css');

@@ -1,8 +1,7 @@
 flask
-groq
 mysql-connector-python
-google-generativeai
 google-auth
 google-auth-oauthlib
 requests
 python-dotenv
+openai

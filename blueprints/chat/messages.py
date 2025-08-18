@@ -9,7 +9,7 @@ from services.chat_service import (
     save_message_to_db,
     get_chat_room_messages,
 )
-from services.llm import get_groq_response
+from services.llm import get_groq_response, get_gemini_response
 
 from . import (
     chat_bp,
@@ -152,7 +152,6 @@ def chat():
         print("Failed to write conversation_messages to extra_prompt.txt:", e)
 
     if model == "google-gemini":
-        from services.gemini import get_gemini_response
         bot_reply = get_gemini_response(conversation_messages, model)
     else:
         bot_reply = get_groq_response(conversation_messages, model)

@@ -56,6 +56,13 @@ python app.py
 - `static/` : CSS・JavaScript・画像などの静的ファイル
 - `db/init.sql` : 初期データベーススキーマ
 
+## CSSガイドライン
+- `static/css/base/` : 変数、リセット、ボタン、レスポンシブ設定などの基盤スタイルを配置します。
+- `static/css/components/` : サイドバーやモーダルなど再利用可能なコンポーネントスタイルをまとめます。
+- `static/css/pages/<page>/index.css` : 各ページのエントリーポイントとなるCSS。`base/base.css` や必要なコンポーネントを `@import` します。
+
+クラス名は BEM 風の `kebab-case` を推奨し、各CSSファイルの冒頭に目的と依存関係をコメントで記述します。HTML テンプレートでは各ページの `index.css` のみを読み込みます。
+
 ## 本番運用のポイント
 - `FLASK_DEBUG` を無効化し、`FLASK_SECRET_KEY` などの機密情報は環境変数から読み込むようにしてください。
 - 依存パッケージのバージョンを固定し、定期的にアップデートを行うと安全です。

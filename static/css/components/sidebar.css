@@ -1,6 +1,6 @@
-/* chat_sidebar.css
-   サイドバー（チャットルームリスト／履歴カード）のレイアウトとカードスタイル
-*/
+/* sidebar.css
+   Sidebar layout and chat room list card styles. Breakpoints are managed in
+   base/responsive.css. */
 .sidebar{
   width:280px;background:var(--secondary-color);padding:1rem;border-right:1px solid #e0e0e0;overflow-y:auto;
 }
@@ -20,11 +20,3 @@
 .chat-room-card.active .room-actions-menu{color:var(--text-dark);}
 .room-actions-menu .menu-item{padding:6px 12px;white-space:nowrap;cursor:pointer;}
 .room-actions-menu .menu-item:hover{background:#eee;}
-
-@media (max-width:576px){
-  .sidebar{
-    padding:.75rem .75rem;
-    border-right:none;        /* 1カラムなので右線は不要 */
-    border-bottom:1px solid #e0e0e0;
-  }
-}

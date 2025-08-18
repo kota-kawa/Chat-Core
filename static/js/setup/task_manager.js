@@ -1,4 +1,125 @@
-// tasks_order.js
+// Task title updater
+
+function updateTaskTitle(card, newTitle) {
+  // ① card の直下にあるテキストノードをすべて削除
+  Array.from(card.childNodes).forEach(node => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      node.remove();
+    }
+  });
+  
+  // ② card 内の要素のうち、"delete-container"、"edit-container"、"task-title" 以外のものを削除
+  Array.from(card.children).forEach(child => {
+    if (!child.classList.contains('delete-container') &&
+        !child.classList.contains('edit-container') &&
+        !child.classList.contains('task-title')) {
+      child.remove();
+    }
+  });
+  
+  // ③ "task-title" クラスの要素を探す。なければ新たに作成して card の先頭に追加
+  let titleElem = card.querySelector('.task-title');
+  if (!titleElem) {
+    titleElem = document.createElement('span');
+    titleElem.className = 'task-title';
+    // card の computed style を取得し、フォント等のスタイルを反映して位置ずれを防ぐ
+    const computedStyle = window.getComputedStyle(card);
+    titleElem.style.font = computedStyle.font;
+    titleElem.style.lineHeight = computedStyle.lineHeight;
+    titleElem.style.display = 'inline';
+    titleElem.style.margin = '0';
+    titleElem.style.padding = '0';
+    card.prepend(titleElem);
+  }
+  
+  // ④ 新しいタスク名を表示
+  titleElem.textContent = newTitle;
+}
+// Task edit modal
+
+function showModal(modalEl) {
+  modalEl.style.display = 'flex';
+}
+
+function hideModal(modalEl) {
+  modalEl.style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const modalEl  = document.getElementById('taskEditModal');
+  const closeBtn = document.getElementById('closeTaskEditModal');
+  const cancelBtn= document.getElementById('cancelTaskEditModal');
+  const saveBtn  = document.getElementById('saveTaskChanges');
+
+  // モーダルの閉じる操作
+  closeBtn?.addEventListener('click',  () => hideModal(modalEl));
+  cancelBtn?.addEventListener('click', () => hideModal(modalEl));
+
+  if (!saveBtn) return;
+
+  saveBtn.addEventListener('click', () => {
+    // 1. モーダル内の入力値取得
+    const taskName       = document.getElementById('taskName').value.trim();
+    const promptTemplate = document.getElementById('promptTemplate').value.trim();
+    const inputExamples  = document.getElementById('inputExamples').value.trim();
+    const outputExamples = document.getElementById('outputExamples').value.trim();
+
+    // 2. 編集前のタスク名を dataset から取得
+    const oldTask = window.currentEditingCard.dataset.task;
+
+    // 3. サーバー送信用ペイロード
+    const payload = {
+      old_task:        oldTask,
+      new_task:        taskName,
+      prompt_template: promptTemplate,
+      input_examples:  inputExamples,
+      output_examples: outputExamples
+    };
+
+    // 4. API 呼び出し
+    fetch('/api/edit_task', {
+      method:      'POST',
+      credentials: 'same-origin',             // Cookie を送信
+      headers:     { 'Content-Type': 'application/json' },
+      body:        JSON.stringify(payload)
+    })
+    .then(response => {
+      const ct = response.headers.get('Content-Type') || '';
+      if (ct.includes('application/json')) {
+        // 正常 or JSON エラー(JSON.stringify された {"error":...})
+        return response.json().then(data => {
+          if (!response.ok) throw new Error(data.error || '更新に失敗しました');
+          return data;
+        });
+      } else {
+        // HTML の 500 ページなどが返ってきた場合
+        return response.text().then(text => {
+          console.error('非JSONレスポンス:', text);
+          throw new Error(`サーバーエラー: ${response.status}`);
+        });
+      }
+    })
+    .then(() => {
+      // 5. 成功したら data- 属性を更新
+      const card = window.currentEditingCard;
+      card.dataset.task            = taskName;
+      card.dataset.prompt_template = promptTemplate;
+      card.dataset.input_examples  = inputExamples;
+      card.dataset.output_examples = outputExamples;
+
+      // 6. タイトルを書き換え
+      updateTaskTitle(card, taskName);
+
+      // 7. モーダル閉じる
+      hideModal(modalEl);
+    })
+    .catch(error => {
+      alert("更新に失敗しました: " + error.message);
+      console.error("edit_task error:", error);
+    });
+  });
+});
+// Task ordering and editing
 
 let isEditingOrder = false;
 let editButton;
@@ -432,3 +553,4 @@ function saveTaskOrder() {
 
 // エクスポート（他のスクリプトから利用できるように）
 window.initTaskOrderEditing = initTaskOrderEditing;
+

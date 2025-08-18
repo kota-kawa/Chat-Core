@@ -1,4 +1,4 @@
-// static/js/web_components/user_icon.js
+// static/js/components/user_icon.js
 // ────────────────────────────────────────────────
 // 右上ユーザーアイコン  +  ドロップダウンメニュー
 //  - /api/user/profile で avatar_url / username を取得

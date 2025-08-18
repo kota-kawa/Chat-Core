@@ -50,7 +50,7 @@ python app.py
 ## ディレクトリ構成
 - `app.py` : Flask アプリケーションのエントリーポイント
 - `auth.py` / `verification.py` : ユーザー登録・ログイン関連
-- `chat.py` : チャット機能のルートと処理
+- `chat/` : チャット機能のルートと処理（複数ファイルに分割）
 - `prompt_share/` : プロンプト共有モジュール
 - `templates/` : HTML テンプレート
 - `static/` : CSS・JavaScript・画像などの静的ファイル

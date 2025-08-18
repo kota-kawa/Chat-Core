@@ -1,3 +1,5 @@
+@import url('../base.css');
+
 /* user_settings.css */
 :root {
   --primary-color-light: #e8f9f3; /* Primary color の薄い版 */

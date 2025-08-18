@@ -1,18 +1,6 @@
-/* prompt_manage.css */
+@import url('base.css');
 
-/* ─────────────────────────── */
-/* 1. カラーパレット＆ルート変数 */
-/* ─────────────────────────── */
-:root {
-  --primary-color:      #2ecc71;
-  --accent-color:       #27ae60;
-  --text-color:         #333333;
-  --light-bg:           #e8f5e9;
-  --background-color:   var(--light-bg);
-  --card-bg:            #ffffff;
-  --shadow:             0 4px 10px rgba(0, 0, 0, 0.1);
-  --border-color:       #dddddd;
-}
+/* prompt_manage.css */
 
 /* ─────────────────────────── */
 /* 2. ベーススタイル               */

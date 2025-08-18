@@ -1,3 +1,5 @@
+import { loadTaskCards } from './setup.js';
+
 document.addEventListener("DOMContentLoaded", function () {
   const openModalBtn = document.getElementById("openNewPromptModal");
   const newPromptModal = document.getElementById("newPromptModal");

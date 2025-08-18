@@ -1,8 +1,12 @@
 // chat_rooms.js – ルーム一覧・作成／削除／改名
 // --------------------------------------------------
 
+import { chatRoomListEl, chatMessages } from './dom.js';
+import { showChatInterface, currentChatRoomId, setCurrentChatRoomId } from './chat_ui.js';
+import { loadLocalChatHistory, loadChatHistory } from './chat_history.js';
+
 /* サイドバーにルーム一覧を描画 */
-function loadChatRooms() {
+export function loadChatRooms() {
   fetch('/api/get_chat_rooms')
     .then(r => r.json()).then(data => {
       if (data.error) { console.error("get_chat_rooms:", data.error); return; }
@@ -104,8 +108,8 @@ function decorateMenuItem(el,color,hover) {
 }
 
 /* ルーム切替 */
-function switchChatRoom(roomId) {
-  currentChatRoomId = roomId;
+export function switchChatRoom(roomId) {
+  setCurrentChatRoomId(roomId);
   localStorage.setItem('currentChatRoomId', roomId);
   showChatInterface();
   loadChatRooms();
@@ -114,7 +118,7 @@ function switchChatRoom(roomId) {
 }
 
 /* ルーム作成 */
-function createNewChatRoom(roomId, title) {
+export function createNewChatRoom(roomId, title) {
   return fetch('/api/new_chat_room', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ id: roomId, title })
@@ -125,7 +129,7 @@ function createNewChatRoom(roomId, title) {
 }
 
 /* ルーム削除 */
-function deleteChatRoom(roomId) {
+export function deleteChatRoom(roomId) {
   fetch('/api/delete_chat_room',{
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ room_id: roomId })
@@ -133,7 +137,7 @@ function deleteChatRoom(roomId) {
     if (data.error) alert("削除失敗: "+data.error);
     else {
       if (roomId===currentChatRoomId) {
-        currentChatRoomId=null; chatMessages.innerHTML='';
+        setCurrentChatRoomId(null); chatMessages.innerHTML='';
         localStorage.removeItem('currentChatRoomId');
       }
       loadChatRooms();
@@ -142,7 +146,7 @@ function deleteChatRoom(roomId) {
 }
 
 /* ルーム名変更 */
-function renameChatRoom(roomId,newTitle){
+export function renameChatRoom(roomId,newTitle){
   fetch('/api/rename_chat_room',{
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ room_id: roomId, new_title: newTitle })
@@ -152,9 +156,3 @@ function renameChatRoom(roomId,newTitle){
   }).catch(err=>alert("名前変更失敗: "+err));
 }
 
-// ---- window へ公開 ------------------------------
-window.loadChatRooms   = loadChatRooms;
-window.switchChatRoom  = switchChatRoom;
-window.createNewChatRoom = createNewChatRoom;
-window.deleteChatRoom  = deleteChatRoom;
-window.renameChatRoom  = renameChatRoom;

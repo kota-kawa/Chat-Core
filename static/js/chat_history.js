@@ -1,8 +1,12 @@
 // chat_history.js – 履歴のロード／保存
 // --------------------------------------------------
 
+import { chatMessages } from './dom.js';
+import { displayMessage, scrollMessageToTop } from './chat_messages.js';
+import { currentChatRoomId } from './chat_ui.js';
+
 /* サーバーから履歴取得 */
-function loadChatHistory() {
+export function loadChatHistory() {
   if (!currentChatRoomId) { chatMessages.innerHTML = ''; return; }
   fetch(`/api/get_chat_history?room_id=${currentChatRoomId}`)
     .then(r => r.json()).then(data => {
@@ -22,7 +26,7 @@ function loadChatHistory() {
 }
 
 /* ローカルストレージから履歴読み込み */
-function loadLocalChatHistory() {
+export function loadLocalChatHistory() {
   if (!currentChatRoomId) return;
   const key = `chatHistory_${currentChatRoomId}`;
   let history = [];
@@ -37,7 +41,7 @@ function loadLocalChatHistory() {
 }
 
 /* メッセージ1件をローカル保存 */
-function saveMessageToLocalStorage(text, sender) {
+export function saveMessageToLocalStorage(text, sender) {
   if (!currentChatRoomId) return;
   const key = `chatHistory_${currentChatRoomId}`;
   let history = [];
@@ -47,7 +51,3 @@ function saveMessageToLocalStorage(text, sender) {
   localStorage.setItem(key, JSON.stringify(history));
 }
 
-// ---- window へ公開 ------------------------------
-window.loadChatHistory       = loadChatHistory;
-window.loadLocalChatHistory  = loadLocalChatHistory;
-window.saveMessageToLocalStorage = saveMessageToLocalStorage;

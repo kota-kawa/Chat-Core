@@ -2,6 +2,7 @@
 // -----------------------------------------------
 //  ユーザー設定フォーム (プロフィール取得／更新)
 // -----------------------------------------------
+export {};
 document.addEventListener('DOMContentLoaded', () => {
   const changeBtn   = document.getElementById('changeAvatarBtn');  // 画像変更ボタン
   const fileInput   = document.getElementById('avatarInput');      // file 要素

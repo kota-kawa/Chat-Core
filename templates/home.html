@@ -241,31 +241,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-
-
-    <script src="{{ url_for('static', filename='js/dom.js') }}"></script>
-
-    <!-- ★チャット機能(順序に注意) -->
-    <script src="{{ url_for('static', filename='js/chat_ui.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/chat_messages.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/chat_history.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/chat_rooms.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/chat_controller.js') }}"></script>
-    
-    <!-- セットアップ -->
-    <script src="{{ url_for('static', filename='js/setup.js') }}"></script>
-    
-    <!-- 画面ロード時の初期化 -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    
-    <!-- 既存 task 系 + プロンプトモーダル -->
-    <script src="{{ url_for('static', filename='js/tasks_order/tasks_order.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/tasks_order/tasks_name_update.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/tasks_order/tasks_edit_modal.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/new_prompt_modal.js') }}"></script>
-
-    <script src="{{ url_for('static', filename='js/web_components/popup_menu.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/web_components/user_icon.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 
   </body>
 </html>

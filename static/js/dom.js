@@ -1,5 +1,5 @@
 // dom.js
-// 画面内で使用するDOM要素をまとめて取得し、グローバル変数として window に登録
+// 画面内で使用するDOM要素をまとめて取得し、他モジュールへエクスポート
 
 // セットアップ画面関連
 const setupContainer   = document.getElementById('setup-container');
@@ -20,18 +20,20 @@ const newChatBtn     = document.getElementById('new-chat-btn');
 const chatRoomListEl = document.getElementById('chat-room-list');
 
 
-// グローバル登録
-window.setupContainer   = setupContainer;
-window.chatContainer    = chatContainer;
-window.chatMessages     = chatMessages;
-window.userInput        = userInput;
-window.sendBtn          = sendBtn;
-window.typingIndicator  = typingIndicator;
-window.backToSetupBtn   = backToSetupBtn;
-window.newChatBtn       = newChatBtn;
-window.chatRoomListEl   = chatRoomListEl;
-window.setupInfoElement = setupInfoElement;
-window.aiModelSelect    = aiModelSelect;
-window.accessChatBtn    = accessChatBtn;
-window.setupTaskCards   = setupTaskCards;
-window.taskSelection    = taskSelection;
+// 他モジュールから利用するためエクスポート
+export {
+  setupContainer,
+  setupInfoElement,
+  aiModelSelect,
+  accessChatBtn,
+  setupTaskCards,
+  taskSelection,
+  chatContainer,
+  chatMessages,
+  userInput,
+  sendBtn,
+  typingIndicator,
+  backToSetupBtn,
+  newChatBtn,
+  chatRoomListEl
+};

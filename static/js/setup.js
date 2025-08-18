@@ -17,8 +17,14 @@
  */
 
 
+import { setupContainer, setupInfoElement, aiModelSelect, chatContainer, chatMessages, taskSelection } from './dom.js';
+import { createNewChatRoom, loadChatRooms } from './chat_rooms.js';
+import { showChatInterface, setCurrentChatRoomId } from './chat_ui.js';
+import { generateResponse } from './chat_controller.js';
+import { initTaskOrderEditing, isEditingOrder } from './tasks_order/tasks_order.js';
+
 // ▼ 1. タスクカード生成・詳細表示 -------------------------------------------------
-function loadTaskCards() {
+export function loadTaskCards() {
   const ioModal        = document.getElementById("io-modal");
   const ioModalContent = document.getElementById("io-modal-content");
 
@@ -90,13 +96,13 @@ function loadTaskCards() {
       // クリック／並び替え関係の初期化
       initSetupTaskCards();
       initToggleTasks();
-      if (typeof initTaskOrderEditing === 'function') initTaskOrderEditing();
+      initTaskOrderEditing();
     })
     .catch(err => console.error("タスク読み込みに失敗:", err));
 }
 
 // ▼ 2. セットアップ画面の表示 ------------------------------------------------------
-function showSetupForm() {
+export function showSetupForm() {
   chatContainer.style.display  = 'none';
   setupContainer.style.display = 'block';
   setupInfoElement.value = '';
@@ -104,14 +110,14 @@ function showSetupForm() {
 }
 
 // ▼ 3. タスクカード選択処理 --------------------------------------------------------
-function initSetupTaskCards() {
+export function initSetupTaskCards() {
   const container = document.getElementById('task-selection');
   container.removeEventListener('click', handleTaskCardClick);
   container.addEventListener('click',  handleTaskCardClick);
 }
 
 function handleTaskCardClick(e) {
-  if (window.isEditingOrder) return;                // 並び替え中は無視
+  if (isEditingOrder) return;                // 並び替え中は無視
 
   const card = e.target.closest('.prompt-card');
   if (!card) return;
@@ -128,7 +134,7 @@ function handleTaskCardClick(e) {
   const newRoomId   = Date.now().toString();
   const roomTitle   = setupInfo || '新規チャット';
 
-  currentChatRoomId = newRoomId;
+  setCurrentChatRoomId(newRoomId);
   localStorage.setItem('currentChatRoomId', newRoomId);
 
   // ① ルームをサーバーに作成
@@ -152,7 +158,7 @@ function handleTaskCardClick(e) {
 }
 
 // ▼ 4. 「もっと見る」ボタン生成 ----------------------------------------------------
-function initToggleTasks() {
+export function initToggleTasks() {
   const oldBtn = document.getElementById('toggle-tasks-btn');
   if (oldBtn) oldBtn.remove();
 
@@ -188,8 +194,3 @@ function initToggleTasks() {
 }
 
 
-// ---- グローバル公開 -------------------------------------------------------------
-window.showSetupForm     = showSetupForm;
-window.initToggleTasks   = initToggleTasks;
-window.initSetupTaskCards= initSetupTaskCards;
-window.loadTaskCards     = loadTaskCards;

@@ -1,11 +1,14 @@
 // tasks_order.js
 
-let isEditingOrder = false;
+import { showModal } from './tasks_edit_modal.js';
+
+export let isEditingOrder = false;
 let editButton;
 let draggingTask = null;
 let taskPlaceholder = null;
 let taskOffsetX = 0;
 let taskOffsetY = 0;
+export let currentEditingCard = null;
 
 // タスクカード読み込み後に並び替え編集ボタンを追加する処理
 function initTaskOrderEditing() {
@@ -38,7 +41,6 @@ function initTaskOrderEditing() {
 function toggleTaskOrderEditing() {
   // 編集モードをトグルする
   isEditingOrder = !isEditingOrder;
-  window.isEditingOrder = isEditingOrder;
 
   if (isEditingOrder) {
     // 編集モード開始時：
@@ -188,7 +190,7 @@ function toggleTaskOrderEditing() {
           var card = this.closest('.prompt-card');
       
           // 対象カードの data 属性から値を取得してモーダルのフォームにセット
-          window.currentEditingCard = card;
+          currentEditingCard = card;
           document.getElementById('taskName').value = card.getAttribute('data-task') || "";
           // 追加：プロンプトテンプレート欄もセットする
           document.getElementById('promptTemplate').value = card.getAttribute('data-prompt_template') || "";
@@ -430,5 +432,4 @@ function saveTaskOrder() {
 }
 
 
-// エクスポート（他のスクリプトから利用できるように）
-window.initTaskOrderEditing = initTaskOrderEditing;
+export { initTaskOrderEditing };

@@ -89,7 +89,7 @@ tpl.innerHTML = `
   </div>
 `;
 
-class UserIcon extends HTMLElement {
+export class UserIcon extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' }).append(tpl.content.cloneNode(true));

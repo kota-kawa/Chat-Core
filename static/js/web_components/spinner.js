@@ -35,7 +35,7 @@ spinnerTemplate.innerHTML = `
   </div>
 `;
 
-class MySpinner extends HTMLElement {
+export class MySpinner extends HTMLElement {
   constructor() {
     super();
     const shadow = this.attachShadow({ mode: 'open' });

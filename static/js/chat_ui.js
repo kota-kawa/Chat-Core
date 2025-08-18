@@ -1,8 +1,12 @@
 // chat_ui.js  – チャット画面 UI 共通ユーティリティ
 // --------------------------------------------------
 
-// グローバル初期化
-window.currentChatRoomId = window.currentChatRoomId || null;
+// 現在のチャットルーム ID を保持
+let currentChatRoomId = null;
+
+export function setCurrentChatRoomId(id) {
+  currentChatRoomId = id;
+}
 
 /* チャット画面を表示（セットアップ画面を隠す） */
 function showChatInterface() {
@@ -70,8 +74,12 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 
 
-// ---- window へ公開 -------------------------------
-window.showChatInterface = showChatInterface;
-window.showTypingIndicator = showTypingIndicator;
-window.hideTypingIndicator = hideTypingIndicator;
-window.formatLLMOutput  = formatLLMOutput;
+// エクスポート
+export {
+  showChatInterface,
+  showTypingIndicator,
+  hideTypingIndicator,
+  formatLLMOutput,
+  currentChatRoomId,
+  setCurrentChatRoomId
+};

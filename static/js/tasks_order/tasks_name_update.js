@@ -1,6 +1,6 @@
 // tasks_name_update.js
 
-function updateTaskTitle(card, newTitle) {
+export function updateTaskTitle(card, newTitle) {
   // ① card の直下にあるテキストノードをすべて削除
   Array.from(card.childNodes).forEach(node => {
     if (node.nodeType === Node.TEXT_NODE) {

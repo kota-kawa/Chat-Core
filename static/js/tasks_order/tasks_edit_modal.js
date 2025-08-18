@@ -1,10 +1,13 @@
 // tasks_edit_modal.js
 
-function showModal(modalEl) {
+import { updateTaskTitle } from './tasks_name_update.js';
+import { currentEditingCard } from './tasks_order.js';
+
+export function showModal(modalEl) {
   modalEl.style.display = 'flex';
 }
 
-function hideModal(modalEl) {
+export function hideModal(modalEl) {
   modalEl.style.display = 'none';
 }
 
@@ -28,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const outputExamples = document.getElementById('outputExamples').value.trim();
 
     // 2. 編集前のタスク名を dataset から取得
-    const oldTask = window.currentEditingCard.dataset.task;
+    const oldTask = currentEditingCard.dataset.task;
 
     // 3. サーバー送信用ペイロード
     const payload = {
@@ -64,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     .then(() => {
       // 5. 成功したら data- 属性を更新
-      const card = window.currentEditingCard;
+      const card = currentEditingCard;
       card.dataset.task            = taskName;
       card.dataset.prompt_template = promptTemplate;
       card.dataset.input_examples  = inputExamples;

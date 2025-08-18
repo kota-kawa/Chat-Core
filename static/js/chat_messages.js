@@ -3,6 +3,10 @@
 // ※ DOMPurify を必ず先にロードしておくこと
 // <script src="https://unpkg.com/dompurify@2.4.0/dist/purify.min.js" defer></script>
 
+import { chatMessages } from './dom.js';
+import { formatLLMOutput } from './chat_ui.js';
+import { saveMessageToLocalStorage } from './chat_history.js';
+
 ////////////////////////////////////////////////////////////////////////////////
 // 1. 便利関数
 ////////////////////////////////////////////////////////////////////////////////
@@ -13,7 +17,7 @@
  * @param {string}      dirtyHtml サニタイズ前 HTML
  * @param {string[]}    allowed   許可タグ（省略時はデフォルト）
  */
-function renderSanitizedHTML(element, dirtyHtml, allowed = [
+export function renderSanitizedHTML(element, dirtyHtml, allowed = [
   'a','strong','em','code','pre','br','p','ul','ol','li','blockquote','img'
 ]) {
   const clean = DOMPurify.sanitize(dirtyHtml, {
@@ -28,7 +32,7 @@ function renderSanitizedHTML(element, dirtyHtml, allowed = [
  * @param {HTMLElement} element
  * @param {string} text
  */
-function setTextWithLineBreaks(element, text) {
+export function setTextWithLineBreaks(element, text) {
   element.textContent = '';
   text.split('\n').forEach((line, idx, arr) => {
     element.appendChild(document.createTextNode(line));
@@ -37,7 +41,7 @@ function setTextWithLineBreaks(element, text) {
 }
 
 // 新しいメッセージを表示領域の先頭に配置
-function scrollMessageToTop(element) {
+export function scrollMessageToTop(element) {
   const offset = -1050; // px, how far from the bottom the newest message should appear
   const max = chatMessages.scrollHeight - chatMessages.clientHeight;
   const target = Math.min(element.offsetTop, max) - offset;
@@ -49,7 +53,7 @@ function scrollMessageToTop(element) {
 ////////////////////////////////////////////////////////////////////////////////
 
 /* ユーザーメッセージを即時描画 */
-function renderUserMessage(text) {
+export function renderUserMessage(text) {
   const wrapper     = document.createElement('div');
   wrapper.className = 'message-wrapper user-message-wrapper';
 
@@ -81,7 +85,7 @@ function renderUserMessage(text) {
 }
 
 /* Bot メッセージをタイプアニメーションで描画 */
-function animateBotMessage(originalText) {
+export function animateBotMessage(originalText) {
   const wrapper = document.createElement('div');
   wrapper.className = 'message-wrapper bot-message-wrapper';
 
@@ -123,7 +127,7 @@ function animateBotMessage(originalText) {
 
 
 /* ローカル／サーバ履歴共通描画 */
-function displayMessage(text, sender) {
+export function displayMessage(text, sender) {
   const wrapper = document.createElement('div');
   const copyBtn = createCopyBtn(() => text);
 
@@ -177,9 +181,5 @@ function createCopyBtn(getText) {
   return btn;
 }
 
-// ---- window へ公開 ------------------------------
-window.renderUserMessage   = renderUserMessage;
-window.animateBotMessage   = animateBotMessage;
-window.displayMessage      = displayMessage;
-window.scrollMessageToTop  = scrollMessageToTop;
+export { createCopyBtn };
 

@@ -16,8 +16,17 @@
  *
  * ■ ユーザーメニュー表示 toggleUserMenu()
  *   - 「設定」「ログアウト」メニューを動的生成・表示・非表示
- */
+*/
 
+import { sendMessage } from './chat_controller.js';
+import { initToggleTasks, initSetupTaskCards, showSetupForm } from './setup.js';
+import { loadChatRooms, switchChatRoom } from './chat_rooms.js';
+import { chatMessages, newChatBtn, sendBtn, userInput, backToSetupBtn, accessChatBtn } from './dom.js';
+import { showChatInterface, setCurrentChatRoomId } from './chat_ui.js';
+import { initTaskOrderEditing } from './tasks_order/tasks_order.js';
+import './new_prompt_modal.js';
+import './web_components/popup_menu.js';
+import './web_components/user_icon.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   // ▼ログイン状態確認とUI制御
@@ -29,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
       //const settingsBtn    = document.getElementById("settings-btn");
       const authButtons    = document.getElementById("auth-buttons");
       const newPromptBtn   = document.getElementById("openNewPromptModal");
-      const accessChatBtn  = document.getElementById("access-chat-btn");
+      const userIcon       = document.getElementById("userIcon");
 
 
       
@@ -37,14 +46,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
          // ログイン時：認証ボタンは隠し、ユーザーアイコンを表示
         authButtons.style.display = "none";
-        userIcon.style.display    = "";  
+        userIcon.style.display    = "";
 
         newPromptBtn.style.display  = "";
         accessChatBtn.style.display = "";
-        
-        if (window.initTaskOrderEditing) {
-          window.initTaskOrderEditing();
-        }
+
+        initTaskOrderEditing();
         
       } else {
         // 未ログイン時：認証ボタンだけ表示、ユーザーアイコンは隠す
@@ -72,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ▼ローカルに保存されていれば現在のチャットルームを復元
   if (localStorage.getItem('currentChatRoomId'))
-    currentChatRoomId = localStorage.getItem('currentChatRoomId');
+    setCurrentChatRoomId(localStorage.getItem('currentChatRoomId'));
 
   // ▼初期化
   initToggleTasks();
@@ -85,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 新規チャット
   newChatBtn.addEventListener('click', () => {
-    currentChatRoomId = null;
+    setCurrentChatRoomId(null);
     localStorage.removeItem('currentChatRoomId');
     chatMessages.innerHTML = '';
     showSetupForm();

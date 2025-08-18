@@ -1,8 +1,12 @@
 // chat_controller.js – 送信ボタン／バックエンド通信
 // --------------------------------------------------
 
+import { userInput, aiModelSelect, chatMessages } from './dom.js';
+import { showTypingIndicator, hideTypingIndicator, currentChatRoomId } from './chat_ui.js';
+import { renderUserMessage, animateBotMessage, scrollMessageToTop } from './chat_messages.js';
+
 /* 送信ボタン or Enter 押下 */
-function sendMessage() {
+export function sendMessage() {
   const message = userInput.value.trim();
   if (!message) return;
   const aiModel = aiModelSelect.value;
@@ -13,7 +17,7 @@ function sendMessage() {
 }
 
 /* サーバー POST → Bot 応答を描画 */
-function generateResponse(message, aiModel) {
+export function generateResponse(message, aiModel) {
 
   // ユーザーメッセージを即描画
   renderUserMessage(message);
@@ -49,6 +53,3 @@ function generateResponse(message, aiModel) {
   });
 }
 
-// ---- window へ公開 ------------------------------
-window.sendMessage      = sendMessage;
-window.generateResponse = generateResponse;

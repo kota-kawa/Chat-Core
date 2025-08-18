@@ -1,18 +1,4 @@
-/* ベースカラーパレット */
-:root {
-  --primary-color: #2ecc71;      /* 明るい緑 */
-  --accent-color: #27ae60;       /* 濃い緑 */
-  --text-color: #333;
-  --light-bg: #e8f5e9;           /* 背景の淡い緑 */
-  --card-bg: #ffffff;
-  --shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+@import url('base.css');
 
 body {
   font-family: 'Poppins', sans-serif;

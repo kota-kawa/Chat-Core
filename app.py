@@ -2,20 +2,20 @@
 from flask import Flask
 import threading
 import time
-from chat import cleanup_ephemeral_chats  # chat.py に定義されたクリーンアップ関数をインポート
+from blueprints.chat import cleanup_ephemeral_chats  # chat.py に定義されたクリーンアップ関数をインポート
 
 # Flaskアプリを生成
 app = Flask(__name__)
 app.secret_key = "YOUR_SECRET_KEY"  # セッション暗号化キー
 
 # 各Blueprintをimport
-from auth import auth_bp
-from verification import verification_bp
-from chat import chat_bp
-from prompt_share import prompt_share_bp
-from prompt_share.prompt_share_api import prompt_share_api_bp
-from prompt_share.prompt_search import search_bp
-from prompt_share.prompt_manage_api import prompt_manage_api_bp
+from blueprints.auth import auth_bp
+from blueprints.verification import verification_bp
+from blueprints.chat import chat_bp
+from blueprints.prompt_share import prompt_share_bp
+from blueprints.prompt_share.prompt_share_api import prompt_share_api_bp
+from blueprints.prompt_share.prompt_search import search_bp
+from blueprints.prompt_share.prompt_manage_api import prompt_manage_api_bp
 
 # Blueprintを登録
 app.register_blueprint(auth_bp)

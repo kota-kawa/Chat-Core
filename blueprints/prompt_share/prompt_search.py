@@ -1,6 +1,6 @@
 # search_module.py
 from flask import Blueprint, request, jsonify
-from common import get_db_connection  # 既存の DB 接続関数を利用
+from services.db import get_db_connection  # 既存の DB 接続関数を利用
 
 search_bp = Blueprint('search', __name__, url_prefix='/search')
 

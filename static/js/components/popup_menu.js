@@ -226,7 +226,7 @@ template.innerHTML = `
         <path d="M12,17.27L18.18,21L16.54,13.97 L22,9.24L14.81,8.62L12,2 L9.19,8.62L2,9.24L7.45,13.97 L5.82,21L12,17.27Z" />
       </svg>
     </button>
-    <button class="btn btn--comment" onclick="location.href='/prompt_share/manage_prompts'"　title="コメント">
+    <button class="btn btn--comment" onclick="location.href='/'"　title="コメント">
       <svg viewBox="0 0 24 24">
         <path d="M19,3A2,2 0 0,1 21,5V19 C21,20.11 20.1,21 19,21H5 A2,2 0 0,1 3,19V5 A2,2 0 0,1 5,3H19 M16.7,9.35 C16.92,9.14 16.92,8.79 16.7,8.58 L15.42,7.3 C15.21,7.08 14.86,7.08 14.65,7.3 L13.65,8.3 L15.7,10.35 L16.7,9.35 M7,14.94 V17 H9.06 L15.12,10.94 L13.06,8.88 L7,14.94Z" />
       </svg>

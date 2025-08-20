@@ -443,18 +443,24 @@ main {
 .guardrail-info {
   display: none;
   position: absolute;
+
   transform: translateX(-50%);
+
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 4px;
   padding: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+
   width: 280px;
+
   max-height: 200px;
   overflow-y: auto;
   overflow-x: hidden;
   white-space: pre-wrap;
   word-break: break-word;
+
   z-index: 1000;
+
 }
 

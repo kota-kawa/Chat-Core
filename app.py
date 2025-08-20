@@ -2,11 +2,13 @@
 from flask import Flask
 import threading
 import time
+from datetime import timedelta
 from blueprints.chat import cleanup_ephemeral_chats  # chat.py に定義されたクリーンアップ関数をインポート
 
 # Flaskアプリを生成
 app = Flask(__name__)
 app.secret_key = "YOUR_SECRET_KEY"  # セッション暗号化キー
+app.permanent_session_lifetime = timedelta(days=30)
 
 # 各Blueprintをimport
 from blueprints.auth import auth_bp

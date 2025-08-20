@@ -140,6 +140,8 @@
   max-width: 480px;
   width: 90%;
   text-align: center;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 

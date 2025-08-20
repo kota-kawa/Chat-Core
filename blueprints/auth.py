@@ -112,6 +112,7 @@ def google_callback():
         user_id = user["id"]
     session["user_id"] = user_id
     session["user_email"] = email
+    session.permanent = True
     return redirect(url_for("chat.index"))
 
 @auth_bp.route("/api/send_login_code", methods=["POST"])
@@ -157,6 +158,7 @@ def api_verify_login_code():
         session["user_id"] = user_id
         user = get_user_by_id(user_id)
         session["user_email"] = user["email"] if user else ""
+        session.permanent = True
         session.pop("login_verification_code", None)
         session.pop("login_temp_user_id", None)
         return jsonify({"status": "success", "message": "ログインに成功しました"})

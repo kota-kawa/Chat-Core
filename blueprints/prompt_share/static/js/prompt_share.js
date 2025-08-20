@@ -26,6 +26,25 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
+  // 入力例・出力例ポップアップの要素を用意
+  const guardrailPopup = document.createElement('div');
+  guardrailPopup.className = 'guardrail-info';
+  document.body.appendChild(guardrailPopup);
+  let activeGuardrailBtn = null;
+
+  // ポップアップ以外をクリックしたら閉じる
+  document.addEventListener('click', () => {
+    guardrailPopup.style.display = 'none';
+    if (activeGuardrailBtn) {
+      activeGuardrailBtn.innerHTML = '<i class="bi bi-caret-down"></i>';
+      activeGuardrailBtn = null;
+    }
+  });
+
+  // ポップアップ自体のクリックは閉じる処理に伝播させない
+  guardrailPopup.addEventListener('click', (e) => e.stopPropagation());
+
+
   function truncateTitle(title) {
     const chars = Array.from(title);
     return chars.length > 17 ? chars.slice(0, 17).join('') + '...' : title;
@@ -71,46 +90,20 @@ document.addEventListener("DOMContentLoaded", function () {
               <h3>${truncateTitle(prompt.title)}</h3>
               <p>${prompt.content}</p>
 
-              <!-- カテゴリと投稿者情報 ＋ （必要なら）トグルボタン＋ポップアップ -->
-              <div class="prompt-meta" style="text-align: center; margin-top: 10px; position: relative;">
+              <!-- カテゴリと投稿者情報 -->
+              <div class="prompt-meta" style="text-align: center; margin-top: 10px;">
                 <span>カテゴリ: ${prompt.category}</span>
-                
                 ${(prompt.input_examples || prompt.output_examples)
                 ? `
-                      <!-- トグルボタン。小さめのBootstrapボタンを利用 -->
                       <button class="toggle-guardrail btn btn-outline-success btn-sm" style="margin: 0 6px; padding: 2px 6px;">
                         <i class="bi bi-caret-down"></i>
                       </button>
-              
                       <span>投稿者: ${prompt.author}</span>
-              
-                      <!-- 入出力例のポップアップ。カードの高さを変えないよう絶対配置 -->
-                      <div class="guardrail-info" style="
-                            display: none;
-                            position: absolute;
-                            bottom: 40px;
-                            left: 50%;
-                            transform: translateX(-50%);
-                            background: #fff;
-                            border: 1px solid #ddd;
-                            border-radius: 4px;
-                            padding: 10px;
-                            width: 80%;
-                            max-height: 200px;
-                            overflow-y: auto;
-                            overflow-x: hidden;
-                            white-space: pre-wrap;
-                            word-break: break-word;
-                            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-                            z-index: 3;">
-                        <strong>入力例:</strong> ${prompt.input_examples}<br>
-                        <strong>出力例:</strong> ${prompt.output_examples}
-                      </div>
                     `
                 : `
                       <span style="margin-left: 6px;">投稿者: ${prompt.author}</span>
                     `
-              }
+                }
               </div>
             `;
 
@@ -178,20 +171,35 @@ document.addEventListener("DOMContentLoaded", function () {
             
 
 
-            // 入力例または出力例がある場合、トグルボタンのクリックイベントを設定してポップアップ表示を切り替え
+            // 入力例または出力例がある場合、トグルボタンでポップアップを表示
             if (prompt.input_examples || prompt.output_examples) {
               const toggleButton = card.querySelector(".toggle-guardrail");
-              const guardrailInfo = card.querySelector(".guardrail-info");
 
               toggleButton.addEventListener("click", function (e) {
                 e.stopPropagation();
-                if (guardrailInfo.style.display === "none") {
-                  guardrailInfo.style.display = "block";
-                  toggleButton.innerHTML = '<i class="bi bi-caret-up"></i>';
-                } else {
-                  guardrailInfo.style.display = "none";
+
+                // 同じボタンを再度押した場合はポップアップを閉じる
+                if (activeGuardrailBtn === toggleButton && guardrailPopup.style.display === 'block') {
+                  guardrailPopup.style.display = 'none';
                   toggleButton.innerHTML = '<i class="bi bi-caret-down"></i>';
+                  activeGuardrailBtn = null;
+                  return;
                 }
+
+                // ポップアップの内容と位置を更新
+                guardrailPopup.innerHTML = `<strong>入力例:</strong> ${prompt.input_examples}<br><strong>出力例:</strong> ${prompt.output_examples}`;
+                const rect = toggleButton.getBoundingClientRect();
+                guardrailPopup.style.top = `${rect.bottom + window.scrollY}px`;
+                guardrailPopup.style.left = `${rect.left + rect.width / 2}px`;
+                guardrailPopup.style.display = 'block';
+
+                // 他のボタンの表示をリセット
+                if (activeGuardrailBtn && activeGuardrailBtn !== toggleButton) {
+                  activeGuardrailBtn.innerHTML = '<i class="bi bi-caret-down"></i>';
+                }
+
+                toggleButton.innerHTML = '<i class="bi bi-caret-up"></i>';
+                activeGuardrailBtn = toggleButton;
               });
             }
 

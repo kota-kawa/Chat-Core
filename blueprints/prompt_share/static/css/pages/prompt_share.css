@@ -190,7 +190,7 @@ main {
   cursor: pointer;
   position: relative;
   max-height: 260px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .prompt-card:hover {
@@ -447,6 +447,10 @@ main {
   margin-top: 1rem;
   font-size: 0.9rem;
   color: var(--text-color);
-  min-height: auto; /* 値を大きくして高さを増加 */
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 

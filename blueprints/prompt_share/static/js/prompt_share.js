@@ -86,16 +86,21 @@ document.addEventListener("DOMContentLoaded", function () {
               
                       <!-- 入出力例のポップアップ。カードの高さを変えないよう絶対配置 -->
                       <div class="guardrail-info" style="
-                            display: none; 
-                            position: absolute; 
-                            bottom: 40px; 
-                            left: 50%; 
+                            display: none;
+                            position: absolute;
+                            bottom: 40px;
+                            left: 50%;
                             transform: translateX(-50%);
-                            background: #fff; 
-                            border: 1px solid #ddd; 
-                            border-radius: 4px; 
-                            padding: 10px; 
+                            background: #fff;
+                            border: 1px solid #ddd;
+                            border-radius: 4px;
+                            padding: 10px;
                             width: 80%;
+                            max-height: 200px;
+                            overflow-y: auto;
+                            overflow-x: hidden;
+                            white-space: pre-wrap;
+                            word-break: break-word;
                             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
                             z-index: 3;">
                         <strong>入力例:</strong> ${prompt.input_examples}<br>

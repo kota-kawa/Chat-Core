@@ -8,6 +8,10 @@
   font-family:  'Roboto', sans-serif;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   min-height: 100vh;

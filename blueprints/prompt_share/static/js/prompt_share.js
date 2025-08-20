@@ -71,47 +71,30 @@ document.addEventListener("DOMContentLoaded", function () {
               <h3>${truncateTitle(prompt.title)}</h3>
               <p>${prompt.content}</p>
 
-              <!-- カテゴリと投稿者情報 ＋ （必要なら）トグルボタン＋ポップアップ -->
-              <div class="prompt-meta" style="text-align: center; margin-top: 10px; position: relative;">
+              <!-- カテゴリと投稿者情報 -->
+              <div class="prompt-meta" style="text-align: center; margin-top: 10px;">
                 <span>カテゴリ: ${prompt.category}</span>
-                
                 ${(prompt.input_examples || prompt.output_examples)
                 ? `
-                      <!-- トグルボタン。小さめのBootstrapボタンを利用 -->
                       <button class="toggle-guardrail btn btn-outline-success btn-sm" style="margin: 0 6px; padding: 2px 6px;">
                         <i class="bi bi-caret-down"></i>
                       </button>
-              
                       <span>投稿者: ${prompt.author}</span>
-              
-                      <!-- 入出力例のポップアップ。カードの高さを変えないよう絶対配置 -->
-                      <div class="guardrail-info" style="
-                            display: none;
-                            position: absolute;
-                            bottom: 40px;
-                            left: 50%;
-                            transform: translateX(-50%);
-                            background: #fff;
-                            border: 1px solid #ddd;
-                            border-radius: 4px;
-                            padding: 10px;
-                            width: 80%;
-                            max-height: 200px;
-                            overflow-y: auto;
-                            overflow-x: hidden;
-                            white-space: pre-wrap;
-                            word-break: break-word;
-                            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-                            z-index: 3;">
-                        <strong>入力例:</strong> ${prompt.input_examples}<br>
-                        <strong>出力例:</strong> ${prompt.output_examples}
-                      </div>
                     `
                 : `
                       <span style="margin-left: 6px;">投稿者: ${prompt.author}</span>
                     `
-              }
+                }
               </div>
+
+              ${(prompt.input_examples || prompt.output_examples)
+                ? `
+                    <div class="guardrail-info">
+                      <strong>入力例:</strong> ${prompt.input_examples}<br>
+                      <strong>出力例:</strong> ${prompt.output_examples}
+                    </div>
+                  `
+                : ``}
             `;
 
 

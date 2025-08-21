@@ -1,6 +1,8 @@
 // settings.js
 // -----------------------------------------------
-//  ユーザー設定フォーム (プロフィール取得／更新)
+//  ユーザー設定フォーム (プロフィール取得／更新)
+//  + サイドバーナビゲーション
+//  + プロンプト管理機能
 // -----------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   const changeBtn   = document.getElementById('changeAvatarBtn');  // 画像変更ボタン
@@ -9,6 +11,41 @@ document.addEventListener('DOMContentLoaded', () => {
   const togglePwd   = document.getElementById('togglePasswordBtn');// パスワード表示切替
   const cancelBtn   = document.getElementById('cancelBtn');        // キャンセル
   const form        = document.getElementById('userSettingsForm'); // フォーム本体
+
+  // ─────────────────────────── 
+  // サイドバーナビゲーション
+  // ─────────────────────────── 
+  const navLinks = document.querySelectorAll('.nav-link');
+  const sections = document.querySelectorAll('.settings-section');
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      
+      // アクティブなリンクを更新
+      navLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+      
+      // 対応するセクションを表示
+      const targetSection = link.dataset.section;
+      sections.forEach(section => {
+        if (section.id === `${targetSection}-section`) {
+          section.classList.add('active');
+        } else {
+          section.classList.remove('active');
+        }
+      });
+      
+      // プロンプト管理セクションがアクティブになった時にプロンプトを読み込む
+      if (targetSection === 'prompts') {
+        loadMyPrompts();
+      }
+    });
+  });
+
+  // ─────────────────────────── 
+  // プロフィール設定機能
+  // ─────────────────────────── 
 
   /* ───────── 画像選択 → プレビュー ───────── */
   changeBtn?.addEventListener('click', () => fileInput.click());
@@ -81,6 +118,152 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       alert('エラー: ' + err.message);
     }
+  });
+
+  // ─────────────────────────── 
+  // プロンプト管理機能
+  // ─────────────────────────── 
+
+  // タイトル切り詰め関数
+  function truncateTitle(title) {
+    const chars = Array.from(title);
+    return chars.length > 17 ? chars.slice(0, 17).join('') + '...' : title;
+  }
+
+  // プロンプト一覧読み込み
+  function loadMyPrompts() {
+    fetch('/prompt_manage/api/my_prompts')
+      .then(response => response.json())
+      .then(data => {
+        const promptList = document.getElementById("promptList");
+        promptList.innerHTML = '';
+        if(data.prompts && data.prompts.length > 0) {
+          data.prompts.forEach(prompt => {
+            const card = document.createElement("div");
+            card.classList.add("prompt-card");
+            card.innerHTML = `
+              <h3>${truncateTitle(prompt.title)}</h3>
+              <p>${prompt.content}</p>
+              <div class="meta">
+                <span>カテゴリ: ${prompt.category}</span><br>
+                <span>投稿日: ${new Date(prompt.created_at).toLocaleString()}</span>
+              </div>
+              <!-- 隠し要素として入力例と出力例を保持 -->
+              <p class="d-none input-examples">${prompt.input_examples || ''}</p>
+              <p class="d-none output-examples">${prompt.output_examples || ''}</p>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-warning edit-btn" data-id="${prompt.id}">
+                  <i class="bi bi-pencil"></i> 編集
+                </button>
+                <button class="btn btn-sm btn-danger delete-btn" data-id="${prompt.id}">
+                  <i class="bi bi-trash"></i> 削除
+                </button>
+              </div>
+            `;
+            promptList.appendChild(card);
+          });
+          attachEventHandlers();
+        } else {
+          promptList.innerHTML = '<p>プロンプトが存在しません。</p>';
+        }
+      })
+      .catch(err => {
+        console.error("プロンプト取得エラー:", err);
+        document.getElementById("promptList").innerHTML = '<p>プロンプトの読み込み中にエラーが発生しました。</p>';
+      });
+  }
+
+  // 編集・削除ボタンのイベントハンドラー追加
+  function attachEventHandlers() {
+    // 編集ボタン
+    document.querySelectorAll(".edit-btn").forEach(btn => {
+      btn.addEventListener("click", function() {
+        const promptId = this.dataset.id;
+        const card = this.closest(".prompt-card");
+        
+        // カードから情報を取得
+        const title = card.querySelector("h3").textContent;
+        const content = card.querySelector("p").textContent;
+        const metaSpans = card.querySelectorAll(".meta span");
+        const category = metaSpans[0].textContent.replace("カテゴリ: ", "");
+        const inputExamples = card.querySelector(".input-examples").textContent;
+        const outputExamples = card.querySelector(".output-examples").textContent;
+        
+        // モーダルフォームに値をセット
+        document.getElementById("editPromptId").value = promptId;
+        document.getElementById("editTitle").value = title;
+        document.getElementById("editCategory").value = category;
+        document.getElementById("editContent").value = content;
+        document.getElementById("editInputExamples").value = inputExamples;
+        document.getElementById("editOutputExamples").value = outputExamples;
+        
+        // モーダルを表示
+        const editModal = new bootstrap.Modal(document.getElementById("editModal"));
+        editModal.show();
+      });
+    });
+
+    // 削除ボタン
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.addEventListener("click", function() {
+        const promptId = this.dataset.id;
+        if(confirm("このプロンプトを削除しますか？")) {
+          fetch(`/prompt_manage/api/prompts/${promptId}`, {
+            method: 'DELETE'
+          })
+          .then(response => response.json())
+          .then(result => {
+            if(result.error) {
+              alert("削除エラー: " + result.error);
+            } else {
+              alert(result.message);
+              loadMyPrompts(); // 一覧を再読み込み
+            }
+          })
+          .catch(err => {
+            console.error("削除中のエラー:", err);
+            alert("プロンプトの削除中にエラーが発生しました。");
+          });
+        }
+      });
+    });
+  }
+
+  // 編集フォームの送信処理
+  const editForm = document.getElementById("editForm");
+  editForm?.addEventListener("submit", function(e) {
+    e.preventDefault();
+    const promptId = document.getElementById("editPromptId").value;
+    const title = document.getElementById("editTitle").value;
+    const category = document.getElementById("editCategory").value;
+    const content = document.getElementById("editContent").value;
+    const inputExamples = document.getElementById("editInputExamples").value;
+    const outputExamples = document.getElementById("editOutputExamples").value;
+    
+    fetch(`/prompt_manage/api/prompts/${promptId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ title, category, content, input_examples: inputExamples, output_examples: outputExamples })
+    })
+    .then(response => response.json())
+    .then(result => {
+      if(result.error) {
+        alert("更新エラー: " + result.error);
+      } else {
+        alert(result.message);
+        // モーダルを閉じて一覧を再読み込み
+        const editModalEl = document.getElementById("editModal");
+        const modal = bootstrap.Modal.getInstance(editModalEl);
+        modal.hide();
+        loadMyPrompts();
+      }
+    })
+    .catch(err => {
+      console.error("更新中のエラー:", err);
+      alert("プロンプトの更新中にエラーが発生しました。");
+    });
   });
 
   // 初期表示時に現在のプロフィールを読み込む

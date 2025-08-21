@@ -5,7 +5,7 @@ from openai import OpenAI
 
 
 # --- Groq client setup ----------------------------------------------------
-groq_api_key = os.environ.get("GROQ_API_KEY")
+groq_api_key = os.environ.get("GROQ_API_KEY", "dummy-key")
 groq_client = OpenAI(
     api_key=groq_api_key,
     base_url="https://api.groq.com/openai/v1",
@@ -27,7 +27,7 @@ def get_groq_response(conversation_messages, model):
 
 
 # --- Google Gemini client setup ------------------------------------------
-gemini_api_key = os.environ.get("Gemini_API_KEY")
+gemini_api_key = os.environ.get("Gemini_API_KEY", "dummy-key")
 gemini_client = OpenAI(
     api_key=gemini_api_key,
     base_url="https://generativelanguage.googleapis.com/v1beta/openai",

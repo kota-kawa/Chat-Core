@@ -167,6 +167,43 @@ document.addEventListener("DOMContentLoaded", function () {
   loadPrompts();
 
   // ------------------------------
+  // 静的プロンプトカードのイベントハンドラを追加（テスト用）
+  // ------------------------------
+  function setupStaticCardEvents() {
+    const staticCards = document.querySelectorAll('.prompt-card');
+    staticCards.forEach(card => {
+      card.addEventListener('click', function(e) {
+        // ブックマークボタンがあればそれは除外
+        if (e.target.closest('.bookmark-btn')) {
+          return;
+        }
+        
+        // 静的カードのデータを取得
+        const title = card.querySelector('h3').textContent;
+        const content = card.querySelector('p').textContent;
+        const category = card.getAttribute('data-category');
+        const authorSpan = card.querySelector('.prompt-meta span:last-child');
+        const author = authorSpan ? authorSpan.textContent.replace('投稿者: ', '') : '不明';
+        
+        // 模擬プロンプトデータを作成
+        const mockPrompt = {
+          title: title,
+          content: content,
+          category: category,
+          author: author,
+          input_examples: title === '告白のアドバイス' ? '好きな人に告白したいです。どのように気持ちを伝えればよいでしょうか？' : '',
+          output_examples: title === '告白のアドバイス' ? '素直な気持ちで、相手のことを思いやりながら「あなたと一緒にいるととても幸せです。お付き合いしていただけませんか？」といった誠実な言葉で伝えることをお勧めします。' : ''
+        };
+        
+        showPromptDetailModal(mockPrompt);
+      });
+    });
+  }
+
+  // 静的カードのイベントをセットアップ
+  setupStaticCardEvents();
+
+  // ------------------------------
   // 検索機能（サーバー側検索）
   // ------------------------------
   const searchInput = document.getElementById("searchInput");

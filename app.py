@@ -4,7 +4,11 @@ import threading
 import time
 from datetime import timedelta
 import os
+from dotenv import load_dotenv
 from blueprints.chat import cleanup_ephemeral_chats  # chat.py に定義されたクリーンアップ関数をインポート
+
+# Load environment variables
+load_dotenv()
 
 # Flaskアプリを生成
 app = Flask(__name__)

@@ -185,6 +185,36 @@
     </div>
   </div>
 
+  <!-- プロンプト詳細モーダル -->
+  <div id="promptDetailModal" class="post-modal">
+    <div class="post-modal-content">
+      <span class="close-btn" id="closePromptDetailModal">&times;</span>
+      <h2 id="modalPromptTitle">プロンプト詳細</h2>
+      <div class="modal-content-body">
+        <div class="form-group">
+          <label><strong>カテゴリ:</strong></label>
+          <p id="modalPromptCategory"></p>
+        </div>
+        <div class="form-group">
+          <label><strong>内容:</strong></label>
+          <p id="modalPromptContent"></p>
+        </div>
+        <div class="form-group">
+          <label><strong>投稿者:</strong></label>
+          <p id="modalPromptAuthor"></p>
+        </div>
+        <div id="modalInputExamplesGroup" class="form-group" style="display: none;">
+          <label><strong>入力例:</strong></label>
+          <p id="modalInputExamples"></p>
+        </div>
+        <div id="modalOutputExamplesGroup" class="form-group" style="display: none;">
+          <label><strong>出力例:</strong></label>
+          <p id="modalOutputExamples"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 新規投稿ボタン -->
   <button id="openPostModal" class="new-prompt-btn" aria-label="新しいプロンプトを投稿">
     <i class="bi bi-plus-lg"></i>

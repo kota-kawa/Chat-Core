@@ -282,6 +282,9 @@ main {
   /* 固定サイズ・スクロール対応 */
   max-height: 90vh;
   overflow-y: auto;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .close-btn {
@@ -290,6 +293,25 @@ main {
   right: 1rem;
   font-size: 1.5rem;
   cursor: pointer;
+}
+
+/* モーダル内のテキストコンテンツのスタイル */
+.post-modal-content .modal-content-body p {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.post-modal-content #modalPromptContent,
+.post-modal-content #modalInputExamples,
+.post-modal-content #modalOutputExamples {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* ==================== */

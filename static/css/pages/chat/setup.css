@@ -54,7 +54,7 @@
   position: relative;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.9rem;
 }
 
 .task-selection .task-wrapper {
@@ -187,7 +187,7 @@
 /* スマホ表示 (576px以下) */
 @media (max-width: 576px) {
   .task-selection {
-    gap: 0.5rem;          /* カード間の隙間を狭く */
+    gap: 0.8rem;          /* カード間の隙間を狭く */
   }
   
   .task-selection .task-wrapper {

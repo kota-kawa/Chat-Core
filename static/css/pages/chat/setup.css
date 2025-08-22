@@ -66,7 +66,7 @@
 /* カード本体のスタイル */
 .prompt-card {
   background: white;
-  padding: 0.8rem;
+  padding: 1.2rem;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -75,6 +75,8 @@
   text-align: center;      /* すべて中央揃え */
   position: relative;      /* 絶対配置の子要素の基準 */
   overflow: visible;
+  min-height: 80px;        /* 最小高さを設定 */
+  font-size: 1.05rem;      /* フォントサイズを少し大きく */
 }
 
 .prompt-card:hover {

@@ -40,8 +40,13 @@ function generateResponse(message, aiModel) {
   .then(data=>{
     hideTypingIndicator();
     spinnerWrap.remove();
-    if (data.response) animateBotMessage(data.response);
-    else animateBotMessage("エラー: "+data.error);
+    if (data && data.response) {
+      animateBotMessage(data.response);
+    } else if (data && data.error) {
+      animateBotMessage("エラー: " + data.error);
+    } else {
+      animateBotMessage("エラー: 予期しないエラーが発生しました。");
+    }
   })
   .catch(err=>{
     hideTypingIndicator(); spinnerWrap.remove();

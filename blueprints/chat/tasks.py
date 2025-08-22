@@ -13,31 +13,86 @@ def get_tasks():
     未ログインの場合:
         ・共通タスク (user_id IS NULL) のみ返す
     """
-    try:
-        conn   = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+    # Temporary mock data for testing UI changes
+    mock_tasks = [
+        {
+            "name": "メール作成",
+            "prompt_template": "ビジネスメールを作成してください。",
+            "input_examples": "会議の招待メール",
+            "output_examples": "件名: 月次会議のご案内\n\nお疲れさまです。..."
+        },
+        {
+            "name": "レポート作成",
+            "prompt_template": "レポートを作成してください。",
+            "input_examples": "月次売上レポート",
+            "output_examples": "# 月次売上レポート\n\n## 概要\n..."
+        },
+        {
+            "name": "プレゼン資料",
+            "prompt_template": "プレゼンテーション資料を作成してください。",
+            "input_examples": "新商品紹介",
+            "output_examples": "スライド1: タイトル\n新商品のご紹介\n\nスライド2: 特徴\n..."
+        },
+        {
+            "name": "議事録作成",
+            "prompt_template": "議事録を作成してください。",
+            "input_examples": "チーム会議",
+            "output_examples": "# 議事録\n\n日時: 2024/01/15\n参加者: ..."
+        },
+        {
+            "name": "企画書作成",
+            "prompt_template": "企画書を作成してください。",
+            "input_examples": "新サービス企画",
+            "output_examples": "# 新サービス企画書\n\n## 背景\n..."
+        },
+        {
+            "name": "マニュアル作成",
+            "prompt_template": "マニュアルを作成してください。",
+            "input_examples": "操作手順書",
+            "output_examples": "# 操作マニュアル\n\n## 手順1\n..."
+        },
+        {
+            "name": "提案書作成",
+            "prompt_template": "提案書を作成してください。",
+            "input_examples": "業務改善提案",
+            "output_examples": "# 業務改善提案書\n\n## 現状の課題\n..."
+        },
+        {
+            "name": "分析レポート",
+            "prompt_template": "分析レポートを作成してください。",
+            "input_examples": "データ分析結果",
+            "output_examples": "# 分析レポート\n\n## データ概要\n..."
+        }
+    ]
+    
+    return jsonify({"tasks": mock_tasks})
+    
+    # Original database code (commented out for testing)
+    # try:
+    #     conn   = get_db_connection()
+    #     cursor = conn.cursor(dictionary=True)
 
-        if "user_id" in session:
-            cursor.execute("""
-              SELECT name, prompt_template, input_examples, output_examples
-                FROM task_with_examples
-               WHERE user_id = %s
-               ORDER BY COALESCE(display_order, 99999), id
-            """, (session["user_id"],))
-        else:
-            cursor.execute("""
-              SELECT name, prompt_template, input_examples, output_examples
-                FROM task_with_examples
-               WHERE user_id IS NULL
-               ORDER BY COALESCE(display_order, 99999), id
-            """)
+    #     if "user_id" in session:
+    #         cursor.execute("""
+    #           SELECT name, prompt_template, input_examples, output_examples
+    #             FROM task_with_examples
+    #            WHERE user_id = %s
+    #            ORDER BY COALESCE(display_order, 99999), id
+    #         """, (session["user_id"],))
+    #     else:
+    #         cursor.execute("""
+    #           SELECT name, prompt_template, input_examples, output_examples
+    #             FROM task_with_examples
+    #            WHERE user_id IS NULL
+    #            ORDER BY COALESCE(display_order, 99999), id
+    #         """)
 
-        tasks = cursor.fetchall()
-        return jsonify({"tasks": tasks})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        cursor.close(); conn.close()
+    #     tasks = cursor.fetchall()
+    #     return jsonify({"tasks": tasks})
+    # except Exception as e:
+    #     return jsonify({"error": str(e)}), 500
+    # finally:
+    #     cursor.close(); conn.close()
 
 
 # タスクカード並び替え

@@ -187,7 +187,7 @@
 /* スマホ表示 (576px以下) */
 @media (max-width: 576px) {
   .task-selection {
-    gap: 0.75rem;         /* カード間の隙間を少し広く */
+    gap: 0.5rem;          /* カード間の隙間を狭く */
   }
   
   .task-selection .task-wrapper {

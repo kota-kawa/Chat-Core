@@ -167,7 +167,7 @@ function initToggleTasks() {
     btn.id   = 'toggle-tasks-btn';
     btn.className     = 'primary-button';
     btn.style.width   = '100%';
-    btn.style.marginTop = '.3rem';
+    btn.style.marginTop = '0.1rem';
     btn.innerHTML     = '<i class="bi bi-chevron-down"></i> もっと見る';
 
     let expanded = false;

@@ -28,7 +28,7 @@ def chat():
 
     user_message = data["message"]
     chat_room_id = data.get("chat_room_id", "default")
-    model = data.get("model", "gemini-2.5-flash")
+    model = data.get("model", "models/gemini-2.5-flash")
 
     # 非ログインユーザーの場合、新規チャット・続けてのチャットの回数としてカウント
     if "user_id" not in session:

@@ -198,7 +198,7 @@ template.innerHTML = `
         height: 45px;
       }
       /* ハンバーガーボタンを + ボタンと同じサイズに */
-      .btn--menu {
+      .actions-menu .btn--menu {
         width: 56px;
         height: 56px;
       }
@@ -224,7 +224,7 @@ template.innerHTML = `
         height: 40px;
       }
       /* ハンバーガーボタンを + ボタンと同じサイズに */
-      .btn--menu {
+      .actions-menu .btn--menu {
         width: 50px;
         height: 50px;
       }

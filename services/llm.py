@@ -33,9 +33,21 @@ gemini_client = OpenAI(
     base_url="https://generativelanguage.googleapis.com/v1beta/openai",
 )
 
+# Valid Gemini model names
+VALID_GEMINI_MODELS = {
+    "gemini-1.5-flash-8b",
+    "gemini-1.5-flash", 
+    "gemini-1.5-pro",
+    "gemini-2.0-flash-exp"
+}
 
 def get_gemini_response(conversation_messages, model_name):
     """Google Gemini API呼び出し (via OpenAI client)"""
+    # Validate model name
+    if model_name not in VALID_GEMINI_MODELS:
+        print(f"Invalid Gemini model: {model_name}. Valid models: {VALID_GEMINI_MODELS}")
+        return f"エラー: 無効なモデル '{model_name}' が指定されました。有効なモデルを選択してください。"
+    
     try:
         response = gemini_client.chat.completions.create(
             model=model_name,

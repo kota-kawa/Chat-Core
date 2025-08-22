@@ -24,28 +24,6 @@ a {
   min-height: 300px;  /* ヘッダーの高さを増加 */
 }
 
-/* チャットに戻るボタン（アイコンのみの丸いボタン） */
-.back-to-chat-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: var(--accent-color);
-  color: #fff;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  font-size: 1.2rem;
-  transition: background 0.3s;
-}
-
-.back-to-chat-btn:hover {
-  background: #1e8449;
-}
-
 /* ヘッダー内の検索セクション（横・縦とも中央に配置） */
 .prompts-header .search-section {
   position: absolute;
@@ -90,12 +68,13 @@ a {
   border: none;
   padding: 0.75rem 1rem;
   cursor: pointer;
-  border-radius: 30px;
+  border-radius: 0 30px 30px 0;
   font-size: 1.2rem;
   transition: background 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 3rem;
 }
 
 .search-box button:hover {
@@ -148,6 +127,9 @@ main {
   align-items: center;
   justify-content: center;
   aspect-ratio: 1;
+  min-height: 100px;
+  position: relative;
+  overflow: hidden;
 }
 
 .category-card.active,
@@ -161,6 +143,23 @@ main {
   font-size: 2rem;
   margin-bottom: 0.5rem;
   color: var(--accent-color);
+  transition: transform 0.2s ease;
+}
+
+.category-card span {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-color);
+  transition: color 0.2s ease;
+}
+
+.category-card:hover i {
+  transform: scale(1.1);
+}
+
+.category-card.active span,
+.category-card:hover span {
+  color: var(--primary-color);
 }
 
 /* ==================== */
@@ -419,20 +418,86 @@ main {
 
 
 @media (max-width: 768px) {
-  .new-prompt-btn {
-    bottom: 70px;
+  /* Header adjustments for mobile */
+  .prompts-header {
+    min-height: 200px;
+    padding: 1.5rem 1rem;
   }
 
+  /* Main content padding reduction */
+  main {
+    padding: 1.5rem 0.75rem;
+  }
+
+  /* Category section improvements */
+  .categories {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .category-list {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .category-card {
+    padding: 0.75rem 0.5rem;
+    min-height: 80px;
+  }
+
+  .category-card i {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .category-card span {
+    font-size: 0.85rem;
+  }
+
+  /* Floating action button adjustments */
+  .new-prompt-btn {
+    bottom: 20px;
+    right: 20px;
+    left: auto;
+    width: 56px;
+    height: 56px;
+  }
+
+  .new-prompt-btn i {
+    font-size: 1.25rem;
+  }
+
+  /* Prompt cards full width on mobile */
   .prompt-card {
     flex: 1 1 100%;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
   }
-  /* ヘッダー内の検索フォーム幅を90%に */
+
+  .prompt-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .prompt-card p {
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  .prompt-meta {
+    font-size: 0.8rem;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: flex-start;
+  }
+
+  /* Header search section improvements */
   .prompts-header .search-section {
-    width: 90%;
+    width: 95%;
     max-width: none;
   }
   
-  /* ─── ボタンを円形に戻す ─── */
+  /* Search box mobile optimization */
   .search-box {
     display: flex;
     align-items: center;
@@ -441,22 +506,160 @@ main {
   .search-box input {
     flex: 1;
     width: auto;
-    /* 左だけ丸めてフォームとつなげる */
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
     border-radius: 30px 0 0 30px;
   }
 
   .search-box button {
     flex: none;
-    /* 高さに合わせた正方形に */
-    width: 3.0rem;
-    height: 3.0rem;
+    width: 3.5rem;
+    height: 3.5rem;
     padding: 0;
-    margin-left: 0.5rem;
-    /* 完全な円形に */
-    border-radius: 50%;
+    margin-left: 0;
+    border-radius: 0 30px 30px 0;
     font-size: 1.25rem;
   }
 
+  /* Modal improvements for mobile */
+  .post-modal-content {
+    width: 95%;
+    padding: 1.5rem;
+    margin: 1rem;
+    max-height: 85vh;
+  }
+
+  .post-modal-content h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Form improvements for mobile */
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-group label {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .form-group input[type="text"],
+  .form-group textarea,
+  .form-group select {
+    padding: 0.875rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+    transition: border-color 0.2s ease;
+  }
+
+  .form-group input[type="text"]:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+    border-color: var(--accent-color);
+    outline: none;
+  }
+
+  .form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+  }
+
+  /* Submit button mobile optimization */
+  .submit-btn {
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.5rem;
+  }
+
+  /* Close button larger touch target */
+  .close-btn {
+    padding: 0.5rem;
+    font-size: 1.75rem;
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.1);
+    transition: background 0.2s ease;
+  }
+
+  .close-btn:hover {
+    background: rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* Additional mobile breakpoint for very small screens */
+@media (max-width: 480px) {
+  .prompts-header {
+    min-height: 180px;
+    padding: 1rem 0.75rem;
+  }
+
+  main {
+    padding: 1rem 0.5rem;
+  }
+
+  .categories {
+    padding: 0.75rem;
+  }
+
+  .category-list {
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .category-card {
+    padding: 0.5rem 0.25rem;
+    min-height: 70px;
+  }
+
+  .category-card i {
+    font-size: 1.25rem;
+  }
+
+  .category-card span {
+    font-size: 0.8rem;
+  }
+
+  .new-prompt-btn {
+    width: 50px;
+    height: 50px;
+    bottom: 15px;
+    right: 15px;
+  }
+
+  .new-prompt-btn i {
+    font-size: 1.1rem;
+  }
+
+  .prompt-card {
+    padding: 0.875rem;
+  }
+
+  .post-modal-content {
+    width: 98%;
+    padding: 1rem;
+    margin: 0.5rem;
+  }
+
+  .search-box input {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .search-box button {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.1rem;
+  }
 }
 
 /* ==================== */

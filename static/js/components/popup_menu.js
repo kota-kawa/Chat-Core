@@ -209,6 +209,32 @@ template.innerHTML = `
       }
     }
 
+    /* 非常に小さな画面での調整（画面幅480px以下） */
+    @media (max-width: 480px) {
+      /* メニュー全体のサイズを + ボタンに合わせて調整 */
+      .actions-menu {
+        bottom: 70px;   /* + ボタンとの位置調整 */
+        right: 20px;    /* + ボタンとの位置調整 */
+        width: 50px;    /* + ボタンと同じサイズに */
+        height: 50px;   /* + ボタンと同じサイズに */
+      }
+      /* 丸ボタン全般のサイズをさらに縮小 */
+      .btn {
+        width: 40px;
+        height: 40px;
+      }
+      /* ハンバーガーボタンを + ボタンと同じサイズに */
+      .btn--menu {
+        width: 50px;
+        height: 50px;
+      }
+      /* アイコンもさらに縮小 */
+      .btn svg {
+        width: 18px;
+        height: 18px;
+      }
+    }
+
     </style>
 
   <!-- チェックボックス（メニュー開閉用） -->

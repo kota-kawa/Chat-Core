@@ -187,20 +187,20 @@ template.innerHTML = `
     @media (max-width: 768px) {
       /* メニュー全体の位置とサイズ */
       .actions-menu {
-        bottom: 75px;   /* 下から70px */
-        right: 25px;    /* 右から20px */
-        width: 50px;    /* 全体幅を少し小さく */
-        height: 50px;   /* 全体高さを少し小さく */
+        bottom: 75px;   /* 下から75px */
+        right: 25px;    /* 右から25px */
+        width: 56px;    /* + ボタンと同じサイズに */
+        height: 56px;   /* + ボタンと同じサイズに */
       }
       /* 丸ボタン全般のサイズ */
       .btn {
         width: 45px;    /* ボタンを少し小さく */
         height: 45px;
       }
-      /* ハンバーガーボタンだけ少し大きめ */
+      /* ハンバーガーボタンを + ボタンと同じサイズに */
       .btn--menu {
-        width: 50px;
-        height: 50px;
+        width: 56px;
+        height: 56px;
       }
       /* アイコンもボタンに合わせて縮小 */
       .btn svg {

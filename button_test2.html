@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Button Size Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+
+    /* Left button (+ button) styles from prompt_share.css */
+    .new-prompt-btn {
+      position: fixed;
+      bottom: 40px;
+      left: 40px;
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #56ab2f, #a8e063);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+      transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1), box-shadow 0.3s ease;
+      z-index: 1000;
+      font-size: 1.5rem;
+    }
+
+    /* Right button (menu button) styles from popup_menu.js */
+    .menu-btn {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #56ab2f, #a8e063);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      font-size: 1.5rem;
+    }
+
+    /* Mobile breakpoint 768px */
+    @media (max-width: 768px) {
+      .new-prompt-btn {
+        bottom: 20px;
+        left: 20px;
+        width: 56px;
+        height: 56px;
+        font-size: 1.25rem;
+      }
+
+      .menu-btn {
+        bottom: 20px;
+        right: 25px;
+        width: 56px;
+        height: 56px;
+        font-size: 1.25rem;
+      }
+    }
+
+    /* Mobile breakpoint 480px */
+    @media (max-width: 480px) {
+      .new-prompt-btn {
+        width: 50px;
+        height: 50px;
+        bottom: 15px;
+        left: 15px;
+        font-size: 1.1rem;
+      }
+
+      .menu-btn {
+        bottom: 15px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        font-size: 1.1rem;
+      }
+    }
+
+    .test-info {
+      margin-top: 50px;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+    }
+
+    .size-indicator {
+      font-weight: bold;
+      color: #168d48;
+    }
+  </style>
+</head>
+<body>
+  <h1>Button Size Test</h1>
+  <p>Test to see the difference between left (+ button) and right (menu button) on mobile.</p>
+  
+  <!-- Left button (+ button) -->
+  <button class="new-prompt-btn" aria-label="新しいプロンプトを投稿">
+    +
+  </button>
+
+  <!-- Right button (menu button) -->
+  <button class="menu-btn" aria-label="メニュー">
+    ☰
+  </button>
+
+  <div class="test-info">
+    <p>Current window dimensions: <span id="dimensions" class="size-indicator"></span></p>
+    <p>Instructions:</p>
+    <ul>
+      <li>Resize your window to test different breakpoints</li>
+      <li>< 768px: Buttons should be 56px × 56px</li>
+      <li>< 480px: Buttons should be 50px × 50px</li>
+    </ul>
+    <p>Look at the bottom-left and bottom-right corners to compare button sizes.</p>
+  </div>
+
+  <script>
+    function updateDimensions() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      let sizeInfo = `${width}px × ${height}px`;
+      
+      if (width <= 480) {
+        sizeInfo += ' (≤ 480px: buttons should be 50px)';
+      } else if (width <= 768) {
+        sizeInfo += ' (≤ 768px: buttons should be 56px)';
+      } else {
+        sizeInfo += ' (desktop: buttons should be 60px)';
+      }
+      
+      document.getElementById('dimensions').textContent = sizeInfo;
+    }
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+  </script>
+</body>
+</html>

@@ -93,16 +93,19 @@ template.innerHTML = `
       transition: transform 0.2s ease;
     }
     .btn--menu span {
-      top: 28px;
-      left: 17px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
     .btn--menu:after {
-      top: 20px;
-      left: 17px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, calc(-50% - 8px));
     }
     .btn--menu:before {
-      top: 36px;
-      left: 17px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, calc(-50% + 8px));
     }
 
     /* ============
@@ -166,13 +169,13 @@ template.innerHTML = `
        ハンバーガー変形
        ============ */
     #actionMenuButton:checked + .actions-menu .btn--menu:after {
-      transform: translateY(8px) rotate(45deg);
+      transform: translate(-50%, -50%) rotate(45deg);
     }
     #actionMenuButton:checked + .actions-menu .btn--menu:before {
-      transform: translateY(-8px) rotate(-45deg);
+      transform: translate(-50%, -50%) rotate(-45deg);
     }
     #actionMenuButton:checked + .actions-menu .btn--menu span {
-      transform: scale(0);
+      transform: translate(-50%, -50%) scale(0);
     }
 
     /* ============

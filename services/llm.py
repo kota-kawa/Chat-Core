@@ -4,26 +4,26 @@ import os
 from openai import OpenAI
 
 
-# --- Groq client setup ----------------------------------------------------
-groq_api_key = os.environ.get("GROQ_API_KEY", "dummy-key")
-groq_client = OpenAI(
-    api_key=groq_api_key,
-    base_url="https://api.groq.com/openai/v1",
-)
-
-
-def get_groq_response(conversation_messages, model):
-    """Groq API呼び出し (via OpenAI client)"""
-    try:
-        response = groq_client.chat.completions.create(
-            model=model,
-            messages=conversation_messages,
-            max_tokens=1024,
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        print(f"Groq API Error: {e}")
-        return "エラーが発生しました。後でもう一度お試しください。"
+# --- Groq client setup (COMMENTED OUT) -----------------------------------
+# groq_api_key = os.environ.get("GROQ_API_KEY", "dummy-key")
+# groq_client = OpenAI(
+#     api_key=groq_api_key,
+#     base_url="https://api.groq.com/openai/v1",
+# )
+# 
+# 
+# def get_groq_response(conversation_messages, model):
+#     """Groq API呼び出し (via OpenAI client)"""
+#     try:
+#         response = groq_client.chat.completions.create(
+#             model=model,
+#             messages=conversation_messages,
+#             max_tokens=1024,
+#         )
+#         return response.choices[0].message.content
+#     except Exception as e:
+#         print(f"Groq API Error: {e}")
+#         return "エラーが発生しました。後でもう一度お試しください。"
 
 
 # --- Google Gemini client setup ------------------------------------------
@@ -38,7 +38,7 @@ def get_gemini_response(conversation_messages, model_name):
     """Google Gemini API呼び出し (via OpenAI client)"""
     try:
         response = gemini_client.chat.completions.create(
-            model="gemini-1.5-flash",
+            model=model_name,
             messages=conversation_messages,
             max_tokens=1024,
         )

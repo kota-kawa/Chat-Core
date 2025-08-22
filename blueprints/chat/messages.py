@@ -9,7 +9,7 @@ from services.chat_service import (
     save_message_to_db,
     get_chat_room_messages,
 )
-from services.llm import get_groq_response, get_gemini_response
+from services.llm import get_gemini_response  # get_groq_response commented out
 
 from . import (
     chat_bp,
@@ -28,7 +28,7 @@ def chat():
 
     user_message = data["message"]
     chat_room_id = data.get("chat_room_id", "default")
-    model = data.get("model", "llama-3.3-70b-versatile")
+    model = data.get("model", "gemini-2.5-flash")
 
     # 非ログインユーザーの場合、新規チャット・続けてのチャットの回数としてカウント
     if "user_id" not in session:
@@ -151,10 +151,8 @@ def chat():
     except Exception as e:
         print("Failed to write conversation_messages to extra_prompt.txt:", e)
 
-    if model == "google-gemini":
-        bot_reply = get_gemini_response(conversation_messages, model)
-    else:
-        bot_reply = get_groq_response(conversation_messages, model)
+    # Always use Gemini since Groq models have been removed
+    bot_reply = get_gemini_response(conversation_messages, model)
 
     if "user_id" in session:
         save_message_to_db(chat_room_id, bot_reply, "assistant")

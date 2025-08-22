@@ -187,7 +187,7 @@ template.innerHTML = `
     @media (max-width: 768px) {
       /* メニュー全体の位置とサイズ */
       .actions-menu {
-        bottom: 75px;   /* 下から75px */
+        bottom: 20px;   /* + ボタンと同じ高さに */
         right: 25px;    /* 右から25px */
         width: 56px;    /* + ボタンと同じサイズに */
         height: 56px;   /* + ボタンと同じサイズに */
@@ -213,7 +213,7 @@ template.innerHTML = `
     @media (max-width: 480px) {
       /* メニュー全体のサイズを + ボタンに合わせて調整 */
       .actions-menu {
-        bottom: 70px;   /* + ボタンとの位置調整 */
+        bottom: 15px;   /* + ボタンと同じ高さに */
         right: 20px;    /* + ボタンとの位置調整 */
         width: 50px;    /* + ボタンと同じサイズに */
         height: 50px;   /* + ボタンと同じサイズに */

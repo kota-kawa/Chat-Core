@@ -46,8 +46,8 @@ auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route("/register", methods=["GET"])
 def register_page():
-    """登録ページ(メール認証方式)"""
-    return render_template("register.html")
+    """登録ページ(統合認証ページを返す)"""
+    return render_template("auth.html")
 
 @auth_bp.route("/api/current_user", methods=["GET"])
 def api_current_user():
@@ -60,8 +60,8 @@ def api_current_user():
 
 @auth_bp.route("/login", methods=["GET"])
 def login():
-    """ログインページ（初期表示は login.html を返す）"""
-    return render_template("login.html")
+    """ログインページ（統合認証ページを返す）"""
+    return render_template("auth.html")
 
 @auth_bp.route("/logout")
 def logout():

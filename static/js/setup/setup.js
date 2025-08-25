@@ -100,6 +100,14 @@ function showSetupForm() {
   chatContainer.style.display  = 'none';
   setupContainer.style.display = 'block';
   setupInfoElement.value = '';
+  
+  // サイドバーの状態をクリーンアップして薄暗い画面を防ぐ
+  const sidebar = document.querySelector('.sidebar');
+  if (sidebar) {
+    sidebar.classList.remove('open');
+  }
+  document.body.classList.remove('sidebar-visible');
+  
   loadTaskCards();
 }
 

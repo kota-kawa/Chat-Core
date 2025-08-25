@@ -186,97 +186,116 @@ template.innerHTML = `
     .btn--comment:hover svg { transform: rotate(-20deg) scale(1.2); }
   
   
+  /* ============
+     Button Size Variables for Smartphone Synchronization
+     ============ */
+  :host {
+    /* メニューボタンサイズ - プロンプト投稿ボタンと同期 */
+    --menu-btn-size-mobile: 56px;    /* 768px以下: prompt_share.cssの.new-prompt-btnと同期 */
+    --menu-btn-size-small: 50px;     /* 480px以下: prompt_share.cssの.new-prompt-btnと同期 */
+    --menu-btn-size-chat-mobile: 50px;    /* チャット画面での768px以下 */
+    --menu-btn-size-chat-small: 45px;     /* チャット画面での480px以下 */
+    
+    /* アクションボタンサイズ（メニューボタンより小さく） */
+    --action-btn-size-mobile: 45px;
+    --action-btn-size-small: 40px;
+    --action-btn-size-chat-mobile: 40px;
+    --action-btn-size-chat-small: 36px;
+    
+    /* アイコンサイズ */
+    --icon-size-mobile: 20px;
+    --icon-size-small: 18px;
+    --icon-size-chat-mobile: 18px;
+    --icon-size-chat-small: 16px;
+  }
+
   /* スマホ表示時の調整（画面幅768px以下） */
-    @media (max-width: 768px) {
-      /* メニュー全体の位置とサイズ - 入力フォームと重ならないよう上に移動 */
-      .actions-menu {
-        bottom: 100px;  /* 入力フォームから十分離して配置 */
-        right: 25px;    /* 右から25px */
-        width: 56px;    /* + ボタンと同じサイズに */
-        height: 56px;   /* + ボタンと同じサイズに */
-      }
-      /* 丸ボタン全般のサイズ */
-      .btn {
-        width: 45px;    /* ボタンを少し小さく */
-        height: 45px;
-      }
-      /* ハンバーガーボタンを + ボタンと同じサイズに */
-      .actions-menu .btn--menu {
-        width: 56px;
-        height: 56px;
-      }
-      /* アイコンもボタンに合わせて縮小 */
-      .btn svg {
-        width: 20px;
-        height: 20px;
-      }
+  @media (max-width: 768px) {
+    /* メニュー全体の位置とサイズ - 入力フォームと重ならないよう上に移動 */
+    .actions-menu {
+      bottom: 100px;  /* 入力フォームから十分離して配置 */
+      right: 25px;    /* 右から25px */
+      width: var(--menu-btn-size-mobile);    /* + ボタンと同じサイズに */
+      height: var(--menu-btn-size-mobile);   /* + ボタンと同じサイズに */
+    }
+    /* 丸ボタン全般のサイズ */
+    .btn {
+      width: var(--action-btn-size-mobile);    /* ボタンを少し小さく */
+      height: var(--action-btn-size-mobile);
+    }
+    /* ハンバーガーボタンを + ボタンと同じサイズに */
+    .actions-menu .btn--menu {
+      width: var(--menu-btn-size-mobile);
+      height: var(--menu-btn-size-mobile);
+    }
+    /* アイコンもボタンに合わせて縮小 */
+    .btn svg {
+      width: var(--icon-size-mobile);
+      height: var(--icon-size-mobile);
     }
     
     /* チャット画面でのメニューボタンサイズ調整 */
-    @media (max-width: 768px) {
-      :host([data-context="chat"]) .actions-menu {
-        width: 50px;    /* チャット画面では少し小さく */
-        height: 50px;
-      }
-      :host([data-context="chat"]) .actions-menu .btn--menu {
-        width: 50px;
-        height: 50px;
-      }
-      :host([data-context="chat"]) .btn {
-        width: 40px;
-        height: 40px;
-      }
-      :host([data-context="chat"]) .btn svg {
-        width: 18px;
-        height: 18px;
-      }
+    :host([data-context="chat"]) .actions-menu {
+      width: var(--menu-btn-size-chat-mobile);    /* チャット画面では少し小さく */
+      height: var(--menu-btn-size-chat-mobile);
     }
+    :host([data-context="chat"]) .actions-menu .btn--menu {
+      width: var(--menu-btn-size-chat-mobile);
+      height: var(--menu-btn-size-chat-mobile);
+    }
+    :host([data-context="chat"]) .btn {
+      width: var(--action-btn-size-chat-mobile);
+      height: var(--action-btn-size-chat-mobile);
+    }
+    :host([data-context="chat"]) .btn svg {
+      width: var(--icon-size-chat-mobile);
+      height: var(--icon-size-chat-mobile);
+    }
+  }
 
-    /* 非常に小さな画面での調整（画面幅480px以下） */
-    @media (max-width: 480px) {
-      /* メニュー全体のサイズを + ボタンに合わせて調整 - 入力フォームから離して配置 */
-      .actions-menu {
-        bottom: 90px;   /* 入力フォームから十分離して配置 */
-        right: 20px;    /* + ボタンとの位置調整 */
-        width: 50px;    /* + ボタンと同じサイズに */
-        height: 50px;   /* + ボタンと同じサイズに */
-      }
-      /* 丸ボタン全般のサイズをさらに縮小 */
-      .btn {
-        width: 40px;
-        height: 40px;
-      }
-      /* ハンバーガーボタンを + ボタンと同じサイズに */
-      .actions-menu .btn--menu {
-        width: 50px;
-        height: 50px;
-      }
-      /* アイコンもさらに縮小 */
-      .btn svg {
-        width: 18px;
-        height: 18px;
-      }
+  /* 非常に小さな画面での調整（画面幅480px以下） */
+  @media (max-width: 480px) {
+    /* メニュー全体のサイズを + ボタンに合わせて調整 - 入力フォームから離して配置 */
+    .actions-menu {
+      bottom: 90px;   /* 入力フォームから十分離して配置 */
+      right: 20px;    /* + ボタンとの位置調整 */
+      width: var(--menu-btn-size-small);    /* + ボタンと同じサイズに */
+      height: var(--menu-btn-size-small);   /* + ボタンと同じサイズに */
+    }
+    /* 丸ボタン全般のサイズをさらに縮小 */
+    .btn {
+      width: var(--action-btn-size-small);
+      height: var(--action-btn-size-small);
+    }
+    /* ハンバーガーボタンを + ボタンと同じサイズに */
+    .actions-menu .btn--menu {
+      width: var(--menu-btn-size-small);
+      height: var(--menu-btn-size-small);
+    }
+    /* アイコンもさらに縮小 */
+    .btn svg {
+      width: var(--icon-size-small);
+      height: var(--icon-size-small);
     }
     
     /* チャット画面での小画面サイズ調整 */
-    @media (max-width: 480px) {
-      :host([data-context="chat"]) .actions-menu {
-        width: 45px;    /* チャット画面では更に小さく */
-        height: 45px;
-      }
-      :host([data-context="chat"]) .actions-menu .btn--menu {
-        width: 45px;
-        height: 45px;
-      }
-      :host([data-context="chat"]) .btn {
-        width: 36px;
-        height: 36px;
-      }
-      :host([data-context="chat"]) .btn svg {
-        width: 16px;
-        height: 16px;
-      }
+    :host([data-context="chat"]) .actions-menu {
+      width: var(--menu-btn-size-chat-small);    /* チャット画面では更に小さく */
+      height: var(--menu-btn-size-chat-small);
     }
+    :host([data-context="chat"]) .actions-menu .btn--menu {
+      width: var(--menu-btn-size-chat-small);
+      height: var(--menu-btn-size-chat-small);
+    }
+    :host([data-context="chat"]) .btn {
+      width: var(--action-btn-size-chat-small);
+      height: var(--action-btn-size-chat-small);
+    }
+    :host([data-context="chat"]) .btn svg {
+      width: var(--icon-size-chat-small);
+      height: var(--icon-size-chat-small);
+    }
+  }
 
     </style>
 

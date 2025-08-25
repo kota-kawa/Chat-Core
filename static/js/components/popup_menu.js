@@ -211,6 +211,26 @@ template.innerHTML = `
         height: 20px;
       }
     }
+    
+    /* チャット画面でのメニューボタンサイズ調整 */
+    @media (max-width: 768px) {
+      :host([data-context="chat"]) .actions-menu {
+        width: 50px;    /* チャット画面では少し小さく */
+        height: 50px;
+      }
+      :host([data-context="chat"]) .actions-menu .btn--menu {
+        width: 50px;
+        height: 50px;
+      }
+      :host([data-context="chat"]) .btn {
+        width: 40px;
+        height: 40px;
+      }
+      :host([data-context="chat"]) .btn svg {
+        width: 18px;
+        height: 18px;
+      }
+    }
 
     /* 非常に小さな画面での調整（画面幅480px以下） */
     @media (max-width: 480px) {
@@ -235,6 +255,26 @@ template.innerHTML = `
       .btn svg {
         width: 18px;
         height: 18px;
+      }
+    }
+    
+    /* チャット画面での小画面サイズ調整 */
+    @media (max-width: 480px) {
+      :host([data-context="chat"]) .actions-menu {
+        width: 45px;    /* チャット画面では更に小さく */
+        height: 45px;
+      }
+      :host([data-context="chat"]) .actions-menu .btn--menu {
+        width: 45px;
+        height: 45px;
+      }
+      :host([data-context="chat"]) .btn {
+        width: 36px;
+        height: 36px;
+      }
+      :host([data-context="chat"]) .btn svg {
+        width: 16px;
+        height: 16px;
       }
     }
 
@@ -277,6 +317,43 @@ class ActionMenu extends HTMLElement {
         toggle.checked = false;
       }
     });
+    
+    // チャット画面かどうかを検出して適切なサイズを適用
+    this.updateMenuSize();
+    // 画面の変化を監視
+    this.observeScreenChanges();
+  }
+  
+  updateMenuSize() {
+    const chatContainer = document.getElementById('chat-container');
+    const isInChatMode = chatContainer && 
+      chatContainer.style.display === 'flex';
+    
+    // CSSカスタムプロパティでコンテキストを設定
+    if (isInChatMode) {
+      this.setAttribute('data-context', 'chat');
+    } else {
+      this.setAttribute('data-context', 'non-chat');
+    }
+  }
+  
+  observeScreenChanges() {
+    const chatContainer = document.getElementById('chat-container');
+    if (chatContainer) {
+      // MutationObserverでchat-containerのstyle変化を監視
+      const observer = new MutationObserver(() => {
+        this.updateMenuSize();
+      });
+      observer.observe(chatContainer, {
+        attributes: true,
+        attributeFilter: ['style']
+      });
+    }
+    
+    // 定期的にもチェック（念のため）
+    setInterval(() => {
+      this.updateMenuSize();
+    }, 1000);
   }
 }
 

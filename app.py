@@ -28,7 +28,7 @@ else:
         SESSION_COOKIE_SECURE=False,
     )
 
-# 各Blueprintをimport
+# 各Blueprintをimportする
 from blueprints.auth import auth_bp
 from blueprints.verification import verification_bp
 from blueprints.chat import chat_bp

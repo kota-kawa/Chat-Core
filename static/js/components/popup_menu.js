@@ -212,23 +212,23 @@ template.innerHTML = `
       }
     }
     
-    /* チャット画面でのメニューボタンサイズ調整 */
+    /* チャット画面でのメニューボタンサイズ調整 - プロンプト投稿ボタンと同じサイズに */
     @media (max-width: 768px) {
       :host([data-context="chat"]) .actions-menu {
-        width: 50px;    /* チャット画面では少し小さく */
-        height: 50px;
+        width: 56px;    /* プロンプト投稿ボタンと同じサイズに */
+        height: 56px;
       }
       :host([data-context="chat"]) .actions-menu .btn--menu {
-        width: 50px;
-        height: 50px;
+        width: 56px;
+        height: 56px;
       }
       :host([data-context="chat"]) .btn {
-        width: 40px;
-        height: 40px;
+        width: 45px;
+        height: 45px;
       }
       :host([data-context="chat"]) .btn svg {
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
       }
     }
 
@@ -258,23 +258,23 @@ template.innerHTML = `
       }
     }
     
-    /* チャット画面での小画面サイズ調整 */
+    /* チャット画面での小画面サイズ調整 - プロンプト投稿ボタンと同じサイズに */
     @media (max-width: 480px) {
       :host([data-context="chat"]) .actions-menu {
-        width: 45px;    /* チャット画面では更に小さく */
-        height: 45px;
+        width: 50px;    /* プロンプト投稿ボタンと同じサイズに */
+        height: 50px;
       }
       :host([data-context="chat"]) .actions-menu .btn--menu {
-        width: 45px;
-        height: 45px;
+        width: 50px;
+        height: 50px;
       }
       :host([data-context="chat"]) .btn {
-        width: 36px;
-        height: 36px;
+        width: 40px;
+        height: 40px;
       }
       :host([data-context="chat"]) .btn svg {
-        width: 16px;
-        height: 16px;
+        width: 18px;
+        height: 18px;
       }
     }
 

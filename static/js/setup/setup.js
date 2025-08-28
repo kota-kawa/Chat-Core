@@ -62,7 +62,7 @@ function loadTaskCards() {
 
         const toggleBtn = document.createElement("button");
         toggleBtn.type = "button";
-        toggleBtn.classList.add("btn", "btn-outline-success", "btn-sm");
+        toggleBtn.classList.add("btn", "btn-outline-success", "btn-md");
         toggleBtn.innerHTML = '<i class="bi bi-caret-down"></i>';
 
         // ▼クリックで詳細モーダル

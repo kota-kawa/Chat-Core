@@ -188,24 +188,24 @@ template.innerHTML = `
   
   /* スマホ表示時の調整（画面幅768px以下） - プロンプト投稿ボタンと同じサイズに */
     @media (max-width: 768px) {
-      /* メニュー全体の位置とサイズ */
+      /* メニュー全体の位置とサイズ - プロンプト投稿ボタンと完全に同じサイズに */
       .actions-menu {
         bottom: 100px;  /* 入力フォームから十分離して配置 */
-        right: 25px;    /* 右から25px */
+        right: 20px;    /* プロンプト投稿ボタンの位置に合わせて調整 */
         width: 56px;    /* プロンプト投稿ボタンと同じサイズに */
         height: 56px;   /* プロンプト投稿ボタンと同じサイズに */
       }
-      /* ハンバーガーボタンをプロンプト投稿ボタンと同じサイズに */
+      /* ハンバーガーボタンをプロンプト投稿ボタンと完全に同じサイズに */
       .actions-menu .btn--menu {
-        width: 56px;
-        height: 56px;
+        width: 56px !important;
+        height: 56px !important;
       }
-      /* 丸ボタン全般のサイズ */
-      .btn {
-        width: 45px;    /* ボタンを少し小さく */
+      /* 他のボタンのサイズ */
+      .actions-menu .btn:not(.btn--menu) {
+        width: 45px;
         height: 45px;
       }
-      /* アイコンもボタンに合わせて縮小 */
+      /* アイコンサイズ調整 */
       .btn svg {
         width: 20px;
         height: 20px;
@@ -217,22 +217,22 @@ template.innerHTML = `
       }
     }
 
-    /* 非常に小さな画面での調整（画面幅480px以下） - プロンプト投稿ボタンと同じサイズに */
+    /* 非常に小さな画面での調整（画面幅480px以下） - プロンプト投稿ボタンと完全に同じサイズに */
     @media (max-width: 480px) {
-      /* メニュー全体のサイズをプロンプト投稿ボタンに合わせて調整 */
+      /* メニュー全体のサイズをプロンプト投稿ボタンに完全に合わせて調整 */
       .actions-menu {
         bottom: 90px;   /* 入力フォームから十分離して配置 */
-        right: 20px;    /* プロンプト投稿ボタンとの位置調整 */
+        right: 15px;    /* プロンプト投稿ボタンの位置に合わせて調整 */
         width: 50px;    /* プロンプト投稿ボタンと同じサイズに */
         height: 50px;   /* プロンプト投稿ボタンと同じサイズに */
       }
-      /* ハンバーガーボタンをプロンプト投稿ボタンと同じサイズに */
+      /* ハンバーガーボタンをプロンプト投稿ボタンと完全に同じサイズに */
       .actions-menu .btn--menu {
-        width: 50px;
-        height: 50px;
+        width: 50px !important;
+        height: 50px !important;
       }
-      /* 丸ボタン全般のサイズをさらに縮小 */
-      .btn {
+      /* 他のボタンのサイズをより小さく */
+      .actions-menu .btn:not(.btn--menu) {
         width: 40px;
         height: 40px;
       }

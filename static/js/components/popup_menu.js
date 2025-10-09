@@ -62,6 +62,10 @@ template.innerHTML = `
       display: none;
     }
 
+    :host([data-context="non-chat"]) .actions-menu {
+      bottom: 40px; /* Align with floating prompt button on desktop */
+    }
+
     @keyframes popIn {
       0% {
         transform: scale(0.5) rotate(0deg);
@@ -192,12 +196,19 @@ template.innerHTML = `
   
   /* スマホ表示時の調整（画面幅768px以下） - プロンプト投稿ボタンと同じサイズに */
     @media (max-width: 768px) {
-      /* メニュー全体の位置とサイズ - プロンプト投稿ボタンと完全に同じサイズに */
+      /* メニュー全体の位置とサイズ */
       .actions-menu {
-        bottom: 100px;  /* 入力フォームから十分離して配置 */
         right: 20px;    /* プロンプト投稿ボタンの位置に合わせて調整 */
         width: 56px;    /* プロンプト投稿ボタンと同じサイズに */
         height: 56px;   /* プロンプト投稿ボタンと同じサイズに */
+      }
+
+      :host([data-context="chat"]) .actions-menu {
+        bottom: 100px;  /* チャット入力フォームから十分離して配置 */
+      }
+
+      :host([data-context="non-chat"]) .actions-menu {
+        bottom: 20px;   /* プロンプト投稿ボタンと同じ高さに配置 */
       }
       /* ハンバーガーボタンをプロンプト投稿ボタンと完全に同じサイズに */
       .actions-menu .btn--menu {
@@ -215,10 +226,6 @@ template.innerHTML = `
         height: 20px;
       }
       
-      /* チャット画面では入力フォームとの位置調整 */
-      :host([data-context="chat"]) .actions-menu {
-        bottom: 100px;  /* チャット入力フォームから十分離して配置 */
-      }
     }
 
     /* 非常に小さな画面での調整（画面幅480px以下） - プロンプト投稿ボタンと完全に同じサイズに */
@@ -245,11 +252,15 @@ template.innerHTML = `
         width: 18px;
         height: 18px;
       }
-      
-      /* チャット画面では入力フォームとの位置調整 */
+
       :host([data-context="chat"]) .actions-menu {
         bottom: 90px;   /* チャット入力フォームから十分離して配置 */
       }
+
+      :host([data-context="non-chat"]) .actions-menu {
+        bottom: 15px;   /* プロンプト投稿ボタンと同じ高さに配置 */
+      }
+
     }
 
     </style>

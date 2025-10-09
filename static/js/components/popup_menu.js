@@ -55,7 +55,11 @@ template.innerHTML = `
       width: 60px;
       height: 60px;
       animation: popIn 0.6s ease;
-      z-index: 9999;  
+      z-index: 9999;
+    }
+
+    :host([data-context="chat"]) .actions-menu {
+      display: none;
     }
 
     @keyframes popIn {

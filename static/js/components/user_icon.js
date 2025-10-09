@@ -97,6 +97,8 @@ class UserIcon extends HTMLElement {
     this.btn       = this.shadowRoot.querySelector('.btn');
     this.dropdown  = this.shadowRoot.querySelector('.dropdown');
     this.avatarImg = this.shadowRoot.querySelector('.avatar');
+    this._profileLoaded = false;
+    this._handleAuthState = this._handleAuthState.bind(this);
 
     // ドロップダウン開閉
     this.btn.addEventListener('click', e => {
@@ -108,11 +110,41 @@ class UserIcon extends HTMLElement {
     document.addEventListener('click', () => { this.dropdown.style.display = 'none'; });
   }
 
-  connectedCallback() { this.loadProfile(); }
+  connectedCallback() {
+    document.addEventListener('authstatechange', this._handleAuthState);
+    if (typeof window.loggedIn !== 'undefined') {
+      this._handleAuthState({ detail: { loggedIn: window.loggedIn } });
+    }
+  }
+
+  disconnectedCallback() {
+    document.removeEventListener('authstatechange', this._handleAuthState);
+  }
+
+  _handleAuthState(evt = {}) {
+    const loggedIn = evt.detail?.loggedIn;
+
+    if (loggedIn) {
+      if (!this._profileLoaded) {
+        this.loadProfile();
+      }
+    } else {
+      this._profileLoaded = false;
+      this.dropdown.style.display = 'none';
+      this.avatarImg.src = '/static/user-icon.png';
+      this.avatarImg.alt = 'ユーザーアイコン';
+      this.btn.removeAttribute('data-username');
+    }
+  }
 
   async loadProfile() {
     try {
       const res = await fetch('/api/user/profile', { credentials: 'same-origin' });
+      if (res.status === 401) {
+        // 未ログイン時は静かに何もしない
+        this._profileLoaded = false;
+        return;
+      }
       if (!res.ok) throw new Error(`status ${res.status}`);
       const data = await res.json();
 
@@ -124,8 +156,10 @@ class UserIcon extends HTMLElement {
       this.btn.setAttribute('data-username', name);
       // alt 属性にもセット
       this.avatarImg.alt = name ? `${name}のアイコン` : 'ユーザーアイコン';
+      this._profileLoaded = true;
     } catch (err) {
       console.warn('user_icon: profile load failed', err);
+      this._profileLoaded = false;
     }
   }
 }

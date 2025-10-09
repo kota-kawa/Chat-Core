@@ -19,54 +19,68 @@
  */
 
 
+function notifyAuthState(loggedIn) {
+  window.loggedIn = loggedIn;
+  document.dispatchEvent(new CustomEvent('authstatechange', {
+    detail: { loggedIn }
+  }));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  const authButtons   = document.getElementById("auth-buttons");
+  const newPromptBtn  = document.getElementById("openNewPromptModal");
+  const accessChatBtn = document.getElementById("access-chat-btn");
+  const userIconEl    = document.getElementById('userIcon');
+  const loginBtn      = document.getElementById("login-btn");
+
+  const applyAuthUI = loggedIn => {
+    if (!authButtons || !newPromptBtn || !accessChatBtn || !userIconEl) return;
+
+    if (loggedIn) {
+      // ログイン時：認証ボタンは隠し、ユーザーアイコンを表示
+      authButtons.style.display = "none";
+      userIconEl.style.display  = "";
+
+      newPromptBtn.style.display  = "";
+      accessChatBtn.style.display = "";
+
+      if (window.initTaskOrderEditing) {
+        window.initTaskOrderEditing();
+      }
+    } else {
+      // 未ログイン時：認証ボタンだけ表示、ユーザーアイコンは隠す
+      authButtons.style.display = "";
+      userIconEl.style.display  = "none";
+
+      if (loginBtn) {
+        loginBtn.onclick = () => {
+          window.location.href = "/login";
+        };
+      }
+
+      // タスク編集ボタンが残っていたら削除
+      const editBtn = document.getElementById('edit-task-order-btn');
+      if (editBtn) editBtn.remove();
+
+      // 新規プロンプト＆過去チャット閲覧ボタンを非表示
+      newPromptBtn.style.display  = "none";
+      accessChatBtn.style.display = "none";
+    }
+  };
+
   // ▼ログイン状態確認とUI制御
   fetch("/api/current_user")
     .then(res => res.json())
     .then(data => {
-      window.loggedIn = data.logged_in;
-
-      //const settingsBtn    = document.getElementById("settings-btn");
-      const authButtons    = document.getElementById("auth-buttons");
-      const newPromptBtn   = document.getElementById("openNewPromptModal");
-      const accessChatBtn  = document.getElementById("access-chat-btn");
-
-
-      
-      if (window.loggedIn) {
-
-         // ログイン時：認証ボタンは隠し、ユーザーアイコンを表示
-        authButtons.style.display = "none";
-        userIcon.style.display    = "";  
-
-        newPromptBtn.style.display  = "";
-        accessChatBtn.style.display = "";
-        
-        if (window.initTaskOrderEditing) {
-          window.initTaskOrderEditing();
-        }
-        
-      } else {
-        // 未ログイン時：認証ボタンだけ表示、ユーザーアイコンは隠す
-        authButtons.style.display  = "";
-        userIcon.style.display     = "none";
-
-        document.getElementById("login-btn").onclick = () => {
-          window.location.href = "/login";
-        };
-
-        // タスク編集ボタンが残っていたら削除
-        const editBtn = document.getElementById('edit-task-order-btn');
-        if (editBtn) editBtn.remove();
-
-        // 新規プロンプト＆過去チャット閲覧ボタンを非表示
-        newPromptBtn.style.display  = "none";
-        accessChatBtn.style.display = "none";
-        
-      }
+      const loggedIn = !!data.logged_in;
+      notifyAuthState(loggedIn);
+      applyAuthUI(loggedIn);
     })
-
-    .catch(err => console.error("Error checking login status:", err));
+    .catch(err => {
+      console.error("Error checking login status:", err);
+      notifyAuthState(false);
+      applyAuthUI(false);
+    });
 
     
 

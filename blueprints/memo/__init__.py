@@ -38,7 +38,13 @@ def _fetch_recent_memos(limit: int = 10) -> List[dict]:
         cursor = connection.cursor(dictionary=True)
         cursor.execute(
             """
-            SELECT id, title, tags, created_at
+            SELECT
+                id,
+                title,
+                tags,
+                created_at,
+                input_content,
+                ai_response
             FROM memo_entries
             ORDER BY created_at DESC
             LIMIT %s

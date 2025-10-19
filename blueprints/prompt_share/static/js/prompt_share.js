@@ -26,6 +26,23 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
+  function closeAllDropdowns(exceptCard) {
+    const openMenus = document.querySelectorAll('.prompt-actions-dropdown.is-open');
+    openMenus.forEach(menu => {
+      if (exceptCard && exceptCard.contains(menu)) {
+        return;
+      }
+      menu.classList.remove('is-open');
+      const trigger = menu.parentElement?.querySelector('.meatball-menu');
+      if (trigger) {
+        trigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  document.addEventListener('click', () => closeAllDropdowns());
+
+
   function truncateTitle(title) {
     const chars = Array.from(title);
     return chars.length > 17 ? chars.slice(0, 17).join('') + '...' : title;
@@ -44,9 +61,15 @@ document.addEventListener("DOMContentLoaded", function () {
       : `<i class="bi bi-bookmark"></i>`;
 
     card.innerHTML = `
-      <button class="meatball-menu" type="button" aria-label="その他の操作">
+      <button class="meatball-menu" type="button" aria-label="その他の操作" aria-haspopup="true" aria-expanded="false">
         <i class="bi bi-three-dots"></i>
       </button>
+
+      <div class="prompt-actions-dropdown" role="menu">
+        <button class="dropdown-item" type="button" role="menuitem">プロンプトリストに保存</button>
+        <button class="dropdown-item" type="button" role="menuitem">ミュート</button>
+        <button class="dropdown-item" type="button" role="menuitem">報告する</button>
+      </div>
 
       <h3>${truncateTitle(prompt.title)}</h3>
       <p>${prompt.content}</p>
@@ -123,9 +146,26 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const meatballBtn = card.querySelector(".meatball-menu");
-    if (meatballBtn) {
+    const dropdownMenu = card.querySelector('.prompt-actions-dropdown');
+    if (meatballBtn && dropdownMenu) {
       meatballBtn.addEventListener("click", function (e) {
         e.stopPropagation();
+        const willOpen = !dropdownMenu.classList.contains('is-open');
+        closeAllDropdowns(card);
+        dropdownMenu.classList.toggle('is-open', willOpen);
+        meatballBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      });
+
+      dropdownMenu.addEventListener('click', (event) => {
+        event.stopPropagation();
+      });
+
+      dropdownMenu.querySelectorAll('.dropdown-item').forEach(item => {
+        item.addEventListener('click', (event) => {
+          event.stopPropagation();
+          dropdownMenu.classList.remove('is-open');
+          meatballBtn.setAttribute('aria-expanded', 'false');
+        });
       });
     }
 
@@ -133,6 +173,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (e.target.closest('.bookmark-btn') || e.target.closest('.meatball-menu')) {
         return;
       }
+      closeAllDropdowns();
       showPromptDetailModal(prompt);
     });
 
@@ -191,9 +232,26 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       const meatballBtn = card.querySelector('.meatball-menu');
-      if (meatballBtn) {
+      const dropdownMenu = card.querySelector('.prompt-actions-dropdown');
+      if (meatballBtn && dropdownMenu) {
         meatballBtn.addEventListener('click', function (e) {
           e.stopPropagation();
+          const willOpen = !dropdownMenu.classList.contains('is-open');
+          closeAllDropdowns(card);
+          dropdownMenu.classList.toggle('is-open', willOpen);
+          meatballBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        });
+
+        dropdownMenu.addEventListener('click', (event) => {
+          event.stopPropagation();
+        });
+
+        dropdownMenu.querySelectorAll('.dropdown-item').forEach(item => {
+          item.addEventListener('click', (event) => {
+            event.stopPropagation();
+            dropdownMenu.classList.remove('is-open');
+            meatballBtn.setAttribute('aria-expanded', 'false');
+          });
         });
       }
 
@@ -235,7 +293,8 @@ document.addEventListener("DOMContentLoaded", function () {
           input_examples: title === '告白のアドバイス' ? '好きな人に告白したいです。どのように気持ちを伝えればよいでしょうか？' : '',
           output_examples: title === '告白のアドバイス' ? '素直な気持ちで、相手のことを思いやりながら「あなたと一緒にいるととても幸せです。お付き合いしていただけませんか？」といった誠実な言葉で伝えることをお勧めします。' : ''
         };
-        
+
+        closeAllDropdowns();
         showPromptDetailModal(mockPrompt);
       });
     });

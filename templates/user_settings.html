@@ -29,12 +29,33 @@
       <div class="sidebar-header">
         <h3>設定</h3>
       </div>
-      <ul class="nav-menu">
-        <li><a href="#" class="nav-link active" data-section="profile"><i class="bi bi-person-circle"></i> プロフィール設定</a></li>
-        <li><a href="#" class="nav-link" data-section="prompts"><i class="bi bi-shield-lock"></i> プロンプト管理</a></li>
-        <li><a href="#" class="nav-link" data-section="notifications"><i class="bi bi-bell"></i> 通知設定</a></li>
-        <li><a href="#" class="nav-link" data-section="security"><i class="bi bi-key"></i> セキュリティ</a></li>
-      </ul>
+        <ul class="nav-menu">
+          <li>
+            <a href="#" class="nav-link active" data-section="profile">
+              <i class="bi bi-person-circle"></i> プロフィール設定
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link" data-section="prompts">
+              <i class="bi bi-shield-lock"></i> プロンプト管理
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link" data-section="saved-prompts">
+              <i class="bi bi-bookmark"></i> 保存したプロンプト
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link" data-section="notifications">
+              <i class="bi bi-bell"></i> 通知設定
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link" data-section="security">
+              <i class="bi bi-key"></i> セキュリティ
+            </a>
+          </li>
+        </ul>
       <div class="sidebar-footer">
         <p>&copy; 2025 YourApp</p>
       </div>
@@ -136,6 +157,19 @@
           </div>
           <div id="promptList" class="prompt-grid">
             <!-- プロンプトカードは JavaScript により動的に生成 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 保存したプロンプトセクション -->
+      <div id="saved-prompts-section" class="settings-section">
+        <div class="settings-card">
+          <h2>保存したプロンプト</h2>
+          <div class="header-bar">
+            <h3 class="section-title">Saved Prompts</h3>
+          </div>
+          <div id="savedPromptList" class="prompt-grid">
+            <!-- 保存したプロンプトは JavaScript により動的に生成 -->
           </div>
         </div>
       </div>

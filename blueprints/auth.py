@@ -1,3 +1,4 @@
+import copy
 import os
 from flask import Blueprint, request, session, render_template, redirect, url_for, jsonify
 import random
@@ -19,10 +20,6 @@ load_dotenv()
 if os.getenv("FLASK_ENV") != "production":
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
-GOOGLE_REDIRECT_URI = os.getenv(
-    "GOOGLE_REDIRECT_URI", "https://chatcore-ai.com/google-callback"
-)
-
 GOOGLE_CLIENT_CONFIG = {
     "web": {
         "client_id": "1059688188980-g1v3g4gmrhnr19pcdh94su969811pk4v.apps.googleusercontent.com",
@@ -31,7 +28,7 @@ GOOGLE_CLIENT_CONFIG = {
         "token_uri": "https://oauth2.googleapis.com/token",
         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
         "client_secret": "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",
-        "redirect_uris": [GOOGLE_REDIRECT_URI],
+        "redirect_uris": [],
         "javascript_origins": ["https://chatcore-ai.com"],
     }
 }
@@ -71,13 +68,19 @@ def logout():
 
 @auth_bp.route("/google-login")
 def google_login():
+    redirect_uri = os.getenv("GOOGLE_REDIRECT_URI") or url_for(
+        "auth.google_callback", _external=True
+    )
+    client_config = copy.deepcopy(GOOGLE_CLIENT_CONFIG)
+    client_config["web"]["redirect_uris"] = [redirect_uri]
     flow = Flow.from_client_config(
-        GOOGLE_CLIENT_CONFIG,
+        client_config,
         scopes=GOOGLE_SCOPES,
-        redirect_uri=GOOGLE_REDIRECT_URI,
+        redirect_uri=redirect_uri,
     )
     authorization_url, state = flow.authorization_url(prompt="consent")
     session["google_oauth_state"] = state
+    session["google_redirect_uri"] = redirect_uri
     return redirect(authorization_url)
 
 
@@ -86,14 +89,22 @@ def google_callback():
     state = session.get("google_oauth_state")
     if not state:
         return redirect(url_for("auth.login"))
+    redirect_uri = session.get("google_redirect_uri") or os.getenv(
+        "GOOGLE_REDIRECT_URI"
+    )
+    if not redirect_uri:
+        redirect_uri = url_for("auth.google_callback", _external=True)
+    client_config = copy.deepcopy(GOOGLE_CLIENT_CONFIG)
+    client_config["web"]["redirect_uris"] = [redirect_uri]
     flow = Flow.from_client_config(
-        GOOGLE_CLIENT_CONFIG,
+        client_config,
         scopes=GOOGLE_SCOPES,
         state=state,
-        redirect_uri=GOOGLE_REDIRECT_URI,
+        redirect_uri=redirect_uri,
     )
     flow.fetch_token(authorization_response=request.url)
     session.pop("google_oauth_state", None)
+    session.pop("google_redirect_uri", None)
 
     credentials = flow.credentials
     user_info = requests.get(

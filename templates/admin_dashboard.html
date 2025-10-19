@@ -43,6 +43,11 @@
             font-size: 1.8rem;
             letter-spacing: 0.04em;
         }
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
         header a {
             color: #fff;
             text-decoration: none;
@@ -56,10 +61,15 @@
             background: rgba(255, 255, 255, 0.18);
             transform: translateY(-1px);
         }
+        header a.back-link {
+            background: rgba(255, 255, 255, 0.16);
+            border-color: rgba(255, 255, 255, 0.32);
+        }
         main {
             padding: 2.5rem clamp(1.5rem, 4vw, 3rem) 3.5rem;
             max-width: 1200px;
             margin: 0 auto;
+            overflow-x: hidden;
         }
         .flash-area {
             display: grid;
@@ -101,6 +111,11 @@
             display: grid;
             grid-template-columns: 360px minmax(0, 1fr);
             gap: 2.5rem;
+        }
+        .right-column {
+            display: grid;
+            gap: 2rem;
+            align-content: start;
         }
         .panel {
             background-color: var(--surface-alt);
@@ -161,12 +176,16 @@
             overflow: hidden;
             box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
             background: #fff;
+            table-layout: fixed;
         }
         table th, table td {
             padding: 0.75rem 1rem;
             text-align: left;
             border-bottom: 1px solid rgba(148, 163, 184, 0.24);
             font-size: 0.95rem;
+            vertical-align: top;
+            word-break: break-word;
+            white-space: normal;
         }
         table th {
             background: rgba(47, 111, 237, 0.08);
@@ -178,6 +197,33 @@
         }
         table tbody tr:nth-child(even) {
             background: rgba(226, 232, 240, 0.35);
+        }
+        details.cell-details {
+            border-radius: 12px;
+            background: rgba(248, 250, 255, 0.75);
+            border: 1px solid rgba(47, 111, 237, 0.14);
+            padding: 0.55rem 0.75rem;
+        }
+        details.cell-details > summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--primary);
+            list-style: none;
+        }
+        details.cell-details > summary::-webkit-details-marker {
+            display: none;
+        }
+        details.cell-details[open] > summary {
+            margin-bottom: 0.5rem;
+        }
+        details.cell-details .cell-details-body {
+            color: var(--text-main);
+            white-space: pre-wrap;
+        }
+        .cell-details-body {
+            color: var(--text-main);
+            white-space: pre-wrap;
+            word-break: break-word;
         }
         form {
             margin-top: 1.4rem;
@@ -246,6 +292,14 @@
             header h1 {
                 font-size: 1.5rem;
             }
+            .header-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+            .header-actions a {
+                width: 100%;
+                text-align: center;
+            }
             main {
                 padding: 2rem 1.25rem 3rem;
             }
@@ -255,7 +309,10 @@
 <body>
     <header>
         <h1>管理コンソール</h1>
-        <a href="{{ url_for('admin.logout') }}">ログアウト</a>
+        <nav class="header-actions">
+            <a class="back-link" href="{{ url_for('admin.dashboard') }}">管理トップへ戻る</a>
+            <a href="{{ url_for('admin.logout') }}">ログアウト</a>
+        </nav>
     </header>
     <main>
         <div class="flash-area">
@@ -289,52 +346,65 @@
                     <button type="submit">削除</button>
                 </form>
             </section>
-
-            <section class="panel">
-                <h2>テーブルプレビュー</h2>
-                {% if selected_table %}
-                    <p class="table-preview-meta">最大100件の行を表示しています：<strong>{{ selected_table }}</strong></p>
-                    {% if column_names %}
-                        <table>
-                            <thead>
-                                <tr>
-                                    {% for column in column_names %}
-                                        <th>{{ column }}</th>
-                                    {% endfor %}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in rows %}
+            <div class="right-column">
+                <section class="panel">
+                    <h2>テーブルプレビュー</h2>
+                    {% if selected_table %}
+                        <p class="table-preview-meta">最大100件の行を表示しています：<strong>{{ selected_table }}</strong></p>
+                        {% if column_names %}
+                            <table>
+                                <thead>
                                     <tr>
-                                        {% for value in row %}
-                                            <td>{{ value }}</td>
+                                        {% for column in column_names %}
+                                            <th>{{ column }}</th>
                                         {% endfor %}
                                     </tr>
-                                {% else %}
-                                    <tr><td colspan="{{ column_names|length }}">表示できるデータがありません。</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {% for row in rows %}
+                                        <tr>
+                                            {% for value in row %}
+                                                {% set cell_text = value|string %}
+                                                <td>
+                                                    {% if cell_text|length > 160 %}
+                                                        <details class="cell-details">
+                                                            <summary>{{ (cell_text[:160]|replace('\n', ' ')|replace('\r', ' ')) ~ '…' }}</summary>
+                                                            <div class="cell-details-body">{{ cell_text }}</div>
+                                                        </details>
+                                                    {% else %}
+                                                        <div class="cell-details-body">{{ cell_text }}</div>
+                                                    {% endif %}
+                                                </td>
+                                            {% endfor %}
+                                        </tr>
+                                    {% else %}
+                                        <tr><td colspan="{{ column_names|length }}">表示できるデータがありません。</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p>表示できるデータがありません。</p>
+                        {% endif %}
                     {% else %}
-                        <p>表示できるデータがありません。</p>
+                        <p class="table-preview-meta">内容を確認するテーブルを選択してください。</p>
                     {% endif %}
-                {% else %}
-                    <p class="table-preview-meta">内容を確認するテーブルを選択してください。</p>
-                {% endif %}
+                </section>
 
-                <form method="post" action="{{ url_for('admin.create_table') }}">
-                    <h3>テーブルの作成</h3>
-                    <label for="create-table-name">テーブル名</label>
-                    <input type="text" id="create-table-name" name="table_name" required>
-                    <label for="column-definitions">カラム定義（SQL）</label>
-                    <textarea id="column-definitions" name="columns" placeholder="id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL" required></textarea>
-                    <button type="submit">作成</button>
-                </form>
+                <section class="panel">
+                    <h2>テーブルの作成</h2>
+                    <form method="post" action="{{ url_for('admin.create_table') }}">
+                        <label for="create-table-name">テーブル名</label>
+                        <input type="text" id="create-table-name" name="table_name" required>
+                        <label for="column-definitions">カラム定義（SQL）</label>
+                        <textarea id="column-definitions" name="columns" placeholder="id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL" required></textarea>
+                        <button type="submit">作成</button>
+                    </form>
 
-                {% if error %}
-                    <p class="error-text">エラー：{{ error }}</p>
-                {% endif %}
-            </section>
+                    {% if error %}
+                        <p class="error-text">エラー：{{ error }}</p>
+                    {% endif %}
+                </section>
+            </div>
         </div>
     </main>
 </body>

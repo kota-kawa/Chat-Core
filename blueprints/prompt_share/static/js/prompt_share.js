@@ -37,6 +37,10 @@ document.addEventListener("DOMContentLoaded", function () {
       if (trigger) {
         trigger.setAttribute('aria-expanded', 'false');
       }
+      const parentCard = menu.closest('.prompt-card');
+      if (parentCard) {
+        parentCard.classList.remove('menu-open');
+      }
     });
   }
 
@@ -182,6 +186,7 @@ document.addEventListener("DOMContentLoaded", function () {
         closeAllDropdowns(card);
         dropdownMenu.classList.toggle('is-open', willOpen);
         meatballBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        card.classList.toggle('menu-open', willOpen);
       });
 
       dropdownMenu.addEventListener('click', (event) => {
@@ -193,6 +198,7 @@ document.addEventListener("DOMContentLoaded", function () {
           event.stopPropagation();
           dropdownMenu.classList.remove('is-open');
           meatballBtn.setAttribute('aria-expanded', 'false');
+          card.classList.remove('menu-open');
         });
       });
     }
@@ -288,6 +294,7 @@ document.addEventListener("DOMContentLoaded", function () {
           closeAllDropdowns(card);
           dropdownMenu.classList.toggle('is-open', willOpen);
           meatballBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+          card.classList.toggle('menu-open', willOpen);
         });
 
         dropdownMenu.addEventListener('click', (event) => {
@@ -299,6 +306,7 @@ document.addEventListener("DOMContentLoaded", function () {
             event.stopPropagation();
             dropdownMenu.classList.remove('is-open');
             meatballBtn.setAttribute('aria-expanded', 'false');
+            card.classList.remove('menu-open');
           });
         });
       }

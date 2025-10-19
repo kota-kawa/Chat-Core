@@ -3,101 +3,181 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>新しいメモを追加</title>
+    <title>メモを保存</title>
     <link rel="icon" type="image/webp" href="{{ url_for('static', filename='favicon.webp') }}" />
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap"
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
     />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="{{ url_for('memo.static', filename='css/memo_form.css') }}" />
   </head>
-  <body>
-    <main class="page-wrapper">
-      <section class="form-section">
-        <div class="form-header">
-          <h1>新しいメモを追加</h1>
-          <p>AIとの対話をそのまま保存できます。入力内容とAIの回答を貼り付けてください。</p>
+  <body class="memo-page">
+    <div class="memo-container">
+      <header class="memo-hero">
+        <div class="memo-hero__text">
+          <p class="memo-hero__eyebrow">Memo Workspace</p>
+          <h1>会話メモを整理する</h1>
+          <p>
+            AIとのやり取りを保存し、後から素早く振り返りましょう。入力とAIの回答をそのまま記録できます。
+          </p>
         </div>
+        <a class="memo-hero__action" href="{{ url_for('chat.index') }}">
+          <span>ホームに戻る</span>
+          <i class="bi bi-arrow-up-right"></i>
+        </a>
+      </header>
 
-        {% with messages = get_flashed_messages(with_categories=True) %}
-          {% if messages %}
-            <div class="alerts">
-              {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
+      <div class="memo-grid">
+        <section class="memo-card memo-form-card">
+          <div class="memo-card__header">
+            <h2>新しいメモを追加</h2>
+            <p>入力内容とAIの回答を貼り付けて保存します。</p>
+          </div>
+
+          {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+              <div class="memo-flash-group" role="alert">
+                {% for category, message in messages %}
+                  <div class="memo-flash memo-flash--{{ category }}">{{ message }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endwith %}
+
+          <form method="post" class="memo-form">
+            <div class="form-group">
+              <label for="input_content">入力内容</label>
+              <textarea
+                id="input_content"
+                name="input_content"
+                placeholder="AIに送ったプロンプトを入力 / 貼り付けしてください"
+                required
+              >{{ input_content }}</textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="ai_response">AIの回答</label>
+              <textarea
+                id="ai_response"
+                name="ai_response"
+                placeholder="AIからの回答を入力 / 貼り付けしてください"
+                required
+              >{{ ai_response }}</textarea>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="title">タイトル</label>
+                <input
+                  type="text"
+                  id="title"
+                  name="title"
+                  placeholder="空の場合は回答の1行目が使われます"
+                  value="{{ title }}"
+                  maxlength="255"
+                />
+              </div>
+              <div class="form-group">
+                <label for="tags">タグ <span class="optional">(任意・スペース区切り)</span></label>
+                <input
+                  type="text"
+                  id="tags"
+                  name="tags"
+                  placeholder="例: 仕事 議事録"
+                  value="{{ tags }}"
+                  maxlength="255"
+                />
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="primary-button">
+                <i class="bi bi-save"></i>
+                保存する
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section class="memo-card memo-history">
+          <div class="memo-card__header memo-card__header--compact">
+            <h2>最近保存したメモ</h2>
+            <p>メモをクリックすると内容が表示されます。</p>
+          </div>
+
+          {% if recent_memos %}
+            <ul class="memo-history__list">
+              {% for memo in recent_memos %}
+                <li>
+                  <button
+                    type="button"
+                    class="memo-item"
+                    data-memo-id="{{ memo.id }}"
+                    data-title="{{ memo.title or '無題のメモ' }}"
+                    data-date="{{ memo.created_at.strftime('%Y-%m-%d %H:%M') if memo.created_at }}"
+                    data-tags="{{ memo.tags or '' }}"
+                    data-input='{{ memo.input_content | tojson }}'
+                    data-response='{{ memo.ai_response | tojson }}'
+                  >
+                    <div class="memo-item__header">
+                      <h3 class="memo-item__title">{{ memo.title or '無題のメモ' }}</h3>
+                      {% if memo.created_at %}
+                        <time class="memo-item__date">{{ memo.created_at.strftime('%Y-%m-%d %H:%M') }}</time>
+                      {% endif %}
+                    </div>
+                    <div class="memo-tag-list">
+                      {% if memo.tags %}
+                        {% for tag in memo.tags.split() %}
+                          <span class="memo-tag">{{ tag }}</span>
+                        {% endfor %}
+                      {% else %}
+                        <span class="memo-tag memo-tag--muted">タグなし</span>
+                      {% endif %}
+                    </div>
+                    {% if memo.ai_response %}
+                      <p class="memo-item__excerpt">
+                        {{ memo.ai_response[:120] }}{% if memo.ai_response|length > 120 %}…{% endif %}
+                      </p>
+                    {% endif %}
+                  </button>
+                </li>
               {% endfor %}
-            </div>
+            </ul>
+          {% else %}
+            <p class="memo-history__empty">まだ保存されたメモはありません。</p>
           {% endif %}
-        {% endwith %}
+        </section>
+      </div>
+    </div>
 
-        <form method="post" class="memo-form">
-          <div class="field">
-            <label for="input_content">入力内容</label>
-            <textarea
-              id="input_content"
-              name="input_content"
-              placeholder="ここにあなたがAIへ送った入力（プロンプト）を入力 / 貼り付けしてください..."
-              required>{{ input_content }}</textarea>
-          </div>
+    <div class="memo-modal" id="memoModal" aria-hidden="true">
+      <div class="memo-modal__overlay" data-close-modal></div>
+      <div class="memo-modal__content" role="dialog" aria-modal="true" aria-labelledby="memoModalTitle">
+        <button type="button" class="memo-modal__close" data-close-modal aria-label="閉じる">
+          <i class="bi bi-x-lg"></i>
+        </button>
+        <header class="memo-modal__header">
+          <h3 id="memoModalTitle" data-modal-title>保存したメモ</h3>
+          <p class="memo-modal__date" data-modal-date></p>
+        </header>
+        <div class="memo-modal__tags" data-modal-tags></div>
+        <div class="memo-modal__body">
+          <section class="memo-modal__section">
+            <h4>入力内容</h4>
+            <pre data-modal-input></pre>
+          </section>
+          <section class="memo-modal__section">
+            <h4>AIの回答</h4>
+            <pre data-modal-response></pre>
+          </section>
+        </div>
+      </div>
+    </div>
 
-          <div class="field">
-            <label for="ai_response">AIの回答</label>
-            <textarea
-              id="ai_response"
-              name="ai_response"
-              placeholder="ここにAIの回答を入力 / 貼り付けしてください..."
-              required>{{ ai_response }}</textarea>
-          </div>
-
-          <div class="field-grid">
-            <div class="field">
-              <label for="title">タイトル</label>
-              <input
-                type="text"
-                id="title"
-                name="title"
-                placeholder="空の場合は回答の1行目が使われます"
-                value="{{ title }}"
-                maxlength="255"
-              />
-            </div>
-            <div class="field">
-              <label for="tags">タグ <span class="optional">(任意)</span></label>
-              <input
-                type="text"
-                id="tags"
-                name="tags"
-                placeholder="仕事 議事録 など（スペース区切り）"
-                value="{{ tags }}"
-                maxlength="255"
-              />
-            </div>
-          </div>
-
-          <div class="actions">
-            <button type="submit" class="primary-btn">保存する</button>
-          </div>
-        </form>
-      </section>
-
-      <section class="memo-list">
-        <h2>最近保存したメモ</h2>
-        {% if recent_memos %}
-          <ul>
-            {% for memo in recent_memos %}
-              <li>
-                <div class="memo-title">{{ memo.title }}</div>
-                <div class="memo-meta">
-                  <span class="memo-date">{{ memo.created_at.strftime('%Y-%m-%d %H:%M') if memo.created_at }}</span>
-                  <span class="memo-tags">{{ memo.tags or 'タグなし' }}</span>
-                </div>
-              </li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <p class="empty">まだ保存されたメモはありません。</p>
-        {% endif %}
-      </section>
-    </main>
+    <script src="{{ url_for('memo.static', filename='js/memo_modal.js') }}" defer></script>
   </body>
 </html>

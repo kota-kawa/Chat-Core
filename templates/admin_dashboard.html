@@ -66,8 +66,8 @@
             border-color: rgba(255, 255, 255, 0.32);
         }
         main {
-            padding: 2.5rem clamp(1.5rem, 4vw, 3rem) 3.5rem;
-            max-width: 1200px;
+            padding: 2.5rem clamp(1.5rem, 3vw, 3rem) 3.5rem;
+            max-width: min(95vw, 1500px);
             margin: 0 auto;
             overflow-x: hidden;
         }
@@ -109,8 +109,8 @@
         }
         .content {
             display: grid;
-            grid-template-columns: 360px minmax(0, 1fr);
-            gap: 2.5rem;
+            grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+            gap: 2rem;
         }
         .right-column {
             display: grid;
@@ -176,7 +176,7 @@
             overflow: hidden;
             box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
             background: #fff;
-            table-layout: fixed;
+            table-layout: auto;
         }
         table th, table td {
             padding: 0.75rem 1rem;
@@ -186,6 +186,9 @@
             vertical-align: top;
             word-break: break-word;
             white-space: normal;
+        }
+        table th.wide-column, table td.wide-column {
+            min-width: clamp(240px, 28vw, 420px);
         }
         table th {
             background: rgba(47, 111, 237, 0.08);
@@ -209,12 +212,32 @@
             font-weight: 600;
             color: var(--primary);
             list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            overflow: hidden;
+        }
+        details.cell-details > summary::after {
+            content: "＋";
+            font-weight: 700;
+            margin-left: auto;
+            color: var(--primary);
         }
         details.cell-details > summary::-webkit-details-marker {
             display: none;
         }
         details.cell-details[open] > summary {
             margin-bottom: 0.5rem;
+        }
+        details.cell-details[open] > summary::after {
+            content: "−";
+        }
+        .cell-summary-text {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         details.cell-details .cell-details-body {
             color: var(--text-main);
@@ -352,11 +375,13 @@
                     {% if selected_table %}
                         <p class="table-preview-meta">最大100件の行を表示しています：<strong>{{ selected_table }}</strong></p>
                         {% if column_names %}
+                            {% set wide_columns = ['message', 'content', 'prompt_template', 'input_examples', 'output_examples'] %}
                             <table>
                                 <thead>
                                     <tr>
                                         {% for column in column_names %}
-                                            <th>{{ column }}</th>
+                                            {% set header_class = 'wide-column' if column in wide_columns else '' %}
+                                            <th class="{{ header_class }}">{{ column }}</th>
                                         {% endfor %}
                                     </tr>
                                 </thead>
@@ -365,10 +390,15 @@
                                         <tr>
                                             {% for value in row %}
                                                 {% set cell_text = value|string %}
-                                                <td>
+                                                {% set column_name = column_names[loop.index0] %}
+                                                {% set cell_class = 'wide-column' if column_name in wide_columns else '' %}
+                                                <td class="{{ cell_class }}">
                                                     {% if cell_text|length > 160 %}
+                                                        {% set summary_text = cell_text[:160]|replace('\n', ' ')|replace('\r', ' ') %}
                                                         <details class="cell-details">
-                                                            <summary>{{ (cell_text[:160]|replace('\n', ' ')|replace('\r', ' ')) ~ '…' }}</summary>
+                                                            <summary>
+                                                                <span class="cell-summary-text">{{ summary_text }}…</span>
+                                                            </summary>
                                                             <div class="cell-details-body">{{ cell_text }}</div>
                                                         </details>
                                                     {% else %}

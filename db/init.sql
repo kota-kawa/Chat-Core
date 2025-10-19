@@ -94,6 +94,23 @@ CREATE TABLE IF NOT EXISTS prompt_list_entries (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
+-- AIメモを保存するためのテーブル
+CREATE TABLE IF NOT EXISTS memo_entries (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NULL,
+    input_content LONGTEXT NOT NULL,
+    ai_response LONGTEXT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    tags VARCHAR(255) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_memo_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
 
 
 

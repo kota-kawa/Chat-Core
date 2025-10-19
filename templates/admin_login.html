@@ -1,74 +1,109 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Administrator Login</title>
+    <title>管理者ログイン</title>
     <style>
+        :root {
+            color-scheme: light;
+            --primary: #2f6fed;
+            --primary-dark: #214bba;
+            --surface: rgba(255, 255, 255, 0.82);
+            --border: rgba(255, 255, 255, 0.65);
+            --text-main: #1f2933;
+        }
+        * {
+            box-sizing: border-box;
+        }
         body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
+            font-family: "Noto Sans JP", "Helvetica Neue", Arial, sans-serif;
+            background: radial-gradient(110% 110% at 10% 0%, #f2f6ff 0%, #d9e4ff 40%, #eef1ff 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 1.5rem;
         }
         .login-container {
-            background: #ffffff;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            width: 320px;
+            background: var(--surface);
+            padding: 2.2rem 2.4rem;
+            border-radius: 22px;
+            box-shadow: 0 20px 45px rgba(47, 111, 237, 0.18);
+            width: min(360px, 100%);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(12px);
         }
         h1 {
-            font-size: 1.4rem;
-            margin-bottom: 1.5rem;
+            font-size: 1.45rem;
+            margin-bottom: 1.6rem;
             text-align: center;
+            letter-spacing: 0.04em;
+            color: var(--text-main);
         }
         label {
             display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
+            margin-bottom: 0.55rem;
+            font-weight: 600;
+            font-size: 0.92rem;
+            color: rgba(31, 41, 51, 0.75);
         }
         input[type="password"] {
             width: 100%;
-            padding: 0.6rem;
-            margin-bottom: 1rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            padding: 0.7rem 0.85rem;
+            margin-bottom: 1.1rem;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-radius: 12px;
             font-size: 1rem;
+            font-family: inherit;
+            background: rgba(255, 255, 255, 0.92);
+            transition: border 0.2s ease, box-shadow 0.2s ease;
+        }
+        input[type="password"]:focus {
+            outline: none;
+            border-color: rgba(47, 111, 237, 0.6);
+            box-shadow: 0 0 0 4px rgba(47, 111, 237, 0.18);
         }
         button {
             width: 100%;
-            padding: 0.6rem;
+            padding: 0.75rem;
             font-size: 1rem;
-            background-color: #2c7be5;
+            background: linear-gradient(135deg, var(--primary), #4f86ff);
             color: #ffffff;
             border: none;
-            border-radius: 4px;
+            border-radius: 999px;
             cursor: pointer;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         button:hover {
-            background-color: #1a5fc4;
+            transform: translateY(-1px);
+            box-shadow: 0 14px 28px rgba(47, 111, 237, 0.25);
         }
         .flash {
-            margin-bottom: 1rem;
-            padding: 0.75rem;
-            border-radius: 4px;
+            margin-bottom: 1.2rem;
+            padding: 0.85rem 1rem;
+            border-radius: 14px;
+            font-weight: 500;
+            text-align: center;
+            backdrop-filter: blur(8px);
         }
         .flash.error {
-            background-color: #f8d7da;
-            color: #721c24;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            background: rgba(254, 226, 226, 0.85);
+            color: #b91c1c;
         }
         .flash.success {
-            background-color: #d4edda;
-            color: #155724;
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            background: rgba(209, 250, 229, 0.85);
+            color: #047857;
         }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <h1>Administrator Login</h1>
+        <h1>管理者ログイン</h1>
         {% with messages = get_flashed_messages(with_categories=True) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -78,9 +113,9 @@
         {% endwith %}
         <form method="post" action="{{ url_for('admin.login') }}">
             <input type="hidden" name="next" value="{{ next_url }}">
-            <label for="password">Password</label>
+            <label for="password">パスワード</label>
             <input type="password" id="password" name="password" required>
-            <button type="submit">Log In</button>
+            <button type="submit">ログイン</button>
         </form>
     </div>
 </body>

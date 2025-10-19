@@ -12,6 +12,7 @@ def get_prompts():
     """
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
+    user_id = session.get('user_id')
     try:
         cursor.execute("""
             SELECT id, title, category, content, author, input_examples, output_examples, created_at
@@ -21,10 +22,14 @@ def get_prompts():
         """)
         prompts = cursor.fetchall()
 
-        # task_with_examples テーブルからブックマークされたプロンプト（ここでは title をキーとしている）を取得
-        cursor.execute("SELECT name FROM task_with_examples")
-        bookmarks = cursor.fetchall()
-        bookmark_titles = {b['name'] for b in bookmarks}
+        bookmark_titles = set()
+        if user_id:
+            cursor.execute(
+                "SELECT name FROM task_with_examples WHERE user_id = %s",
+                (user_id,)
+            )
+            bookmarks = cursor.fetchall()
+            bookmark_titles = {b['name'] for b in bookmarks}
 
         # 各プロンプトにブックマーク済みかどうかのフラグを付与
         for prompt in prompts:
@@ -99,8 +104,16 @@ def add_bookmark():
         return jsonify({'error': '必要なフィールドが不足しています'}), 400
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
     try:
+        cursor.execute(
+            "SELECT id FROM task_with_examples WHERE user_id = %s AND name = %s",
+            (user_id, title)
+        )
+        existing = cursor.fetchone()
+        if existing:
+            return jsonify({'message': 'すでに保存されています。', 'saved_id': existing['id']}), 200
+
         # user_id を必ず INSERT して、自分のタスクとして登録
         cursor.execute(
             """
@@ -111,7 +124,7 @@ def add_bookmark():
             (user_id, title, content, input_examples, output_examples)
         )
         conn.commit()
-        return jsonify({'message': 'ブックマークが保存されました。'}), 201
+        return jsonify({'message': 'ブックマークが保存されました。', 'saved_id': cursor.lastrowid}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:

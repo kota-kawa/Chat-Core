@@ -58,7 +58,8 @@
 }
 
 .task-selection .task-wrapper {
-  flex: 1 1 calc(50% - 0.5rem);
+  flex: 0 0 calc(50% - 0.5rem);
+  max-width: calc(50% - 0.5rem);
   display: flex;
 }
 
@@ -189,9 +190,10 @@
   .task-selection {
     gap: 0.8rem;          /* カード間の隙間を狭く */
   }
-  
+
   .task-selection .task-wrapper {
     flex: 1 1 100%;       /* スマホでは1列表示 */
+    max-width: 100%;
   }
   
   .prompt-card {

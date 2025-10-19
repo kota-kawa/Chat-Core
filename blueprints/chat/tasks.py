@@ -24,11 +24,10 @@ def get_tasks():
                      prompt_template,
                      input_examples,
                      output_examples,
-                     user_id IS NULL AS is_default
+                     FALSE AS is_default
                 FROM task_with_examples
-               WHERE user_id = %s OR user_id IS NULL
-               ORDER BY CASE WHEN user_id IS NULL THEN 0 ELSE 1 END,
-                        COALESCE(display_order, 99999),
+               WHERE user_id = %s
+               ORDER BY COALESCE(display_order, 99999),
                         id
             """,
                 (session["user_id"],),

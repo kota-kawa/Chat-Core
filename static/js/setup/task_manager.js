@@ -1,39 +1,20 @@
 // Task title updater
 
 function updateTaskTitle(card, newTitle) {
-  // ① card の直下にあるテキストノードをすべて削除
-  Array.from(card.childNodes).forEach(node => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      node.remove();
-    }
-  });
-  
-  // ② card 内の要素のうち、"delete-container"、"edit-container"、"task-title" 以外のものを削除
-  Array.from(card.children).forEach(child => {
-    if (!child.classList.contains('delete-container') &&
-        !child.classList.contains('edit-container') &&
-        !child.classList.contains('task-title')) {
-      child.remove();
-    }
-  });
-  
-  // ③ "task-title" クラスの要素を探す。なければ新たに作成して card の先頭に追加
-  let titleElem = card.querySelector('.task-title');
-  if (!titleElem) {
-    titleElem = document.createElement('span');
-    titleElem.className = 'task-title';
-    // card の computed style を取得し、フォント等のスタイルを反映して位置ずれを防ぐ
-    const computedStyle = window.getComputedStyle(card);
-    titleElem.style.font = computedStyle.font;
-    titleElem.style.lineHeight = computedStyle.lineHeight;
-    titleElem.style.display = 'inline';
-    titleElem.style.margin = '0';
-    titleElem.style.padding = '0';
-    card.prepend(titleElem);
+  const truncatedTitle = newTitle.length > 8 ? newTitle.substring(0, 8) + '…' : newTitle;
+
+  // 既存のヘッダーがある場合はテキストだけを更新
+  const header = card.querySelector('.task-header');
+  if (header) {
+    header.textContent = truncatedTitle;
+  } else if (typeof window.loadTaskCards === 'function') {
+    // ヘッダーが存在しない異常状態では一覧を再描画して整える
+    window.loadTaskCards();
+    return;
   }
-  
-  // ④ 新しいタスク名を表示
-  titleElem.textContent = newTitle;
+
+  // 過去に生成された task-title 要素が残っている場合は削除しておく
+  card.querySelectorAll('.task-title').forEach(elem => elem.remove());
 }
 // Task edit modal
 

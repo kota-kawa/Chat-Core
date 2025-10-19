@@ -296,6 +296,23 @@
             transform: translateY(-1px);
             box-shadow: 0 16px 30px rgba(47, 111, 237, 0.28);
         }
+        .schema-table-container {
+            margin-top: 1.2rem;
+            overflow-x: auto;
+        }
+        table.schema-table {
+            margin-top: 0.6rem;
+        }
+        table.schema-table th,
+        table.schema-table td {
+            font-size: 0.88rem;
+            white-space: nowrap;
+        }
+        .help-text {
+            margin-top: 0.4rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
         .error-text {
             color: #dc2626;
             margin-top: 1.2rem;
@@ -375,6 +392,35 @@
                     <h2>テーブルプレビュー</h2>
                     {% if selected_table %}
                         <p class="table-preview-meta">最大100件の行を表示しています：<strong>{{ selected_table }}</strong></p>
+                        {% if column_details %}
+                            <div class="schema-table-container">
+                                <h3>テーブル定義</h3>
+                                <table class="schema-table">
+                                    <thead>
+                                        <tr>
+                                            <th>カラム名</th>
+                                            <th>型</th>
+                                            <th>NULL</th>
+                                            <th>キー</th>
+                                            <th>デフォルト</th>
+                                            <th>追加情報</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for column in column_details %}
+                                            <tr>
+                                                <td>{{ column.name }}</td>
+                                                <td>{{ column.type }}</td>
+                                                <td>{{ '許可' if column.nullable else '不可' }}</td>
+                                                <td>{{ column.key or '—' }}</td>
+                                                <td>{{ column.default if column.default is not none else '—' }}</td>
+                                                <td>{{ column.extra or '—' }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% endif %}
                         {% if column_names %}
                             {% set wide_columns = ['message', 'content', 'prompt_template', 'input_examples', 'output_examples'] %}
                             <table>
@@ -424,6 +470,7 @@
                 <section class="panel">
                     <h2>テーブル操作</h2>
                     {% if selected_table %}
+                        {% set delete_disabled = existing_columns|length <= 1 %}
                         <h3>カラムの追加</h3>
                         <form method="post" action="{{ url_for('admin.add_column') }}">
                             <input type="hidden" name="table_name" value="{{ selected_table }}">
@@ -438,13 +485,16 @@
                         <form method="post" action="{{ url_for('admin.delete_column') }}">
                             <input type="hidden" name="table_name" value="{{ selected_table }}">
                             <label for="delete-column-name">削除するカラム</label>
-                            <select id="delete-column-name" name="column_name" required>
+                            <select id="delete-column-name" name="column_name" {% if delete_disabled %}disabled{% endif %} required>
                                 <option value="" disabled selected>カラムを選択</option>
-                                {% for column in existing_columns %}
-                                    <option value="{{ column }}">{{ column }}</option>
+                                {% for column in column_details %}
+                                    <option value="{{ column.name }}">{{ column.name }}{% if column.type %} ({{ column.type }}){% endif %}</option>
                                 {% endfor %}
                             </select>
-                            <button type="submit">カラムを削除</button>
+                            <button type="submit" {% if delete_disabled %}disabled{% endif %}>カラムを削除</button>
+                            {% if delete_disabled %}
+                                <p class="help-text">テーブルのカラムが1つしかないため削除できません。</p>
+                            {% endif %}
                         </form>
                     {% else %}
                         <p class="table-preview-meta">カラムの変更を行うテーブルを選択してください。</p>

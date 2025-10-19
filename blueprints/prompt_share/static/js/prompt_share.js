@@ -102,6 +102,28 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  function savePromptToList(prompt) {
+    return fetch('/prompt_share/api/prompt_list', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt_id: prompt.id ?? null,
+        title: prompt.title,
+        category: prompt.category || '',
+        content: prompt.content,
+        input_examples: prompt.input_examples || '',
+        output_examples: prompt.output_examples || ''
+      })
+    }).then(async response => {
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || data.error) {
+        throw new Error(data.error || '操作に失敗しました。');
+      }
+      return data;
+    });
+  }
+
   function createPromptCardElement(prompt) {
     const card = document.createElement("div");
     card.classList.add("prompt-card");
@@ -110,6 +132,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const isBookmarked = Boolean(prompt.bookmarked);
+    const isSavedToList = Boolean(prompt.saved_to_list);
     const bookmarkIcon = isBookmarked
       ? `<i class="bi bi-bookmark-fill"></i>`
       : `<i class="bi bi-bookmark"></i>`;
@@ -151,6 +174,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     card.dataset.fullTitle = prompt.title || '';
     card.dataset.fullContent = prompt.content || '';
+    card.dataset.savedToList = isSavedToList ? 'true' : 'false';
 
     const bookmarkBtn = card.querySelector(".bookmark-btn");
     if (bookmarkBtn) {
@@ -240,23 +264,23 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
           }
 
-          if (bookmarkBtn && bookmarkBtn.classList.contains('bookmarked')) {
-            alert('このプロンプトはすでに保存されています。');
+          if (prompt.saved_to_list) {
+            alert('このプロンプトはすでにプロンプトリストに保存されています。');
             return;
           }
 
           saveMenuItem.disabled = true;
-          savePromptBookmark(prompt)
+          savePromptToList(prompt)
             .then(result => {
-              updateBookmarkButtonState(bookmarkBtn, true);
-              prompt.bookmarked = true;
+              prompt.saved_to_list = true;
+              card.dataset.savedToList = 'true';
               if (result && result.message) {
                 console.log(result.message);
               }
             })
             .catch(err => {
               console.error('プロンプト保存中にエラーが発生しました:', err);
-              alert('プロンプトの保存中にエラーが発生しました。');
+              alert('プロンプトリストへの保存中にエラーが発生しました。');
             })
             .finally(() => {
               saveMenuItem.disabled = false;
@@ -290,6 +314,8 @@ document.addEventListener("DOMContentLoaded", function () {
           data.prompts.forEach(prompt => {
 
             // サーバーから返却された各プロンプトに、ブックマーク状態を示すフィールド（bookmarked）があると仮定
+            prompt.bookmarked = Boolean(prompt.bookmarked);
+            prompt.saved_to_list = Boolean(prompt.saved_to_list);
             const isBookmarked = prompt.bookmarked;
 
             // ブックマーク状態に応じて、アイコンのHTMLを切り替える

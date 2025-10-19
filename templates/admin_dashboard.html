@@ -505,6 +505,8 @@
                             <input type="text" id="create-table-name" name="table_name" required>
                             <label for="column-definitions">カラム定義（SQL）</label>
                             <textarea id="column-definitions" name="columns" placeholder="id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL" required></textarea>
+                            <label for="table-options">テーブルオプション（例：ENGINE=InnoDB DEFAULT CHARSET=utf8mb4）</label>
+                            <input type="text" id="table-options" name="table_options" placeholder="ENGINE=InnoDB DEFAULT CHARSET=utf8mb4">
                             <button type="submit">作成</button>
                         </form>
                     {% endif %}

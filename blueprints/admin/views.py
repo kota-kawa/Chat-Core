@@ -60,6 +60,11 @@ def _fetch_tables(cursor) -> list[str]:
     return [row[0] for row in cursor.fetchall()]
 
 
+def _fetch_table_columns(cursor, table_name: str) -> list[str]:
+    cursor.execute(f"SHOW COLUMNS FROM {_quote_identifier(table_name)}")
+    return [row[0] for row in cursor.fetchall()]
+
+
 def _fetch_table_preview(cursor, table_name: str) -> tuple[list[str], list[tuple]]:
     cursor.execute(f"SELECT * FROM {_quote_identifier(table_name)} LIMIT 100")
     rows = cursor.fetchall()
@@ -73,6 +78,7 @@ def dashboard():
     selected_table: Optional[str] = request.args.get("table")
     tables: list[str] = []
     column_names: list[str] = []
+    existing_columns: list[str] = []
     rows: list[tuple] = []
     error: Optional[str] = None
     connection = None
@@ -86,6 +92,7 @@ def dashboard():
         if selected_table:
             if selected_table in tables:
                 column_names, rows = _fetch_table_preview(cursor, selected_table)
+                existing_columns = _fetch_table_columns(cursor, selected_table)
             else:
                 flash("The selected table does not exist.", "error")
                 selected_table = None
@@ -102,6 +109,7 @@ def dashboard():
         tables=tables,
         selected_table=selected_table,
         column_names=column_names,
+        existing_columns=existing_columns,
         rows=rows,
         error=error,
     )
@@ -166,3 +174,86 @@ def delete_table():
             connection.close()
 
     return redirect(url_for("admin.dashboard"))
+
+
+@admin_bp.route("/add-column", methods=["POST"])
+@admin_required
+def add_column():
+    table_name = request.form.get("table_name", "").strip()
+    column_name = request.form.get("column_name", "").strip()
+    column_type = request.form.get("column_type", "").strip()
+
+    if not table_name or not column_name or not column_type:
+        flash("テーブル名、カラム名、カラム定義は必須です。", "error")
+        return redirect(url_for("admin.dashboard", table=table_name))
+
+    connection = None
+    cursor = None
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        tables = _fetch_tables(cursor)
+        if table_name not in tables:
+            flash(f"テーブル '{table_name}' は存在しません。", "error")
+            return redirect(url_for("admin.dashboard"))
+
+        existing_columns = _fetch_table_columns(cursor, table_name)
+        if column_name in existing_columns:
+            flash(f"カラム '{column_name}' は既に存在します。", "error")
+            return redirect(url_for("admin.dashboard", table=table_name))
+
+        cursor.execute(
+            f"ALTER TABLE {_quote_identifier(table_name)} ADD COLUMN {_quote_identifier(column_name)} {column_type}"
+        )
+        connection.commit()
+        flash(f"カラム '{column_name}' をテーブル '{table_name}' に追加しました。", "success")
+    except Error as exc:
+        flash(f"カラムの追加に失敗しました: {exc}", "error")
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None:
+            connection.close()
+
+    return redirect(url_for("admin.dashboard", table=table_name))
+
+
+@admin_bp.route("/delete-column", methods=["POST"])
+@admin_required
+def delete_column():
+    table_name = request.form.get("table_name", "").strip()
+    column_name = request.form.get("column_name", "").strip()
+
+    if not table_name or not column_name:
+        flash("テーブル名とカラム名は必須です。", "error")
+        return redirect(url_for("admin.dashboard", table=table_name))
+
+    connection = None
+    cursor = None
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        tables = _fetch_tables(cursor)
+        if table_name not in tables:
+            flash(f"テーブル '{table_name}' は存在しません。", "error")
+            return redirect(url_for("admin.dashboard"))
+
+        existing_columns = _fetch_table_columns(cursor, table_name)
+        if column_name not in existing_columns:
+            flash(f"カラム '{column_name}' は存在しません。", "error")
+            return redirect(url_for("admin.dashboard", table=table_name))
+
+        cursor.execute(
+            f"ALTER TABLE {_quote_identifier(table_name)} DROP COLUMN {_quote_identifier(column_name)}"
+        )
+        connection.commit()
+        flash(f"カラム '{column_name}' をテーブル '{table_name}' から削除しました。", "success")
+    except Error as exc:
+        flash(f"カラムの削除に失敗しました: {exc}", "error")
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None:
+            connection.close()
+
+    return redirect(url_for("admin.dashboard", table=table_name))

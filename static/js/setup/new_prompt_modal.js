@@ -8,19 +8,33 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const togglePlusRotation = isRotated => {
     if (!openModalBtn) return;
-    if (isRotated) {
-      openModalBtn.classList.add("is-rotated");
-    } else {
-      openModalBtn.classList.remove("is-rotated");
-    }
+    openModalBtn.classList.toggle("is-rotated", !!isRotated);
   };
+
+  const closeModal = () => {
+    if (!newPromptModal) return;
+    newPromptModal.classList.remove("show");
+    togglePlusRotation(false);
+  };
+
+  const openModal = () => {
+    if (!newPromptModal) return;
+    newPromptModal.classList.add("show");
+    togglePlusRotation(true);
+  };
+
+  // 初期表示では必ず閉じた状態にする
+  closeModal();
 
   // ＋ボタンを押すとモーダル表示
   if (openModalBtn && newPromptModal) {
     openModalBtn.addEventListener("click", function (e) {
       e.preventDefault();
-      newPromptModal.classList.add("show");
-      togglePlusRotation(true);
+      if (newPromptModal.classList.contains("show")) {
+        closeModal();
+      } else {
+        openModal();
+      }
     });
   }
 
@@ -28,8 +42,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (modalCloseBtn) {
     modalCloseBtn.addEventListener("click", function (e) {
       e.preventDefault();
-      newPromptModal.classList.remove("show");
-      togglePlusRotation(false);
+      closeModal();
     });
   }
 
@@ -37,8 +50,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (newPromptModal) {
     newPromptModal.addEventListener("click", function (e) {
       if (e.target === newPromptModal) {
-        newPromptModal.classList.remove("show");
-        togglePlusRotation(false);
+        closeModal();
       }
     });
   }
@@ -86,8 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
           alert(result.message);
           newPostForm.reset();
           guardrailFields.style.display = "none";
-          newPromptModal.classList.remove("show");
-          togglePlusRotation(false);
+          closeModal();
 
           // ここでタスク一覧を更新する
           loadTaskCards();

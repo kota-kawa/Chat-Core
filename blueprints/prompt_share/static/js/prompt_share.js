@@ -623,12 +623,31 @@ document.addEventListener("DOMContentLoaded", function () {
   const openModalBtn = document.getElementById("openPostModal");
   const postModal = document.getElementById("postModal");
   const closeModalBtn = document.querySelector(".close-btn");
+  const newPromptIcon = openModalBtn ? openModalBtn.querySelector("i") : null;
+
+  if (newPromptIcon) {
+    newPromptIcon.addEventListener("animationend", () => {
+      newPromptIcon.classList.remove("rotating");
+    });
+  }
 
   openModalBtn.addEventListener("click", function () {
+    if (newPromptIcon) {
+      // 連続クリック時にも回転が再生されるよう一度リセット
+      newPromptIcon.classList.remove("rotating");
+      // Reflow を強制してアニメーションを再適用
+      void newPromptIcon.offsetWidth;
+    }
+
     if (!isLoggedIn) {
       alert("プロンプトを投稿するにはログインが必要です。");
       return;
     }
+
+    if (newPromptIcon) {
+      newPromptIcon.classList.add("rotating");
+    }
+
     postModal.classList.add("show");
   });
 
@@ -756,22 +775,4 @@ document.addEventListener("DOMContentLoaded", function () {
       promptDetailModal.classList.remove("show");
     }
   });
-
-
-});
-
-
-
-window.addEventListener('load', () => {
-  const btn = document.querySelector('.new-prompt-btn');
-  if (!btn) return;
-
-  // ロード時の回転
-  btn.classList.add('rotate-on-load');
-
-  // （オプション）一定時間後にクラスを外すと、
-  // 再度モーダルオープン時の回転に影響しません
-  setTimeout(() => {
-    btn.classList.remove('rotate-on-load');
-  }, 1100); // CSSのtransition時間＋ちょっと余裕
 });

@@ -11,9 +11,15 @@ document.addEventListener("DOMContentLoaded", function () {
     openModalBtn.classList.toggle("is-rotated", !!isRotated);
   };
 
-  const closeModal = () => {
+  const closeModal = (options = {}) => {
     if (!newPromptModal) return;
     newPromptModal.classList.remove("show");
+
+    if (options.skipRotation) {
+      openModalBtn?.classList.remove("is-rotated");
+      return;
+    }
+
     togglePlusRotation(false);
   };
 
@@ -23,8 +29,8 @@ document.addEventListener("DOMContentLoaded", function () {
     togglePlusRotation(true);
   };
 
-  // 初期表示では必ず閉じた状態にする
-  closeModal();
+  // 初期表示では必ず閉じた状態にし、回転アニメーションは発火させない
+  closeModal({ skipRotation: true });
 
   // ＋ボタンを押すとモーダル表示
   if (openModalBtn && newPromptModal) {

@@ -128,9 +128,10 @@ def google_callback():
     if not user:
         user_id = create_user(email)
         set_user_verified(user_id)
-        copy_default_tasks_for_user(user_id)
     else:
         user_id = user["id"]
+
+    copy_default_tasks_for_user(user_id)
     session["user_id"] = user_id
     session["user_email"] = email
     session.permanent = True
@@ -182,6 +183,7 @@ def api_verify_login_code():
         session.permanent = True
         session.pop("login_verification_code", None)
         session.pop("login_temp_user_id", None)
+        copy_default_tasks_for_user(user_id)
         return jsonify({"status": "success", "message": "ログインに成功しました"})
     else:
         return jsonify({"status": "fail", "error": "認証コードが違います"}), 400

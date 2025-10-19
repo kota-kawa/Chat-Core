@@ -13,9 +13,21 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base/buttons.css') }}" />
     <link rel="stylesheet" href="{{ url_for('memo.static', filename='css/memo_form.css') }}" />
   </head>
   <body class="memo-page">
+    <action-menu></action-menu>
+
+    <div id="auth-buttons" style="display: none; position: absolute; top: 10px; right: 10px; z-index: 10000">
+      <button id="login-btn" class="auth-btn">
+        <i class="bi bi-person-circle"></i>
+        <span>ログイン</span>
+      </button>
+    </div>
+
+    <user-icon id="userIcon" style="display: none"></user-icon>
+
     <div class="memo-container">
       <header class="memo-hero">
         <div class="memo-hero__text">
@@ -177,7 +189,8 @@
         </div>
       </div>
     </div>
-
+    <script src="{{ url_for('static', filename='js/components/popup_menu.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/components/user_icon.js') }}" defer></script>
     <script src="{{ url_for('memo.static', filename='js/memo_modal.js') }}" defer></script>
   </body>
 </html>

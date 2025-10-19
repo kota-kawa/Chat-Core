@@ -72,9 +72,8 @@ document.addEventListener("DOMContentLoaded", function () {
               <p>${prompt.content}</p>
 
               <!-- カテゴリと投稿者情報 -->
-              <div class="prompt-meta" style="text-align: center; margin-top: 10px;">
+              <div class="prompt-meta">
                 <span>カテゴリ: ${prompt.category}</span>
-                <br>
                 <span>投稿者: ${prompt.author}</span>
               </div>
             `;

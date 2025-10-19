@@ -1,13 +1,27 @@
 document.addEventListener("DOMContentLoaded", function () {
   const openModalBtn = document.getElementById("openNewPromptModal");
+  const plusIcon = openModalBtn?.querySelector(".bi-plus-lg");
   const newPromptModal = document.getElementById("newPromptModal");
   const modalCloseBtn = document.getElementById("newModalCloseBtn");
   const guardrailCheckbox = document.getElementById("new-guardrail-checkbox");
   const guardrailFields = document.getElementById("new-guardrail-fields");
   const newPostForm = document.getElementById("newPostForm");
 
-  const togglePlusRotation = isRotated => {
+  const togglePlusRotation = (isRotated, options = {}) => {
     if (!openModalBtn) return;
+
+    const { animate = true } = options;
+
+    if (!animate && plusIcon) {
+      plusIcon.classList.add("no-transition");
+      openModalBtn.classList.toggle("is-rotated", !!isRotated);
+
+      requestAnimationFrame(() => {
+        plusIcon.classList.remove("no-transition");
+      });
+      return;
+    }
+
     openModalBtn.classList.toggle("is-rotated", !!isRotated);
   };
 
@@ -16,17 +30,17 @@ document.addEventListener("DOMContentLoaded", function () {
     newPromptModal.classList.remove("show");
 
     if (options.skipRotation) {
-      openModalBtn?.classList.remove("is-rotated");
+      togglePlusRotation(false, { animate: false });
       return;
     }
 
-    togglePlusRotation(false);
+    togglePlusRotation(false, { animate: !!options.animateRotation });
   };
 
-  const openModal = () => {
+  const openModal = options => {
     if (!newPromptModal) return;
     newPromptModal.classList.add("show");
-    togglePlusRotation(true);
+    togglePlusRotation(true, { animate: !!options?.animateRotation });
   };
 
   // 初期表示では必ず閉じた状態にし、回転アニメーションは発火させない
@@ -37,9 +51,9 @@ document.addEventListener("DOMContentLoaded", function () {
     openModalBtn.addEventListener("click", function (e) {
       e.preventDefault();
       if (newPromptModal.classList.contains("show")) {
-        closeModal();
+        closeModal({ animateRotation: true });
       } else {
-        openModal();
+        openModal({ animateRotation: true });
       }
     });
   }

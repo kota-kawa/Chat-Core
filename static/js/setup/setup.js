@@ -51,6 +51,7 @@ function loadTaskCards() {
         card.dataset.prompt_template = task.prompt_template || "プロンプトテンプレートはありません";
         card.dataset.input_examples  = task.input_examples  || "入力例がありません";
         card.dataset.output_examples = task.output_examples || "出力例がありません";
+        card.dataset.is_default      = task.is_default ? 'true' : 'false';
 
         // ヘッダー（タイトル＋▼ボタン）
         const headerContainer = document.createElement("div");

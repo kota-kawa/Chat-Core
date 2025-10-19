@@ -47,9 +47,21 @@ document.addEventListener("DOMContentLoaded", function () {
   document.addEventListener('click', () => closeAllDropdowns());
 
 
+  const TITLE_CHAR_LIMIT = 17;
+  const CONTENT_CHAR_LIMIT = 160;
+
+  function truncateText(text, limit) {
+    const safeText = text || '';
+    const chars = Array.from(safeText);
+    return chars.length > limit ? chars.slice(0, limit).join('') + '...' : safeText;
+  }
+
   function truncateTitle(title) {
-    const chars = Array.from(title);
-    return chars.length > 17 ? chars.slice(0, 17).join('') + '...' : title;
+    return truncateText(title, TITLE_CHAR_LIMIT);
+  }
+
+  function truncateContent(content) {
+    return truncateText(content, CONTENT_CHAR_LIMIT);
   }
 
   function createPromptCardElement(prompt) {
@@ -64,6 +76,8 @@ document.addEventListener("DOMContentLoaded", function () {
       ? `<i class="bi bi-bookmark-fill"></i>`
       : `<i class="bi bi-bookmark"></i>`;
 
+    const truncatedContent = truncateContent(prompt.content);
+
     card.innerHTML = `
       <button class="meatball-menu" type="button" aria-label="その他の操作" aria-haspopup="true" aria-expanded="false">
         <i class="bi bi-three-dots"></i>
@@ -76,7 +90,7 @@ document.addEventListener("DOMContentLoaded", function () {
       </div>
 
       <h3>${truncateTitle(prompt.title)}</h3>
-      <p>${prompt.content}</p>
+      <p class="prompt-card__content">${truncatedContent}</p>
 
       <div class="prompt-meta">
         <div class="prompt-meta-info">
@@ -96,6 +110,9 @@ document.addEventListener("DOMContentLoaded", function () {
         </div>
       </div>
     `;
+
+    card.dataset.fullTitle = prompt.title || '';
+    card.dataset.fullContent = prompt.content || '';
 
     const bookmarkBtn = card.querySelector(".bookmark-btn");
     if (bookmarkBtn) {
@@ -255,6 +272,20 @@ document.addEventListener("DOMContentLoaded", function () {
   function setupStaticCardEvents() {
     const staticCards = document.querySelectorAll('.prompt-card');
     staticCards.forEach(card => {
+      const titleElem = card.querySelector('h3');
+      if (titleElem) {
+        const fullTitle = titleElem.textContent;
+        titleElem.dataset.fullTitle = fullTitle;
+        titleElem.textContent = truncateTitle(fullTitle);
+      }
+
+      const contentElem = card.querySelector('p');
+      if (contentElem) {
+        const fullContent = contentElem.textContent;
+        contentElem.dataset.fullContent = fullContent;
+        contentElem.textContent = truncateContent(fullContent);
+      }
+
       const meta = card.querySelector('.prompt-meta');
       if (meta && !meta.querySelector('.prompt-meta-info')) {
         const spans = Array.from(meta.querySelectorAll('span'));
@@ -334,8 +365,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         // 静的カードのデータを取得
-        const title = card.querySelector('h3').textContent;
-        const content = card.querySelector('p').textContent;
+        const title = titleElem ? (titleElem.dataset.fullTitle || titleElem.textContent) : '';
+        const content = contentElem ? (contentElem.dataset.fullContent || contentElem.textContent) : '';
         const category = card.getAttribute('data-category');
         const authorSpan = card.querySelector('.prompt-meta span:last-child');
         const author = authorSpan ? authorSpan.textContent.replace('投稿者: ', '') : '不明';

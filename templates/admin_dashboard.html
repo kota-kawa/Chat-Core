@@ -498,16 +498,16 @@
                         </form>
                     {% else %}
                         <p class="table-preview-meta">カラムの変更を行うテーブルを選択してください。</p>
-                    {% endif %}
 
-                    <h3>テーブルの作成</h3>
-                    <form method="post" action="{{ url_for('admin.create_table') }}">
-                        <label for="create-table-name">テーブル名</label>
-                        <input type="text" id="create-table-name" name="table_name" required>
-                        <label for="column-definitions">カラム定義（SQL）</label>
-                        <textarea id="column-definitions" name="columns" placeholder="id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL" required></textarea>
-                        <button type="submit">作成</button>
-                    </form>
+                        <h3>テーブルの作成</h3>
+                        <form method="post" action="{{ url_for('admin.create_table') }}">
+                            <label for="create-table-name">テーブル名</label>
+                            <input type="text" id="create-table-name" name="table_name" required>
+                            <label for="column-definitions">カラム定義（SQL）</label>
+                            <textarea id="column-definitions" name="columns" placeholder="id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL" required></textarea>
+                            <button type="submit">作成</button>
+                        </form>
+                    {% endif %}
 
                     {% if error %}
                         <p class="error-text">エラー：{{ error }}</p>

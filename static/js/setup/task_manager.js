@@ -180,9 +180,6 @@ function toggleTaskOrderEditing() {
 
 
     document.querySelectorAll('.prompt-card').forEach(card => {
-      if (card.dataset.is_default === 'true') {
-        return;
-      }
       // 既にボタンが存在する場合は削除（念のため）
       const existingDeleteContainer = card.querySelector('.delete-container');
       const existingEditContainer = card.querySelector('.edit-container');
@@ -306,23 +303,20 @@ function toggleTaskOrderEditing() {
 
 
       // 編集ボタン押下時の処理
-      document.querySelectorAll('.card-edit-btn').forEach(function (editBtn) {
-        editBtn.addEventListener('click', function (e) {
-          e.stopPropagation();
-          var card = this.closest('.prompt-card');
+      editBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const targetCard = this.closest('.prompt-card');
 
-          // 対象カードの data 属性から値を取得してモーダルのフォームにセット
-          window.currentEditingCard = card;
-          document.getElementById('taskName').value = card.getAttribute('data-task') || "";
-          // 追加：プロンプトテンプレート欄もセットする
-          document.getElementById('promptTemplate').value = card.getAttribute('data-prompt_template') || "";
-          document.getElementById('inputExamples').value = card.getAttribute('data-input_examples') || "";
-          document.getElementById('outputExamples').value = card.getAttribute('data-output_examples') || "";
-      
-          // カスタムモーダルを表示
-          var modalEl = document.getElementById('taskEditModal');
-          showModal(modalEl);
-        });
+        // 対象カードの data 属性から値を取得してモーダルのフォームにセット
+        window.currentEditingCard = targetCard;
+        document.getElementById('taskName').value = targetCard.getAttribute('data-task') || "";
+        document.getElementById('promptTemplate').value = targetCard.getAttribute('data-prompt_template') || "";
+        document.getElementById('inputExamples').value = targetCard.getAttribute('data-input_examples') || "";
+        document.getElementById('outputExamples').value = targetCard.getAttribute('data-output_examples') || "";
+
+        // カスタムモーダルを表示
+        const modalEl = document.getElementById('taskEditModal');
+        showModal(modalEl);
       });
       
 

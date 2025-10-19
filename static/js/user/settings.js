@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─────────────────────────── 
   const navLinks = document.querySelectorAll('.nav-link');
   const sections = document.querySelectorAll('.settings-section');
+  const savedPromptListEl = document.getElementById('savedPromptList');
 
   navLinks.forEach(link => {
     link.addEventListener('click', (e) => {
@@ -39,6 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // プロンプト管理セクションがアクティブになった時にプロンプトを読み込む
       if (targetSection === 'prompts') {
         loadMyPrompts();
+      } else if (targetSection === 'saved-prompts') {
+        loadSavedPrompts();
       }
     });
   });
@@ -170,6 +173,92 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(err => {
         console.error("プロンプト取得エラー:", err);
         document.getElementById("promptList").innerHTML = '<p>プロンプトの読み込み中にエラーが発生しました。</p>';
+      });
+  }
+
+  function attachSavedPromptHandlers() {
+    if (!savedPromptListEl) return;
+
+    savedPromptListEl.querySelectorAll('.remove-saved-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const promptId = this.dataset.id;
+        if (!promptId) return;
+        if (!confirm('保存したプロンプトを削除しますか？')) return;
+
+        fetch(`/prompt_manage/api/saved_prompts/${promptId}`, {
+          method: 'DELETE',
+          credentials: 'same-origin'
+        })
+          .then(response => response.json())
+          .then(result => {
+            if (result.error) {
+              alert('削除エラー: ' + result.error);
+            } else {
+              alert(result.message || '保存したプロンプトを削除しました。');
+              loadSavedPrompts();
+            }
+          })
+          .catch(err => {
+            console.error('保存したプロンプトの削除中にエラーが発生しました:', err);
+            alert('保存したプロンプトの削除中にエラーが発生しました。');
+          });
+      });
+    });
+  }
+
+  function loadSavedPrompts() {
+    if (!savedPromptListEl) return;
+
+    savedPromptListEl.innerHTML = '<p>読み込み中...</p>';
+
+    fetch('/prompt_manage/api/saved_prompts', {
+      credentials: 'same-origin'
+    })
+      .then(async response => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.error || '保存したプロンプトの取得に失敗しました。');
+        }
+        return data;
+      })
+      .then(data => {
+        if (!data.prompts || data.prompts.length === 0) {
+          savedPromptListEl.innerHTML = '<p>保存したプロンプトは存在しません。</p>';
+          return;
+        }
+
+        savedPromptListEl.innerHTML = '';
+        data.prompts.forEach(prompt => {
+          const card = document.createElement('div');
+          card.classList.add('prompt-card');
+
+          const createdAt = prompt.created_at
+            ? new Date(prompt.created_at).toLocaleString()
+            : '';
+
+          card.innerHTML = `
+            <h3>${truncateTitle(prompt.name)}</h3>
+            <p>${prompt.prompt_template}</p>
+            ${prompt.input_examples ? `<div class="meta"><strong>入力例:</strong> ${prompt.input_examples}</div>` : ''}
+            ${prompt.output_examples ? `<div class="meta"><strong>出力例:</strong> ${prompt.output_examples}</div>` : ''}
+            <div class="meta">
+              <span>保存日: ${createdAt}</span>
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-sm btn-danger remove-saved-btn" data-id="${prompt.id}">
+                <i class="bi bi-trash"></i> 削除
+              </button>
+            </div>
+          `;
+
+          savedPromptListEl.appendChild(card);
+        });
+
+        attachSavedPromptHandlers();
+      })
+      .catch(err => {
+        console.error('保存したプロンプト取得エラー:', err);
+        savedPromptListEl.innerHTML = `<p>${err.message}</p>`;
       });
   }
 

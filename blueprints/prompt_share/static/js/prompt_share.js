@@ -64,6 +64,44 @@ document.addEventListener("DOMContentLoaded", function () {
     return truncateText(content, CONTENT_CHAR_LIMIT);
   }
 
+  function updateBookmarkButtonState(button, isBookmarked) {
+    if (!button) return;
+    button.classList.toggle('bookmarked', isBookmarked);
+    button.innerHTML = isBookmarked
+      ? `<i class="bi bi-bookmark-fill"></i>`
+      : `<i class="bi bi-bookmark"></i>`;
+  }
+
+  function sendBookmarkRequest(method, payload) {
+    return fetch('/prompt_share/api/bookmark', {
+      method,
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(async response => {
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || data.error) {
+        throw new Error(data.error || '操作に失敗しました。');
+      }
+      return data;
+    });
+  }
+
+  function savePromptBookmark(prompt) {
+    return sendBookmarkRequest('POST', {
+      title: prompt.title,
+      content: prompt.content,
+      input_examples: prompt.input_examples || '',
+      output_examples: prompt.output_examples || ''
+    });
+  }
+
+  function removePromptBookmark(prompt) {
+    return sendBookmarkRequest('DELETE', {
+      title: prompt.title
+    });
+  }
+
   function createPromptCardElement(prompt) {
     const card = document.createElement("div");
     card.classList.add("prompt-card");
@@ -84,7 +122,7 @@ document.addEventListener("DOMContentLoaded", function () {
       </button>
 
       <div class="prompt-actions-dropdown" role="menu">
-        <button class="dropdown-item" type="button" role="menuitem">プロンプトリストに保存</button>
+        <button class="dropdown-item" type="button" role="menuitem" data-action="save-to-list">プロンプトリストに保存</button>
         <button class="dropdown-item" type="button" role="menuitem">ミュート</button>
         <button class="dropdown-item" type="button" role="menuitem">報告する</button>
       </div>
@@ -122,54 +160,29 @@ document.addEventListener("DOMContentLoaded", function () {
           alert("ブックマークするにはログインが必要です。");
           return;
         }
-        bookmarkBtn.classList.toggle("bookmarked");
-        const isBookmarkedNow = bookmarkBtn.classList.contains("bookmarked");
-        bookmarkBtn.innerHTML = isBookmarkedNow
-          ? `<i class="bi bi-bookmark-fill"></i>`
-          : `<i class="bi bi-bookmark"></i>`;
 
-        if (isBookmarkedNow) {
-          fetch('/prompt_share/api/bookmark', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              title: prompt.title,
-              content: prompt.content,
-              input_examples: prompt.input_examples || "",
-              output_examples: prompt.output_examples || ""
-            })
+        const shouldBookmark = !bookmarkBtn.classList.contains('bookmarked');
+        bookmarkBtn.disabled = true;
+
+        const request = shouldBookmark
+          ? savePromptBookmark(prompt)
+          : removePromptBookmark(prompt);
+
+        request
+          .then(result => {
+            updateBookmarkButtonState(bookmarkBtn, shouldBookmark);
+            prompt.bookmarked = shouldBookmark;
+            if (result && result.message) {
+              console.log(result.message);
+            }
           })
-            .then(response => response.json())
-            .then(result => {
-              if (result.error) {
-                console.error("ブックマーク保存エラー:", result.error);
-              } else {
-                console.log("ブックマークが保存されました:", result.message);
-              }
-            })
-            .catch(err => {
-              console.error("ブックマーク保存中にエラーが発生しました:", err);
-            });
-        } else {
-          fetch('/prompt_share/api/bookmark', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              title: prompt.title
-            })
+          .catch(err => {
+            console.error('ブックマーク操作エラー:', err);
+            alert('ブックマークの更新中にエラーが発生しました。');
           })
-            .then(response => response.json())
-            .then(result => {
-              if (result.error) {
-                console.error("ブックマーク削除エラー:", result.error);
-              } else {
-                console.log("ブックマークが削除されました:", result.message);
-              }
-            })
-            .catch(err => {
-              console.error("ブックマーク削除中にエラーが発生しました:", err);
-            });
-        }
+          .finally(() => {
+            bookmarkBtn.disabled = false;
+          });
       });
       bookmarkBtn.dataset.bound = 'true';
     }
@@ -218,6 +231,38 @@ document.addEventListener("DOMContentLoaded", function () {
           card.classList.remove('menu-open');
         });
       });
+
+      const saveMenuItem = dropdownMenu.querySelector('[data-action="save-to-list"]');
+      if (saveMenuItem) {
+        saveMenuItem.addEventListener('click', () => {
+          if (!isLoggedIn) {
+            alert('プロンプトを保存するにはログインが必要です。');
+            return;
+          }
+
+          if (bookmarkBtn && bookmarkBtn.classList.contains('bookmarked')) {
+            alert('このプロンプトはすでに保存されています。');
+            return;
+          }
+
+          saveMenuItem.disabled = true;
+          savePromptBookmark(prompt)
+            .then(result => {
+              updateBookmarkButtonState(bookmarkBtn, true);
+              prompt.bookmarked = true;
+              if (result && result.message) {
+                console.log(result.message);
+              }
+            })
+            .catch(err => {
+              console.error('プロンプト保存中にエラーが発生しました:', err);
+              alert('プロンプトの保存中にエラーが発生しました。');
+            })
+            .finally(() => {
+              saveMenuItem.disabled = false;
+            });
+        });
+      }
     }
 
     card.addEventListener("click", function (e) {

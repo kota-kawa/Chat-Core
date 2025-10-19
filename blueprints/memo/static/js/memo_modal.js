@@ -4,6 +4,50 @@ const setupMemoModal = () => {
     return;
   }
 
+  const authButtons = document.getElementById('auth-buttons');
+  const userIcon = document.getElementById('userIcon');
+  const loginBtn = document.getElementById('login-btn');
+
+  const notifyAuthState = (loggedIn) => {
+    window.loggedIn = loggedIn;
+    document.dispatchEvent(
+      new CustomEvent('authstatechange', {
+        detail: { loggedIn }
+      })
+    );
+  };
+
+  const applyAuthUI = (loggedIn) => {
+    if (authButtons) {
+      authButtons.style.display = loggedIn ? 'none' : '';
+    }
+    if (userIcon) {
+      userIcon.style.display = loggedIn ? '' : 'none';
+    }
+    if (!loggedIn && loginBtn) {
+      loginBtn.onclick = () => {
+        window.location.href = '/login';
+      };
+    }
+  };
+
+  fetch('/api/current_user')
+    .then((res) => {
+      if (!res.ok) {
+        return { logged_in: false };
+      }
+      return res.json();
+    })
+    .then((data) => {
+      const loggedIn = Boolean(data.logged_in);
+      notifyAuthState(loggedIn);
+      applyAuthUI(loggedIn);
+    })
+    .catch(() => {
+      notifyAuthState(false);
+      applyAuthUI(false);
+    });
+
   const closeTargets = modal.querySelectorAll('[data-close-modal]');
   const titleEl = modal.querySelector('[data-modal-title]');
   const dateEl = modal.querySelector('[data-modal-date]');

@@ -184,6 +184,7 @@ main {
   border-radius: 8px;
   flex: 1 1 calc(48% - 1rem);
   padding: 1rem;
+  padding-bottom: 3rem;
   box-shadow: var(--shadow);
   transition: 0.3s ease;
   cursor: pointer;
@@ -213,7 +214,7 @@ main {
 }
 
 .prompt-card p {
-  margin-bottom: 1rem;
+  margin-bottom: 0;
   color: var(--text-color);
   overflow: hidden;
   display: -webkit-box;
@@ -225,10 +226,23 @@ main {
 .prompt-meta {
   font-size: 0.85rem;
   display: flex;
+  align-items: flex-end;
   justify-content: space-between;
+  gap: 0.5rem;
   color: #555;
-  margin-top: auto;
-  padding-top: 0.5rem;
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+}
+
+.prompt-meta span {
+  word-break: break-word;
+}
+
+.prompt-meta span:last-child {
+  margin-left: auto;
+  text-align: right;
 }
 
 /* ==================== */
@@ -476,6 +490,7 @@ main {
   .prompt-card {
     flex: 1 1 100%;
     padding: 1rem;
+    padding-bottom: 3rem;
     margin-bottom: 0.5rem;
   }
 
@@ -491,9 +506,8 @@ main {
 
   .prompt-meta {
     font-size: 0.8rem;
-    flex-direction: column;
-    gap: 0.25rem;
-    align-items: flex-start;
+    gap: 0.4rem;
+    flex-wrap: wrap;
   }
 
   /* Header search section improvements */
@@ -648,6 +662,7 @@ main {
 
   .prompt-card {
     padding: 0.875rem;
+    padding-bottom: 3rem;
   }
 
   .post-modal-content {

@@ -180,6 +180,9 @@ function toggleTaskOrderEditing() {
 
 
     document.querySelectorAll('.prompt-card').forEach(card => {
+      if (card.dataset.is_default === 'true') {
+        return;
+      }
       // 既にボタンが存在する場合は削除（念のため）
       const existingDeleteContainer = card.querySelector('.delete-container');
       const existingEditContainer = card.querySelector('.edit-container');
@@ -307,7 +310,7 @@ function toggleTaskOrderEditing() {
         editBtn.addEventListener('click', function (e) {
           e.stopPropagation();
           var card = this.closest('.prompt-card');
-      
+
           // 対象カードの data 属性から値を取得してモーダルのフォームにセット
           window.currentEditingCard = card;
           document.getElementById('taskName').value = card.getAttribute('data-task') || "";
@@ -530,9 +533,19 @@ function onTaskPointerUp(e) {
 // 並び順をサーバーに保存する関数
 function saveTaskOrder() {
   const wrappers = document.querySelectorAll('.task-wrapper');
-  const newOrder = Array.from(wrappers).map(wrapper => {
-    return wrapper.querySelector('.prompt-card').getAttribute('data-task');
-  });
+  const newOrder = Array.from(wrappers)
+    .map(wrapper => {
+      const card = wrapper.querySelector('.prompt-card');
+      if (!card || card.dataset.is_default === 'true') {
+        return null;
+      }
+      return card.getAttribute('data-task');
+    })
+    .filter(Boolean);
+
+  if (newOrder.length === 0) {
+    return;
+  }
 
   fetch('/api/update_tasks_order', {
     method: 'POST',

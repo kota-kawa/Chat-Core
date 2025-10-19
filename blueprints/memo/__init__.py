@@ -61,12 +61,7 @@ def _fetch_recent_memos(limit: int = 10) -> List[dict]:
             connection.close()
 
 
-@memo_bp.route("/")
-def index():
-    return redirect(url_for("memo.create_memo"))
-
-
-@memo_bp.route("/new", methods=["GET", "POST"])
+@memo_bp.route("", methods=["GET", "POST"])
 def create_memo():
     input_content = request.form.get("input_content", "").strip()
     ai_response = request.form.get("ai_response", "").strip()

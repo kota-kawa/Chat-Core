@@ -31,6 +31,114 @@ document.addEventListener("DOMContentLoaded", function () {
     return chars.length > 17 ? chars.slice(0, 17).join('') + '...' : title;
   }
 
+  function createPromptCardElement(prompt) {
+    const card = document.createElement("div");
+    card.classList.add("prompt-card");
+    if (prompt.category) {
+      card.setAttribute("data-category", prompt.category);
+    }
+
+    const isBookmarked = Boolean(prompt.bookmarked);
+    const bookmarkIcon = isBookmarked
+      ? `<i class="bi bi-bookmark-fill"></i>`
+      : `<i class="bi bi-bookmark"></i>`;
+
+    card.innerHTML = `
+      <button class="meatball-menu" type="button" aria-label="その他の操作">
+        <i class="bi bi-three-dots"></i>
+      </button>
+
+      <h3>${truncateTitle(prompt.title)}</h3>
+      <p>${prompt.content}</p>
+
+      <div class="prompt-meta">
+        <div class="prompt-meta-info">
+          <span>カテゴリ: ${prompt.category}</span>
+          <span>投稿者: ${prompt.author}</span>
+        </div>
+        <button class="bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" type="button" aria-label="ブックマーク">
+          ${bookmarkIcon}
+        </button>
+      </div>
+    `;
+
+    const bookmarkBtn = card.querySelector(".bookmark-btn");
+    if (bookmarkBtn) {
+      bookmarkBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (!isLoggedIn) {
+          alert("ブックマークするにはログインが必要です。");
+          return;
+        }
+        bookmarkBtn.classList.toggle("bookmarked");
+        const isBookmarkedNow = bookmarkBtn.classList.contains("bookmarked");
+        bookmarkBtn.innerHTML = isBookmarkedNow
+          ? `<i class="bi bi-bookmark-fill"></i>`
+          : `<i class="bi bi-bookmark"></i>`;
+
+        if (isBookmarkedNow) {
+          fetch('/prompt_share/api/bookmark', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: prompt.title,
+              content: prompt.content,
+              input_examples: prompt.input_examples || "",
+              output_examples: prompt.output_examples || ""
+            })
+          })
+            .then(response => response.json())
+            .then(result => {
+              if (result.error) {
+                console.error("ブックマーク保存エラー:", result.error);
+              } else {
+                console.log("ブックマークが保存されました:", result.message);
+              }
+            })
+            .catch(err => {
+              console.error("ブックマーク保存中にエラーが発生しました:", err);
+            });
+        } else {
+          fetch('/prompt_share/api/bookmark', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: prompt.title
+            })
+          })
+            .then(response => response.json())
+            .then(result => {
+              if (result.error) {
+                console.error("ブックマーク削除エラー:", result.error);
+              } else {
+                console.log("ブックマークが削除されました:", result.message);
+              }
+            })
+            .catch(err => {
+              console.error("ブックマーク削除中にエラーが発生しました:", err);
+            });
+        }
+      });
+      bookmarkBtn.dataset.bound = 'true';
+    }
+
+    const meatballBtn = card.querySelector(".meatball-menu");
+    if (meatballBtn) {
+      meatballBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+      });
+    }
+
+    card.addEventListener("click", function (e) {
+      if (e.target.closest('.bookmark-btn') || e.target.closest('.meatball-menu')) {
+        return;
+      }
+      showPromptDetailModal(prompt);
+    });
+
+    return card;
+  }
+
   // ------------------------------
   // サーバーからプロンプト一覧を取得して表示する関数（Promise を返す）
   // ------------------------------
@@ -53,106 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
               : `<i class="bi bi-bookmark"></i>`;
 
 
-            const card = document.createElement("div");
-            card.classList.add("prompt-card");
-            // カテゴリフィルタ用に data-category 属性を設定
-            card.setAttribute("data-category", prompt.category);
-
-            // カード内で position: absolute; を使うため、相対配置を設定
-            card.style.position = "relative";
-
-            // カード内容を組み立て
-            card.innerHTML = `
-              <!-- ブックマークボタン：カード右上に固定 -->
-                  <button class="bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" style="position: absolute; top: 10px; right: 10px; z-index: 2;">
-                    ${bookmarkIcon}
-                  </button>
-              
-              <h3>${truncateTitle(prompt.title)}</h3>
-              <p>${prompt.content}</p>
-
-              <!-- カテゴリと投稿者情報 -->
-              <div class="prompt-meta">
-                <span>カテゴリ: ${prompt.category}</span>
-                <span>投稿者: ${prompt.author}</span>
-              </div>
-            `;
-
-
-            // ブックマークボタンにクリックイベントを設定
-            const bookmarkBtn = card.querySelector(".bookmark-btn");
-            bookmarkBtn.addEventListener("click", function (e) {
-              e.stopPropagation();
-              if (!isLoggedIn) {
-                alert("ブックマークするにはログインが必要です。");
-                return;
-              }
-              // ブックマーク状態をトグル
-              bookmarkBtn.classList.toggle("bookmarked");
-              const isBookmarkedNow = bookmarkBtn.classList.contains("bookmarked");
-              bookmarkBtn.innerHTML = isBookmarkedNow
-                ? `<i class="bi bi-bookmark-fill"></i>`
-                : `<i class="bi bi-bookmark"></i>`;
-            
-              if (isBookmarkedNow) {
-                // ブックマーク追加（POSTリクエスト）
-                fetch('/prompt_share/api/bookmark', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    title: prompt.title,
-                    content: prompt.content,
-                    input_examples: prompt.input_examples || "",
-                    output_examples: prompt.output_examples || ""
-                  })
-                })
-                  .then(response => response.json())
-                  .then(result => {
-                    if (result.error) {
-                      console.error("ブックマーク保存エラー:", result.error);
-                    } else {
-                      console.log("ブックマークが保存されました:", result.message);
-                    }
-                  })
-                  .catch(err => {
-                    console.error("ブックマーク保存中にエラーが発生しました:", err);
-                  });
-              } else {
-                // ブックマーク削除（DELETEリクエスト）
-                fetch('/prompt_share/api/bookmark', {
-                  method: 'DELETE',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    title: prompt.title
-                  })
-                })
-                  .then(response => response.json())
-                  .then(result => {
-                    if (result.error) {
-                      console.error("ブックマーク削除エラー:", result.error);
-                    } else {
-                      console.log("ブックマークが削除されました:", result.message);
-                    }
-                  })
-                  .catch(err => {
-                    console.error("ブックマーク削除中にエラーが発生しました:", err);
-                  });
-              }
-            });
-            
-
-
-            // カード全体にクリックイベントを追加してモーダルを表示
-            card.addEventListener("click", function (e) {
-              // ブックマークボタンのクリックの場合は何もしない
-              if (e.target.closest('.bookmark-btn')) {
-                return;
-              }
-              
-              // モーダルにプロンプト情報を表示
-              showPromptDetailModal(prompt);
-            });
-
+            const card = createPromptCardElement(prompt);
             promptContainer.appendChild(card);
           });
         }
@@ -171,12 +180,45 @@ document.addEventListener("DOMContentLoaded", function () {
   function setupStaticCardEvents() {
     const staticCards = document.querySelectorAll('.prompt-card');
     staticCards.forEach(card => {
+      const meta = card.querySelector('.prompt-meta');
+      if (meta && !meta.querySelector('.prompt-meta-info')) {
+        const spans = Array.from(meta.querySelectorAll('span'));
+        const metaInfo = document.createElement('div');
+        metaInfo.classList.add('prompt-meta-info');
+        spans.forEach(span => metaInfo.appendChild(span));
+        meta.innerHTML = '';
+        meta.appendChild(metaInfo);
+      }
+
+      const meatballBtn = card.querySelector('.meatball-menu');
+      if (meatballBtn) {
+        meatballBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+        });
+      }
+
+      const bookmarkBtn = card.querySelector('.bookmark-btn');
+      if (bookmarkBtn) {
+        bookmarkBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (!isLoggedIn) {
+            alert('ブックマークするにはログインが必要です。');
+            return;
+          }
+          bookmarkBtn.classList.toggle('bookmarked');
+          bookmarkBtn.innerHTML = bookmarkBtn.classList.contains('bookmarked')
+            ? `<i class="bi bi-bookmark-fill"></i>`
+            : `<i class="bi bi-bookmark"></i>`;
+        });
+        bookmarkBtn.dataset.bound = 'true';
+      }
+
       card.addEventListener('click', function(e) {
         // ブックマークボタンがあればそれは除外
-        if (e.target.closest('.bookmark-btn')) {
+        if (e.target.closest('.bookmark-btn') || e.target.closest('.meatball-menu')) {
           return;
         }
-        
+
         // 静的カードのデータを取得
         const title = card.querySelector('h3').textContent;
         const content = card.querySelector('p').textContent;
@@ -234,17 +276,7 @@ document.addEventListener("DOMContentLoaded", function () {
         promptCardsSection.innerHTML = ""; // 既存のカードをクリア
         if (data.prompts && data.prompts.length > 0) {
           data.prompts.forEach(prompt => {
-            const card = document.createElement("div");
-            card.classList.add("prompt-card");
-            card.setAttribute("data-category", prompt.category);
-            card.innerHTML = `
-              <h3>${truncateTitle(prompt.title)}</h3>
-              <p>${prompt.content}</p>
-              <div class="prompt-meta">
-                <span>カテゴリ: ${prompt.category}</span>
-                <span>投稿者: ${prompt.author}</span>
-              </div>
-            `;
+            const card = createPromptCardElement(prompt);
             promptCardsSection.appendChild(card);
           });
         } else {
@@ -398,24 +430,46 @@ document.addEventListener("DOMContentLoaded", function () {
   // ------------------------------
   const promptCards = document.querySelectorAll(".prompt-card");
   promptCards.forEach((card) => {
-    if (!card.querySelector(".bookmark-btn")) {
-      const bookmarkBtn = document.createElement("button");
-      bookmarkBtn.classList.add("bookmark-btn");
-      bookmarkBtn.innerHTML = `<i class="bi bi-bookmark"></i>`;
-      card.prepend(bookmarkBtn);
-
-      bookmarkBtn.addEventListener("click", function (e) {
-        e.stopPropagation();
-        if (!isLoggedIn) {
-          alert("ブックマークするにはログインが必要です。");
-          return;
-        }
-        bookmarkBtn.classList.toggle("bookmarked");
-        bookmarkBtn.innerHTML = bookmarkBtn.classList.contains("bookmarked")
-          ? `<i class="bi bi-bookmark-fill"></i>`
-          : `<i class="bi bi-bookmark"></i>`;
-      });
+    const meta = card.querySelector(".prompt-meta");
+    if (!meta) {
+      return;
     }
+
+    if (!meta.querySelector(".prompt-meta-info")) {
+      const spans = Array.from(meta.querySelectorAll("span"));
+      const metaInfo = document.createElement("div");
+      metaInfo.classList.add("prompt-meta-info");
+      spans.forEach(span => metaInfo.appendChild(span));
+      meta.innerHTML = "";
+      meta.appendChild(metaInfo);
+    }
+
+    let bookmarkBtn = meta.querySelector(".bookmark-btn");
+    if (!bookmarkBtn) {
+      bookmarkBtn = document.createElement("button");
+      bookmarkBtn.classList.add("bookmark-btn");
+      bookmarkBtn.setAttribute("type", "button");
+      bookmarkBtn.setAttribute("aria-label", "ブックマーク");
+      bookmarkBtn.innerHTML = `<i class="bi bi-bookmark"></i>`;
+      meta.appendChild(bookmarkBtn);
+    }
+
+    if (bookmarkBtn.dataset.bound === 'true') {
+      return;
+    }
+
+    bookmarkBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (!isLoggedIn) {
+        alert("ブックマークするにはログインが必要です。");
+        return;
+      }
+      bookmarkBtn.classList.toggle("bookmarked");
+      bookmarkBtn.innerHTML = bookmarkBtn.classList.contains("bookmarked")
+        ? `<i class="bi bi-bookmark-fill"></i>`
+        : `<i class="bi bi-bookmark"></i>`;
+    });
+    bookmarkBtn.dataset.bound = 'true';
   });
 
 

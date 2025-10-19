@@ -50,7 +50,17 @@ def register_page():
 def api_current_user():
     if "user_id" in session:
         user = get_user_by_id(session["user_id"])
-        return jsonify({"logged_in": True, "user": {"id": user["id"], "email": user["email"]}})
+        if user:
+            return jsonify({"logged_in": True, "user": {"id": user["id"], "email": user["email"]}})
+        # user_id in session but user no longer exists; clear the stale session
+        session.pop("user_id", None)
+        session.pop("user_email", None)
+        session.pop("login_verification_code", None)
+        session.pop("login_temp_user_id", None)
+        session.pop("google_oauth_state", None)
+        session.pop("google_redirect_uri", None)
+        session.permanent = False
+        return jsonify({"logged_in": False})
     else:
         return jsonify({"logged_in": False})
 

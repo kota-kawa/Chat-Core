@@ -190,6 +190,9 @@ main {
   position: relative;
   max-height: 260px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .prompt-card:hover {
@@ -224,6 +227,8 @@ main {
   display: flex;
   justify-content: space-between;
   color: #555;
+  margin-top: auto;
+  padding-top: 0.5rem;
 }
 
 /* ==================== */

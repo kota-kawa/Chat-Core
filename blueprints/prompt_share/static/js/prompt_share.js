@@ -607,6 +607,7 @@ document.addEventListener("DOMContentLoaded", function () {
           postForm.reset();
           document.getElementById("guardrail-fields").style.display = "none";
           document.getElementById("postModal").classList.remove("show");
+          triggerNewPromptIconRotation();
           // 最新のプロンプト一覧を再読み込み
           loadPrompts();
         }
@@ -625,6 +626,15 @@ document.addEventListener("DOMContentLoaded", function () {
   const closeModalBtn = document.querySelector(".close-btn");
   const newPromptIcon = openModalBtn ? openModalBtn.querySelector("i") : null;
 
+  const triggerNewPromptIconRotation = () => {
+    if (!newPromptIcon) {
+      return;
+    }
+    newPromptIcon.classList.remove("rotating");
+    void newPromptIcon.offsetWidth;
+    newPromptIcon.classList.add("rotating");
+  };
+
   if (newPromptIcon) {
     newPromptIcon.addEventListener("animationend", () => {
       newPromptIcon.classList.remove("rotating");
@@ -632,32 +642,25 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   openModalBtn.addEventListener("click", function () {
-    if (newPromptIcon) {
-      // 連続クリック時にも回転が再生されるよう一度リセット
-      newPromptIcon.classList.remove("rotating");
-      // Reflow を強制してアニメーションを再適用
-      void newPromptIcon.offsetWidth;
-    }
-
     if (!isLoggedIn) {
       alert("プロンプトを投稿するにはログインが必要です。");
       return;
     }
 
-    if (newPromptIcon) {
-      newPromptIcon.classList.add("rotating");
-    }
+    triggerNewPromptIconRotation();
 
     postModal.classList.add("show");
   });
 
   closeModalBtn.addEventListener("click", function () {
     postModal.classList.remove("show");
+    triggerNewPromptIconRotation();
   });
 
   window.addEventListener("click", function (event) {
     if (event.target === postModal) {
       postModal.classList.remove("show");
+      triggerNewPromptIconRotation();
     }
   });
 

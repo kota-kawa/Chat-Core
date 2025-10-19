@@ -53,9 +53,11 @@ body {
 /* 5. プロンプトカードのグリッド    */
 /* ─────────────────────────── */
 .prompt-grid {
+  --prompt-card-width: min(100%, clamp(280px, 28vw, 340px));
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(var(--prompt-card-width), var(--prompt-card-width)));
   gap: 1.5rem;
+  justify-content: flex-start;
 }
 
 /* ─────────────────────────── */
@@ -207,10 +209,12 @@ body {
 
 .prompt-grid {
   /* グリッド項目の高さを揃える */
+  --prompt-card-width: min(100%, clamp(280px, 28vw, 340px));
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(var(--prompt-card-width), var(--prompt-card-width)));
   gap: 1.5rem;
   align-items: stretch;
+  justify-content: flex-start;
 }
 
 .prompt-card {

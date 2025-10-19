@@ -70,6 +70,30 @@ CREATE TABLE IF NOT EXISTS prompts (
   COLLATE=utf8mb4_unicode_ci;
 
 
+-- プロンプトリストを管理するテーブル
+CREATE TABLE IF NOT EXISTS prompt_list_entries (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    prompt_id INT NULL,
+    title VARCHAR(255) NOT NULL,
+    category VARCHAR(50) DEFAULT '',
+    content TEXT NOT NULL,
+    input_examples TEXT,
+    output_examples TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_prompt_list_user_prompt (user_id, prompt_id),
+    KEY idx_prompt_list_user_title (user_id, title(191)),
+    CONSTRAINT fk_prompt_list_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_prompt_list_prompt
+        FOREIGN KEY (prompt_id)
+        REFERENCES prompts(id)
+        ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
 
 
 

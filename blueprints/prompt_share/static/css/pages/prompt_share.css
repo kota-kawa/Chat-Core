@@ -184,7 +184,6 @@ main {
   border-radius: 8px;
   flex: 1 1 calc(48% - 1rem);
   padding: 1rem;
-  padding-bottom: 3rem;
   box-shadow: var(--shadow);
   transition: 0.3s ease;
   cursor: pointer;
@@ -226,14 +225,20 @@ main {
 .prompt-meta {
   font-size: 0.85rem;
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 0.5rem;
   color: #555;
-  position: absolute;
-  left: 1rem;
-  right: 1rem;
-  bottom: 1rem;
+  margin-top: auto;
+}
+
+.prompt-meta-info {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .prompt-meta span {
@@ -246,19 +251,36 @@ main {
 }
 
 /* ==================== */
-/* Bookmark ボタン */
+/* アクションボタン */
 /* ==================== */
+.meatball-menu,
 .bookmark-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
   background: transparent;
   border: none;
-  font-size: 1.5rem;
   cursor: pointer;
   color: var(--accent-color);
   outline: none;
   transition: color 0.3s ease;
+}
+
+.meatball-menu {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 1.5rem;
+  border-radius: 50%;
+  padding: 0.25rem;
+}
+
+.meatball-menu:hover,
+.bookmark-btn:hover {
+  color: var(--primary-color);
+}
+
+.bookmark-btn {
+  align-self: flex-start;
+  font-size: 1.5rem;
+  padding: 0;
 }
 
 .bookmark-btn.bookmarked {
@@ -490,7 +512,6 @@ main {
   .prompt-card {
     flex: 1 1 100%;
     padding: 1rem;
-    padding-bottom: 3rem;
     margin-bottom: 0.5rem;
   }
 
@@ -507,7 +528,6 @@ main {
   .prompt-meta {
     font-size: 0.8rem;
     gap: 0.4rem;
-    flex-wrap: wrap;
   }
 
   /* Header search section improvements */

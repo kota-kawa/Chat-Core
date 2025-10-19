@@ -23,6 +23,8 @@ def get_prompts():
         prompts = cursor.fetchall()
 
         bookmark_titles = set()
+        saved_prompt_ids = set()
+        saved_prompt_titles = set()
         if user_id:
             cursor.execute(
                 "SELECT name FROM task_with_examples WHERE user_id = %s",
@@ -31,9 +33,27 @@ def get_prompts():
             bookmarks = cursor.fetchall()
             bookmark_titles = {b['name'] for b in bookmarks}
 
-        # 各プロンプトにブックマーク済みかどうかのフラグを付与
+            cursor.execute(
+                """
+                SELECT prompt_id, title
+                FROM prompt_list_entries
+                WHERE user_id = %s
+                """,
+                (user_id,)
+            )
+            saved_entries = cursor.fetchall()
+            for entry in saved_entries:
+                if entry['prompt_id'] is not None:
+                    saved_prompt_ids.add(entry['prompt_id'])
+                if entry['title']:
+                    saved_prompt_titles.add(entry['title'])
+
+        # 各プロンプトにブックマーク・保存状態のフラグを付与
         for prompt in prompts:
             prompt['bookmarked'] = prompt['title'] in bookmark_titles
+            prompt['saved_to_list'] = (
+                prompt['id'] in saved_prompt_ids or prompt['title'] in saved_prompt_titles
+            )
 
         return jsonify({'prompts': prompts})
     except Exception as e:
@@ -156,6 +176,77 @@ def remove_bookmark():
         conn.commit()
         return jsonify({'message': 'ブックマークが削除されました。'})
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@prompt_share_api_bp.route('/prompt_list', methods=['POST'])
+def add_prompt_to_list():
+    if 'user_id' not in session:
+        return jsonify({'error': 'ログインしていません'}), 401
+    user_id = session['user_id']
+
+    data = request.get_json() or {}
+    prompt_id = data.get('prompt_id')
+    title = data.get('title')
+    category = data.get('category', '')
+    content = data.get('content')
+    input_examples = data.get('input_examples', '')
+    output_examples = data.get('output_examples', '')
+
+    if not title or not content:
+        return jsonify({'error': '必要なフィールドが不足しています'}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        if prompt_id is not None:
+            cursor.execute(
+                """
+                SELECT id
+                FROM prompt_list_entries
+                WHERE user_id = %s AND prompt_id = %s
+                """,
+                (user_id, prompt_id),
+            )
+            existing = cursor.fetchone()
+            if existing:
+                return jsonify({'message': 'すでに保存されています。', 'saved_id': existing['id']}), 200
+
+        cursor.execute(
+            """
+            SELECT id
+            FROM prompt_list_entries
+            WHERE user_id = %s AND prompt_id IS NULL AND title = %s
+            """,
+            (user_id, title),
+        )
+        existing_by_title = cursor.fetchone()
+        if existing_by_title:
+            return jsonify({'message': 'すでに保存されています。', 'saved_id': existing_by_title['id']}), 200
+
+        cursor.execute(
+            """
+            INSERT INTO prompt_list_entries
+                (user_id, prompt_id, title, category, content, input_examples, output_examples)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                user_id,
+                prompt_id,
+                title,
+                category or '',
+                content,
+                input_examples,
+                output_examples,
+            ),
+        )
+        conn.commit()
+        return jsonify({'message': 'プロンプトリストに保存しました。', 'saved_id': cursor.lastrowid}), 201
+    except Exception as e:
+        conn.rollback()
         return jsonify({'error': str(e)}), 500
     finally:
         cursor.close()

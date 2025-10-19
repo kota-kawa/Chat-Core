@@ -55,6 +55,55 @@ def get_saved_prompts():
         conn.close()
 
 
+@prompt_manage_api_bp.route('/prompt_list', methods=['GET'])
+def get_prompt_list():
+    """ログインユーザーのプロンプトリストを取得するエンドポイント"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'ログインしていません'}), 401
+
+    user_id = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        query = """
+            SELECT id, prompt_id, title, category, content, input_examples, output_examples, created_at
+            FROM prompt_list_entries
+            WHERE user_id = %s
+            ORDER BY created_at DESC, id DESC
+        """
+        cursor.execute(query, (user_id,))
+        prompts = cursor.fetchall()
+        return jsonify({'prompts': prompts})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@prompt_manage_api_bp.route('/prompt_list/<int:entry_id>', methods=['DELETE'])
+def delete_prompt_list_entry(entry_id):
+    """プロンプトリストからエントリを削除するエンドポイント"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'ログインしていません'}), 401
+
+    user_id = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        query = "DELETE FROM prompt_list_entries WHERE id = %s AND user_id = %s"
+        cursor.execute(query, (entry_id, user_id))
+        conn.commit()
+        if cursor.rowcount == 0:
+            return jsonify({'error': '対象のプロンプトが見つかりませんでした。'}), 404
+        return jsonify({'message': 'プロンプトを削除しました。'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
 @prompt_manage_api_bp.route('/saved_prompts/<int:prompt_id>', methods=['DELETE'])
 def delete_saved_prompt(prompt_id):
     """保存したプロンプトを削除するエンドポイント"""

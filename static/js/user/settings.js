@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const navLinks = document.querySelectorAll('.nav-link');
   const sections = document.querySelectorAll('.settings-section');
   const savedPromptListEl = document.getElementById('savedPromptList');
+  const promptListEntriesEl = document.getElementById('promptListEntries');
 
   navLinks.forEach(link => {
     link.addEventListener('click', (e) => {
@@ -42,6 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
         loadMyPrompts();
       } else if (targetSection === 'saved-prompts') {
         loadSavedPrompts();
+      } else if (targetSection === 'prompt-list') {
+        loadPromptList();
       }
     });
   });
@@ -206,6 +209,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function attachPromptListHandlers() {
+    if (!promptListEntriesEl) return;
+
+    promptListEntriesEl.querySelectorAll('.remove-prompt-list-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const entryId = this.dataset.id;
+        if (!entryId) return;
+        if (!confirm('プロンプトリストから削除しますか？')) return;
+
+        fetch(`/prompt_manage/api/prompt_list/${entryId}`, {
+          method: 'DELETE',
+          credentials: 'same-origin'
+        })
+          .then(response => response.json())
+          .then(result => {
+            if (result.error) {
+              alert('削除エラー: ' + result.error);
+            } else {
+              alert(result.message || 'プロンプトを削除しました。');
+              loadPromptList();
+            }
+          })
+          .catch(err => {
+            console.error('プロンプトリストの削除中にエラーが発生しました:', err);
+            alert('プロンプトリストの削除中にエラーが発生しました。');
+          });
+      });
+    });
+  }
+
   function loadSavedPrompts() {
     if (!savedPromptListEl) return;
 
@@ -259,6 +292,63 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(err => {
         console.error('保存したプロンプト取得エラー:', err);
         savedPromptListEl.innerHTML = `<p>${err.message}</p>`;
+      });
+  }
+
+  function loadPromptList() {
+    if (!promptListEntriesEl) return;
+
+    promptListEntriesEl.innerHTML = '<p>読み込み中...</p>';
+
+    fetch('/prompt_manage/api/prompt_list', {
+      credentials: 'same-origin'
+    })
+      .then(async response => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.error || 'プロンプトリストの取得に失敗しました。');
+        }
+        return data;
+      })
+      .then(data => {
+        if (!data.prompts || data.prompts.length === 0) {
+          promptListEntriesEl.innerHTML = '<p>プロンプトリストは存在しません。</p>';
+          return;
+        }
+
+        promptListEntriesEl.innerHTML = '';
+        data.prompts.forEach(entry => {
+          const card = document.createElement('div');
+          card.classList.add('prompt-card');
+
+          const createdAt = entry.created_at
+            ? new Date(entry.created_at).toLocaleString()
+            : '';
+
+          card.innerHTML = `
+            <h3>${truncateTitle(entry.title)}</h3>
+            <p>${entry.content}</p>
+            ${entry.category ? `<div class="meta"><strong>カテゴリ:</strong> ${entry.category}</div>` : ''}
+            ${entry.input_examples ? `<div class="meta"><strong>入力例:</strong> ${entry.input_examples}</div>` : ''}
+            ${entry.output_examples ? `<div class="meta"><strong>出力例:</strong> ${entry.output_examples}</div>` : ''}
+            <div class="meta">
+              <span>保存日: ${createdAt}</span>
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-sm btn-danger remove-prompt-list-btn" data-id="${entry.id}">
+                <i class="bi bi-trash"></i> 削除
+              </button>
+            </div>
+          `;
+
+          promptListEntriesEl.appendChild(card);
+        });
+
+        attachPromptListHandlers();
+      })
+      .catch(err => {
+        console.error('プロンプトリスト取得エラー:', err);
+        promptListEntriesEl.innerHTML = `<p>${err.message}</p>`;
       });
   }
 

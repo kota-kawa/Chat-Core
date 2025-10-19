@@ -258,7 +258,7 @@
             color: var(--text-muted);
             font-size: 0.9rem;
         }
-        input[type="text"], textarea {
+        input[type="text"], textarea, select {
             width: 100%;
             padding: 0.65rem 0.8rem;
             border: 1px solid rgba(148, 163, 184, 0.35);
@@ -269,7 +269,8 @@
             font-family: inherit;
         }
         input[type="text"]:focus,
-        textarea:focus {
+        textarea:focus,
+        select:focus {
             outline: none;
             border-color: rgba(47, 111, 237, 0.55);
             box-shadow: 0 0 0 4px rgba(47, 111, 237, 0.18);
@@ -421,7 +422,35 @@
                 </section>
 
                 <section class="panel">
-                    <h2>テーブルの作成</h2>
+                    <h2>テーブル操作</h2>
+                    {% if selected_table %}
+                        <h3>カラムの追加</h3>
+                        <form method="post" action="{{ url_for('admin.add_column') }}">
+                            <input type="hidden" name="table_name" value="{{ selected_table }}">
+                            <label for="add-column-name">カラム名</label>
+                            <input type="text" id="add-column-name" name="column_name" required>
+                            <label for="add-column-type">カラム定義（例：VARCHAR(255) NOT NULL）</label>
+                            <input type="text" id="add-column-type" name="column_type" required>
+                            <button type="submit">カラムを追加</button>
+                        </form>
+
+                        <h3>カラムの削除</h3>
+                        <form method="post" action="{{ url_for('admin.delete_column') }}">
+                            <input type="hidden" name="table_name" value="{{ selected_table }}">
+                            <label for="delete-column-name">削除するカラム</label>
+                            <select id="delete-column-name" name="column_name" required>
+                                <option value="" disabled selected>カラムを選択</option>
+                                {% for column in existing_columns %}
+                                    <option value="{{ column }}">{{ column }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit">カラムを削除</button>
+                        </form>
+                    {% else %}
+                        <p class="table-preview-meta">カラムの変更を行うテーブルを選択してください。</p>
+                    {% endif %}
+
+                    <h3>テーブルの作成</h3>
                     <form method="post" action="{{ url_for('admin.create_table') }}">
                         <label for="create-table-name">テーブル名</label>
                         <input type="text" id="create-table-name" name="table_name" required>

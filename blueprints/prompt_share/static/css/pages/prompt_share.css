@@ -272,8 +272,70 @@ main {
   padding: 0.25rem;
 }
 
+.meatball-menu[aria-expanded="true"] {
+  color: var(--primary-color);
+  background: rgba(83, 167, 243, 0.12);
+}
+
 .meatball-menu:hover,
 .bookmark-btn:hover {
+  color: var(--primary-color);
+}
+
+.prompt-actions-dropdown {
+  position: absolute;
+  top: 44px;
+  right: 8px;
+  min-width: 190px;
+  background: var(--card-bg);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 10px;
+  box-shadow: 0 20px 35px rgba(15, 23, 42, 0.18);
+  padding: 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+  z-index: 5;
+}
+
+.prompt-actions-dropdown::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  right: 16px;
+  width: 14px;
+  height: 14px;
+  background: var(--card-bg);
+  border-left: 1px solid rgba(148, 163, 184, 0.3);
+  border-top: 1px solid rgba(148, 163, 184, 0.3);
+  transform: rotate(45deg);
+  box-shadow: -3px -3px 12px rgba(15, 23, 42, 0.08);
+}
+
+.prompt-actions-dropdown.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.prompt-actions-dropdown .dropdown-item {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  font-size: 0.95rem;
+  padding: 0.6rem 1rem;
+  color: var(--accent-color);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.prompt-actions-dropdown .dropdown-item:hover {
+  background: rgba(83, 167, 243, 0.12);
   color: var(--primary-color);
 }
 

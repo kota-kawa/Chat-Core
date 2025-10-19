@@ -6,11 +6,21 @@ document.addEventListener("DOMContentLoaded", function () {
   const guardrailFields = document.getElementById("new-guardrail-fields");
   const newPostForm = document.getElementById("newPostForm");
 
+  const togglePlusRotation = isRotated => {
+    if (!openModalBtn) return;
+    if (isRotated) {
+      openModalBtn.classList.add("is-rotated");
+    } else {
+      openModalBtn.classList.remove("is-rotated");
+    }
+  };
+
   // ＋ボタンを押すとモーダル表示
   if (openModalBtn && newPromptModal) {
     openModalBtn.addEventListener("click", function (e) {
       e.preventDefault();
       newPromptModal.classList.add("show");
+      togglePlusRotation(true);
     });
   }
 
@@ -19,6 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
     modalCloseBtn.addEventListener("click", function (e) {
       e.preventDefault();
       newPromptModal.classList.remove("show");
+      togglePlusRotation(false);
     });
   }
 
@@ -27,6 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
     newPromptModal.addEventListener("click", function (e) {
       if (e.target === newPromptModal) {
         newPromptModal.classList.remove("show");
+        togglePlusRotation(false);
       }
     });
   }
@@ -75,7 +87,8 @@ document.addEventListener("DOMContentLoaded", function () {
           newPostForm.reset();
           guardrailFields.style.display = "none";
           newPromptModal.classList.remove("show");
-          
+          togglePlusRotation(false);
+
           // ここでタスク一覧を更新する
           loadTaskCards();
         } else {

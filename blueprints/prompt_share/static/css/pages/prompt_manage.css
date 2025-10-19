@@ -53,11 +53,13 @@ body {
 /* 5. プロンプトカードのグリッド    */
 /* ─────────────────────────── */
 .prompt-grid {
-  --prompt-card-width: min(100%, clamp(280px, 28vw, 340px));
+  --prompt-card-width: clamp(280px, 28vw, 340px);
+  --prompt-grid-gap: 1.5rem;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(var(--prompt-card-width), var(--prompt-card-width)));
-  gap: 1.5rem;
+  gap: var(--prompt-grid-gap);
   justify-content: flex-start;
+  width: min(100%, calc(var(--prompt-card-width) * 2 + var(--prompt-grid-gap)));
 }
 
 /* ─────────────────────────── */
@@ -209,12 +211,14 @@ body {
 
 .prompt-grid {
   /* グリッド項目の高さを揃える */
-  --prompt-card-width: min(100%, clamp(280px, 28vw, 340px));
+  --prompt-card-width: clamp(280px, 28vw, 340px);
+  --prompt-grid-gap: 1.5rem;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(var(--prompt-card-width), var(--prompt-card-width)));
-  gap: 1.5rem;
+  gap: var(--prompt-grid-gap);
   align-items: stretch;
   justify-content: flex-start;
+  width: min(100%, calc(var(--prompt-card-width) * 2 + var(--prompt-grid-gap)));
 }
 
 .prompt-card {
@@ -237,6 +241,12 @@ body {
 @media (max-width: 768px) {
   .main-container {
     padding: 1.5rem;
+  }
+  .prompt-grid {
+    --prompt-card-width: 100%;
+    --prompt-grid-gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(var(--prompt-card-width), 1fr));
+    width: 100%;
   }
   .prompt-card {
     padding: 1.2rem;

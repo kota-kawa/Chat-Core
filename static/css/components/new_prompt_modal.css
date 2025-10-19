@@ -58,6 +58,15 @@
   background: var(--accent-color);
 }
 
+/* ＋アイコンの回転アニメーション */
+#openNewPromptModal .bi-plus-lg {
+  transition: transform 0.3s ease;
+}
+
+#openNewPromptModal.is-rotated .bi-plus-lg {
+  transform: rotate(90deg);
+}
+
 /* 新しいプロンプト投稿用の＋ボタン */
 .new-prompt-modal-btn {
   /* margin-right: 0.5rem; 削除 */

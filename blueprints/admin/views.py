@@ -136,17 +136,28 @@ def dashboard():
 def create_table():
     table_name = request.form.get("table_name", "").strip()
     column_definitions = request.form.get("columns", "").strip()
+    table_options = request.form.get("table_options", "").strip()
 
     if not table_name or not column_definitions:
         flash("Table name and column definition are required.", "error")
         return redirect(url_for("admin.dashboard"))
+
+    if table_options:
+        normalized_options = table_options.rstrip(";").strip()
+        if ";" in normalized_options:
+            flash("テーブルオプションに複数の文を含めることはできません。", "error")
+            return redirect(url_for("admin.dashboard"))
+        table_options = normalized_options
 
     connection = None
     cursor = None
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
-        cursor.execute(f"CREATE TABLE {_quote_identifier(table_name)} ({column_definitions})")
+        create_sql = f"CREATE TABLE {_quote_identifier(table_name)} ({column_definitions})"
+        if table_options:
+            create_sql = f"{create_sql} {table_options}"
+        cursor.execute(create_sql)
         connection.commit()
         flash(f"Table '{table_name}' created successfully.", "success")
     except Error as exc:

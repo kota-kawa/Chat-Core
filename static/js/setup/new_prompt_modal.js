@@ -30,7 +30,9 @@ document.addEventListener("DOMContentLoaded", function () {
     newPromptModal.classList.remove("show");
 
     if (options.skipRotation) {
-      togglePlusRotation(false, { animate: false });
+      if (openModalBtn) {
+        openModalBtn.classList.remove("is-rotated");
+      }
       return;
     }
 
@@ -43,8 +45,12 @@ document.addEventListener("DOMContentLoaded", function () {
     togglePlusRotation(true, { animate: !!options?.animateRotation });
   };
 
-  // 初期表示では必ず閉じた状態にし、回転アニメーションは発火させない
-  closeModal({ skipRotation: true });
+  // 初期表示では回転アニメーションを発火させない
+  if (newPromptModal?.classList.contains("show")) {
+    closeModal({ skipRotation: true });
+  } else if (openModalBtn) {
+    openModalBtn.classList.remove("is-rotated");
+  }
 
   // ＋ボタンを押すとモーダル表示
   if (openModalBtn && newPromptModal) {

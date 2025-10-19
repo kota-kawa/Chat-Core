@@ -1,9 +1,21 @@
 // my_prompts.js
 document.addEventListener("DOMContentLoaded", function() {
   // ユーザーが投稿したプロンプト一覧を取得して表示する関数
+  const TITLE_CHAR_LIMIT = 17;
+  const CONTENT_CHAR_LIMIT = 160;
+
+  function truncateText(text, limit) {
+    const safeText = text || '';
+    const chars = Array.from(safeText);
+    return chars.length > limit ? chars.slice(0, limit).join('') + '...' : safeText;
+  }
+
   function truncateTitle(title) {
-    const chars = Array.from(title);
-    return chars.length > 17 ? chars.slice(0, 17).join('') + '...' : title;
+    return truncateText(title, TITLE_CHAR_LIMIT);
+  }
+
+  function truncateContent(content) {
+    return truncateText(content, CONTENT_CHAR_LIMIT);
   }
 
   function loadMyPrompts() {
@@ -16,9 +28,11 @@ document.addEventListener("DOMContentLoaded", function() {
           data.prompts.forEach(prompt => {
             const card = document.createElement("div");
             card.classList.add("prompt-card");
+            const truncatedContent = truncateContent(prompt.content);
+
             card.innerHTML = `
               <h3>${truncateTitle(prompt.title)}</h3>
-              <p>${prompt.content}</p>
+              <p class="prompt-card__content">${truncatedContent}</p>
               <div class="meta">
                 <span>カテゴリ: ${prompt.category}</span><br>
                 <span>投稿日: ${new Date(prompt.created_at).toLocaleString()}</span>
@@ -35,6 +49,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 </button>
               </div>
             `;
+            card.dataset.fullTitle = prompt.title || '';
+            card.dataset.fullContent = prompt.content || '';
             promptList.appendChild(card);
           });
           attachEventHandlers();
@@ -85,8 +101,10 @@ document.addEventListener("DOMContentLoaded", function() {
       btn.addEventListener("click", function() {
         const promptId = this.getAttribute("data-id");
         const card = this.closest(".prompt-card");
-        const title = card.querySelector("h3").textContent;
-        const content = card.querySelector("p").textContent;
+        const titleElem = card.querySelector("h3");
+        const contentElem = card.querySelector("p");
+        const title = card.dataset.fullTitle || (titleElem ? titleElem.textContent : '');
+        const content = card.dataset.fullContent || (contentElem ? contentElem.textContent : '');
         // 「カテゴリ: ○○」というテキストからカテゴリ部分を抽出
         const categoryText = card.querySelector(".meta span").textContent;
         const category = categoryText.replace("カテゴリ: ", "");

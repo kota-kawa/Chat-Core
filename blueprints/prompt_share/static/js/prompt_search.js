@@ -9,9 +9,21 @@ document.addEventListener("DOMContentLoaded", function () {
   const originalCardsHTML = promptCardsSection.innerHTML;
   const originalHeaderText = selectedCategoryTitle.textContent;
 
+  const TITLE_CHAR_LIMIT = 17;
+  const CONTENT_CHAR_LIMIT = 160;
+
+  function truncateText(text, limit) {
+    const safeText = text || '';
+    const chars = Array.from(safeText);
+    return chars.length > limit ? chars.slice(0, limit).join('') + '...' : safeText;
+  }
+
   function truncateTitle(title) {
-    const chars = Array.from(title);
-    return chars.length > 17 ? chars.slice(0, 17).join('') + '...' : title;
+    return truncateText(title, TITLE_CHAR_LIMIT);
+  }
+
+  function truncateContent(content) {
+    return truncateText(content, CONTENT_CHAR_LIMIT);
   }
 
   function searchPromptsServer() {
@@ -43,14 +55,18 @@ document.addEventListener("DOMContentLoaded", function () {
             card.classList.add("prompt-card");
             // カテゴリフィルタ用に data-category 属性を設定
             card.setAttribute("data-category", prompt.category);
+            const truncatedContent = truncateContent(prompt.content);
+
             card.innerHTML = `
               <h3>${truncateTitle(prompt.title)}</h3>
-              <p>${prompt.content}</p>
+              <p class="prompt-card__content">${truncatedContent}</p>
               <div class="prompt-meta">
                 <span>カテゴリ: ${prompt.category}</span>
                 <span>投稿者: ${prompt.author}</span>
               </div>
             `;
+            card.dataset.fullTitle = prompt.title || '';
+            card.dataset.fullContent = prompt.content || '';
             promptCardsSection.appendChild(card);
           });
         } else {

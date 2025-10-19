@@ -214,6 +214,8 @@ main {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .prompt-card p {
@@ -224,6 +226,8 @@ main {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .prompt-meta {

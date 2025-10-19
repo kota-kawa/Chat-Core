@@ -531,28 +531,22 @@ main {
 
 .new-prompt-btn i {
   font-size: 1.5rem;
-  /* アイコン単体のトランジションも長めに */
-  transition: transform 1s cubic-bezier(0.645, 0.045, 0.355, 1);
+  transition: transform 0.3s ease;
 }
 
-/* モーダル表示時（.post-modal.show の直後）に、
-   ボタン本体はそのまま 2 回転（720°）、アイコンだけ 3 回転（1080°）に */
-   .post-modal.show + .new-prompt-btn {
-    transform: rotate(720deg);
-  }
-  .post-modal.show + .new-prompt-btn i {
-    transform: rotate(1080deg);
+.new-prompt-btn i.rotating {
+  animation: newPromptIconSpin 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+@keyframes newPromptIconSpin {
+  from {
+    transform: rotate(0deg);
   }
 
-
-  .rotate-on-load {
-    /* ボタン本体を 2 回転 */
+  to {
     transform: rotate(360deg);
   }
-  .rotate-on-load i {
-    /* アイコンだけ 3 回転 */
-    transform: rotate(360deg);
-  }
+}
 
 
 @media (max-width: 768px) {

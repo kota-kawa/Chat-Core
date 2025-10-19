@@ -79,9 +79,17 @@ document.addEventListener("DOMContentLoaded", function () {
           <span>カテゴリ: ${prompt.category}</span>
           <span>投稿者: ${prompt.author}</span>
         </div>
-        <button class="bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" type="button" aria-label="ブックマーク">
-          ${bookmarkIcon}
-        </button>
+        <div class="prompt-actions">
+          <button class="prompt-action-btn comment-btn" type="button" aria-label="コメント">
+            <i class="bi bi-chat-dots"></i>
+          </button>
+          <button class="prompt-action-btn like-btn" type="button" aria-label="いいね">
+            <i class="bi bi-heart"></i>
+          </button>
+          <button class="prompt-action-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" type="button" aria-label="ブックマーク">
+            ${bookmarkIcon}
+          </button>
+        </div>
       </div>
     `;
 
@@ -145,6 +153,26 @@ document.addEventListener("DOMContentLoaded", function () {
       bookmarkBtn.dataset.bound = 'true';
     }
 
+    const commentBtn = card.querySelector('.comment-btn');
+    if (commentBtn) {
+      commentBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+      });
+    }
+
+    const likeBtn = card.querySelector('.like-btn');
+    if (likeBtn) {
+      likeBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        likeBtn.classList.toggle('liked');
+        const icon = likeBtn.querySelector('i');
+        if (icon) {
+          icon.classList.toggle('bi-heart');
+          icon.classList.toggle('bi-heart-fill');
+        }
+      });
+    }
+
     const meatballBtn = card.querySelector(".meatball-menu");
     const dropdownMenu = card.querySelector('.prompt-actions-dropdown');
     if (meatballBtn && dropdownMenu) {
@@ -170,7 +198,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     card.addEventListener("click", function (e) {
-      if (e.target.closest('.bookmark-btn') || e.target.closest('.meatball-menu')) {
+      if (e.target.closest('.prompt-action-btn') || e.target.closest('.meatball-menu')) {
         return;
       }
       closeAllDropdowns();
@@ -231,6 +259,26 @@ document.addEventListener("DOMContentLoaded", function () {
         meta.appendChild(metaInfo);
       }
 
+      const commentBtn = card.querySelector('.comment-btn');
+      if (commentBtn) {
+        commentBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+        });
+      }
+
+      const likeBtn = card.querySelector('.like-btn');
+      if (likeBtn) {
+        likeBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          likeBtn.classList.toggle('liked');
+          const icon = likeBtn.querySelector('i');
+          if (icon) {
+            icon.classList.toggle('bi-heart');
+            icon.classList.toggle('bi-heart-fill');
+          }
+        });
+      }
+
       const meatballBtn = card.querySelector('.meatball-menu');
       const dropdownMenu = card.querySelector('.prompt-actions-dropdown');
       if (meatballBtn && dropdownMenu) {
@@ -273,7 +321,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       card.addEventListener('click', function(e) {
         // ブックマークボタンがあればそれは除外
-        if (e.target.closest('.bookmark-btn') || e.target.closest('.meatball-menu')) {
+        if (e.target.closest('.prompt-action-btn') || e.target.closest('.meatball-menu')) {
           return;
         }
 

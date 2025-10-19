@@ -60,9 +60,22 @@ def _fetch_tables(cursor) -> list[str]:
     return [row[0] for row in cursor.fetchall()]
 
 
-def _fetch_table_columns(cursor, table_name: str) -> list[str]:
+def _fetch_table_columns(cursor, table_name: str) -> list[dict[str, object]]:
     cursor.execute(f"SHOW COLUMNS FROM {_quote_identifier(table_name)}")
-    return [row[0] for row in cursor.fetchall()]
+    columns: list[dict[str, object]] = []
+    for row in cursor.fetchall():
+        # SHOW COLUMNS returns: Field, Type, Null, Key, Default, Extra
+        columns.append(
+            {
+                "name": row[0],
+                "type": row[1],
+                "nullable": row[2] == "YES",
+                "key": row[3],
+                "default": row[4],
+                "extra": row[5],
+            }
+        )
+    return columns
 
 
 def _fetch_table_preview(cursor, table_name: str) -> tuple[list[str], list[tuple]]:
@@ -78,6 +91,7 @@ def dashboard():
     selected_table: Optional[str] = request.args.get("table")
     tables: list[str] = []
     column_names: list[str] = []
+    column_details: list[dict[str, object]] = []
     existing_columns: list[str] = []
     rows: list[tuple] = []
     error: Optional[str] = None
@@ -92,7 +106,8 @@ def dashboard():
         if selected_table:
             if selected_table in tables:
                 column_names, rows = _fetch_table_preview(cursor, selected_table)
-                existing_columns = _fetch_table_columns(cursor, selected_table)
+                column_details = _fetch_table_columns(cursor, selected_table)
+                existing_columns = [column["name"] for column in column_details]
             else:
                 flash("The selected table does not exist.", "error")
                 selected_table = None
@@ -109,6 +124,7 @@ def dashboard():
         tables=tables,
         selected_table=selected_table,
         column_names=column_names,
+        column_details=column_details,
         existing_columns=existing_columns,
         rows=rows,
         error=error,
@@ -197,8 +213,9 @@ def add_column():
             flash(f"テーブル '{table_name}' は存在しません。", "error")
             return redirect(url_for("admin.dashboard"))
 
-        existing_columns = _fetch_table_columns(cursor, table_name)
-        if column_name in existing_columns:
+        existing_columns = [column["name"] for column in _fetch_table_columns(cursor, table_name)]
+        normalized_existing_columns = {name.lower() for name in existing_columns}
+        if column_name.lower() in normalized_existing_columns:
             flash(f"カラム '{column_name}' は既に存在します。", "error")
             return redirect(url_for("admin.dashboard", table=table_name))
 
@@ -238,16 +255,23 @@ def delete_column():
             flash(f"テーブル '{table_name}' は存在しません。", "error")
             return redirect(url_for("admin.dashboard"))
 
-        existing_columns = _fetch_table_columns(cursor, table_name)
-        if column_name not in existing_columns:
+        columns = _fetch_table_columns(cursor, table_name)
+        existing_columns = [column["name"] for column in columns]
+        column_lookup = {name.lower(): name for name in existing_columns}
+        target_column = column_lookup.get(column_name.lower())
+        if target_column is None:
             flash(f"カラム '{column_name}' は存在しません。", "error")
             return redirect(url_for("admin.dashboard", table=table_name))
 
+        if len(existing_columns) <= 1:
+            flash("テーブルには少なくとも1つのカラムが必要です。", "error")
+            return redirect(url_for("admin.dashboard", table=table_name))
+
         cursor.execute(
-            f"ALTER TABLE {_quote_identifier(table_name)} DROP COLUMN {_quote_identifier(column_name)}"
+            f"ALTER TABLE {_quote_identifier(table_name)} DROP COLUMN {_quote_identifier(target_column)}"
         )
         connection.commit()
-        flash(f"カラム '{column_name}' をテーブル '{table_name}' から削除しました。", "success")
+        flash(f"カラム '{target_column}' をテーブル '{table_name}' から削除しました。", "success")
     except Error as exc:
         flash(f"カラムの削除に失敗しました: {exc}", "error")
     finally:

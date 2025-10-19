@@ -371,6 +371,18 @@
   </div>
 
   <script>
+    // Logged-in users should not stay on the auth page. Redirect them to the top page.
+    fetch('/api/current_user')
+      .then(response => response.json())
+      .then(data => {
+        if (data.logged_in) {
+          window.location.href = '/';
+        }
+      })
+      .catch(error => {
+        console.error('Error checking login state:', error);
+      });
+
     // Current mode: 'login' or 'register'
     let currentMode = 'login';
 

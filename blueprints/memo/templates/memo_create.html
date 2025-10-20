@@ -62,12 +62,11 @@
 
           <form method="post" class="memo-form">
             <div class="form-group">
-              <label for="input_content">入力内容</label>
+              <label for="input_content">入力内容 <span class="optional">(任意)</span></label>
               <textarea
                 id="input_content"
                 name="input_content"
                 placeholder="AIに送ったプロンプトを入力 / 貼り付けしてください"
-                required
               >{{ input_content }}</textarea>
             </div>
 
@@ -83,7 +82,7 @@
 
             <div class="form-grid">
               <div class="form-group">
-                <label for="title">タイトル</label>
+                <label for="title">タイトル <span class="optional">(任意)</span></label>
                 <input
                   type="text"
                   id="title"

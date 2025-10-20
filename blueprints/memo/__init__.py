@@ -69,9 +69,7 @@ def create_memo():
     tags = request.form.get("tags", "").strip()
 
     if request.method == "POST":
-        if not input_content:
-            flash("入力内容を入力してください。", "error")
-        elif not ai_response:
+        if not ai_response:
             flash("AIの回答を入力してください。", "error")
         else:
             resolved_title = _ensure_title(ai_response, title)

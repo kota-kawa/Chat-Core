@@ -14,8 +14,10 @@ async def get_tasks(request: Request):
     未ログインの場合:
         ・共通タスク (user_id IS NULL) のみ返す
     """
+    conn = None
+    cursor = None
     try:
-        conn   = get_db_connection()
+        conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
         session = request.session
@@ -53,7 +55,10 @@ async def get_tasks(request: Request):
     except Exception as e:
         return jsonify({"error": str(e)}, status_code=500)
     finally:
-        cursor.close(); conn.close()
+        if cursor is not None:
+            cursor.close()
+        if conn is not None:
+            conn.close()
 
 
 # タスクカード並び替え
@@ -66,8 +71,10 @@ async def update_tasks_order(request: Request):
         return jsonify({"error": "ログインが必要です"}, status_code=403)
     if not new_order or not isinstance(new_order, list):
         return jsonify({"error": "order must be a list"}, status_code=400)
+    conn = None
+    cursor = None
     try:
-        conn   = get_db_connection()
+        conn = get_db_connection()
         cursor = conn.cursor()
         for index, task_name in enumerate(new_order):
             cursor.execute("""
@@ -80,7 +87,10 @@ async def update_tasks_order(request: Request):
     except Exception as e:
         return jsonify({"error": str(e)}, status_code=500)
     finally:
-        cursor.close(); conn.close()
+        if cursor is not None:
+            cursor.close()
+        if conn is not None:
+            conn.close()
 
 
 @chat_bp.post("/api/delete_task", name="chat.delete_task")
@@ -92,8 +102,10 @@ async def delete_task(request: Request):
         return jsonify({"error": "ログインが必要です"}, status_code=403)
     if not task_name:
         return jsonify({"error": "task is required"}, status_code=400)
+    conn = None
+    cursor = None
     try:
-        conn   = get_db_connection()
+        conn = get_db_connection()
         cursor = conn.cursor()
         query  = "DELETE FROM task_with_examples WHERE name=%s AND user_id=%s"
         cursor.execute(query, (task_name, user_id))
@@ -102,7 +114,10 @@ async def delete_task(request: Request):
     except Exception as e:
         return jsonify({"error": str(e)}, status_code=500)
     finally:
-        cursor.close(); conn.close()
+        if cursor is not None:
+            cursor.close()
+        if conn is not None:
+            conn.close()
 
 
 @chat_bp.post("/api/edit_task", name="chat.edit_task")
@@ -120,6 +135,9 @@ async def edit_task(request: Request):
     if not old_task or not new_task:
         return jsonify({"error": "old_task と new_task は必須です"}, status_code=400)
 
+    conn = None
+    sel_cursor = None
+    upd_cursor = None
     try:
         conn = get_db_connection()
 
@@ -135,6 +153,7 @@ async def edit_task(request: Request):
         )
         exists = sel_cursor.fetchone()
         sel_cursor.close()
+        sel_cursor = None
 
         if not exists:
             return jsonify({"error": "他ユーザーのタスクは編集できません"}, status_code=403)
@@ -155,6 +174,7 @@ async def edit_task(request: Request):
         )
         conn.commit()
         upd_cursor.close()
+        upd_cursor = None
 
         return jsonify({"message": "Task updated"}, status_code=200)
 
@@ -163,7 +183,12 @@ async def edit_task(request: Request):
         return jsonify({"error": str(e)}, status_code=500)
 
     finally:
-        conn.close()
+        if sel_cursor is not None:
+            sel_cursor.close()
+        if upd_cursor is not None:
+            upd_cursor.close()
+        if conn is not None:
+            conn.close()
 
 
 @chat_bp.post("/api/add_task", name="chat.add_task")
@@ -181,8 +206,10 @@ async def add_task(request: Request):
     if not title or not prompt_content:
         return jsonify({"error": "タイトルとプロンプト内容は必須です。"}, status_code=400)
 
+    conn = None
+    cursor = None
     try:
-        conn   = get_db_connection()
+        conn = get_db_connection()
         cursor = conn.cursor()
         query = """
             INSERT INTO task_with_examples
@@ -196,4 +223,7 @@ async def add_task(request: Request):
     except Exception as e:
         return jsonify({"error": str(e)}, status_code=500)
     finally:
-        cursor.close(); conn.close()
+        if cursor is not None:
+            cursor.close()
+        if conn is not None:
+            conn.close()

@@ -37,6 +37,18 @@ def _get_env(name, fallback_name, default):
     return default
 
 
+def _get_db_hosts():
+    env_host = os.environ.get("POSTGRES_HOST") or os.environ.get("MYSQL_HOST")
+    if env_host:
+        hosts = [host.strip() for host in env_host.split(",") if host.strip()]
+        # If a single docker-compose host is provided, add safe local fallbacks.
+        if len(hosts) == 1 and hosts[0] == "db":
+            hosts.extend(["localhost", "127.0.0.1", "host.docker.internal"])
+        return hosts
+    # Prefer docker-compose's default service name but allow local dev fallback.
+    return ["db", "localhost", "127.0.0.1", "host.docker.internal"]
+
+
 def _get_db_config():
     return {
         "host": _get_env("POSTGRES_HOST", "MYSQL_HOST", "db"),
@@ -51,5 +63,17 @@ def get_db_connection():
     """PostgreSQLへの接続を返す"""
     if psycopg2 is None:
         raise RuntimeError("psycopg2 is required to connect to the database.")
-    connection = psycopg2.connect(**_get_db_config())
-    return _ConnectionProxy(connection)
+    config = _get_db_config()
+    first_exc = None
+    for host in _get_db_hosts():
+        config["host"] = host
+        try:
+            connection = psycopg2.connect(**config)
+            return _ConnectionProxy(connection)
+        except Exception as exc:  # pragma: no cover - depends on env
+            if first_exc is None:
+                first_exc = exc
+            continue
+    if first_exc is not None:
+        raise first_exc
+    raise RuntimeError("Database connection failed without an exception.")

@@ -6,7 +6,7 @@ from fastapi import Request
 from starlette.responses import RedirectResponse
 
 from services.db import Error, get_db_connection
-from services.web import flash, render_template, url_for
+from services.web import flash, get_flashed_messages, get_json, jsonify, render_template, url_for
 
 from . import admin_bp
 
@@ -42,6 +42,20 @@ def admin_required(view_func):
     return wrapper
 
 
+def _admin_guard(request: Request):
+    if not request.session.get("is_admin"):
+        return jsonify({"status": "fail", "error": "Unauthorized"}, status_code=401)
+    return None
+
+
+async def _get_payload(request: Request) -> dict:
+    data = await get_json(request)
+    if data is not None:
+        return data
+    form = await request.form()
+    return {key: value for key, value in form.items()}
+
+
 @admin_bp.api_route("/login", methods=["GET", "POST"], name="admin.login")
 async def login(request: Request):
     if request.method == "POST":
@@ -55,6 +69,27 @@ async def login(request: Request):
         flash(request, "Invalid password.", "error")
     next_url = request.query_params.get("next") or url_for(request, "admin.dashboard")
     return render_template(request, "admin_login.html", next_url=next_url)
+
+
+@admin_bp.post("/api/login", name="admin.api_login")
+async def api_login(request: Request):
+    payload = await _get_payload(request)
+    password = (payload.get("password") or "").strip()
+    next_url = payload.get("next") or url_for(request, "admin.dashboard")
+
+    if password == ADMIN_PASSWORD:
+        request.session["is_admin"] = True
+        flash(request, "Logged in as administrator.", "success")
+        return jsonify({"status": "success", "redirect": next_url})
+
+    return jsonify({"status": "fail", "error": "Invalid password."}, status_code=401)
+
+
+@admin_bp.post("/api/logout", name="admin.api_logout")
+async def api_logout(request: Request):
+    request.session.pop("is_admin", None)
+    flash(request, "Logged out of administrator session.", "success")
+    return jsonify({"status": "success", "redirect": url_for(request, "admin.login")})
 
 
 @admin_bp.get("/logout", name="admin.logout")
@@ -142,6 +177,59 @@ async def dashboard(request: Request):
     )
 
 
+@admin_bp.get("/api/dashboard", name="admin.api_dashboard")
+async def api_dashboard(request: Request):
+    guard = _admin_guard(request)
+    if guard is not None:
+        return guard
+
+    selected_table: Optional[str] = request.query_params.get("table")
+    tables: list[str] = []
+    column_names: list[str] = []
+    column_details: list[dict[str, object]] = []
+    existing_columns: list[str] = []
+    rows: list[tuple] = []
+    error: Optional[str] = None
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        tables = _fetch_tables(cursor)
+
+        if selected_table:
+            if selected_table in tables:
+                column_names, rows = _fetch_table_preview(cursor, selected_table)
+                column_details = _fetch_table_columns(cursor, selected_table)
+                existing_columns = [column["name"] for column in column_details]
+            else:
+                flash(request, "The selected table does not exist.", "error")
+                selected_table = None
+    except Error as exc:  # pragma: no cover - defensive logging
+        error = str(exc)
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None:
+            connection.close()
+
+    messages = get_flashed_messages(request, with_categories=True)
+
+    return jsonify(
+        {
+            "tables": tables,
+            "selected_table": selected_table,
+            "column_names": column_names,
+            "column_details": column_details,
+            "existing_columns": existing_columns,
+            "rows": rows,
+            "error": error,
+            "messages": messages,
+        }
+    )
+
+
 @admin_bp.post("/create-table", name="admin.create_table")
 @admin_required
 async def create_table(request: Request):
@@ -183,6 +271,55 @@ async def create_table(request: Request):
     return RedirectResponse(url_for(request, "admin.dashboard"), status_code=302)
 
 
+@admin_bp.post("/api/create-table", name="admin.api_create_table")
+async def api_create_table(request: Request):
+    guard = _admin_guard(request)
+    if guard is not None:
+        return guard
+
+    payload = await _get_payload(request)
+    table_name = (payload.get("table_name") or "").strip()
+    column_definitions = (payload.get("columns") or "").strip()
+    table_options = (payload.get("table_options") or "").strip()
+
+    if not table_name or not column_definitions:
+        flash(request, "Table name and column definition are required.", "error")
+        return jsonify(
+            {"status": "fail", "error": "Table name and column definition are required."},
+            status_code=400,
+        )
+
+    if table_options:
+        normalized_options = table_options.rstrip(";").strip()
+        if ";" in normalized_options:
+            flash(request, "テーブルオプションに複数の文を含めることはできません。", "error")
+            return jsonify(
+                {"status": "fail", "error": "Invalid table options."}, status_code=400
+            )
+        table_options = normalized_options
+
+    connection = None
+    cursor = None
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        create_sql = f"CREATE TABLE {_quote_identifier(table_name)} ({column_definitions})"
+        if table_options:
+            create_sql = f"{create_sql} {table_options}"
+        cursor.execute(create_sql)
+        connection.commit()
+        flash(request, f"Table '{table_name}' created successfully.", "success")
+        return jsonify({"status": "success", "redirect": url_for(request, "admin.dashboard")})
+    except Error as exc:
+        flash(request, f"Failed to create table: {exc}", "error")
+        return jsonify({"status": "fail", "error": str(exc)}, status_code=500)
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None:
+            connection.close()
+
+
 @admin_bp.post("/delete-table", name="admin.delete_table")
 @admin_required
 async def delete_table(request: Request):
@@ -214,6 +351,46 @@ async def delete_table(request: Request):
             connection.close()
 
     return RedirectResponse(url_for(request, "admin.dashboard"), status_code=302)
+
+
+@admin_bp.post("/api/delete-table", name="admin.api_delete_table")
+async def api_delete_table(request: Request):
+    guard = _admin_guard(request)
+    if guard is not None:
+        return guard
+
+    payload = await _get_payload(request)
+    table_name = (payload.get("table_name") or "").strip()
+
+    if not table_name:
+        flash(request, "Table name is required for deletion.", "error")
+        return jsonify(
+            {"status": "fail", "error": "Table name is required."}, status_code=400
+        )
+
+    connection = None
+    cursor = None
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        existing_tables = _fetch_tables(cursor)
+        if table_name not in existing_tables:
+            flash(request, f"Table '{table_name}' does not exist.", "error")
+            return jsonify(
+                {"status": "fail", "error": "Table does not exist."}, status_code=404
+            )
+        cursor.execute(f"DROP TABLE {_quote_identifier(table_name)}")
+        connection.commit()
+        flash(request, f"Table '{table_name}' deleted successfully.", "success")
+        return jsonify({"status": "success", "redirect": url_for(request, "admin.dashboard")})
+    except Error as exc:
+        flash(request, f"Failed to delete table: {exc}", "error")
+        return jsonify({"status": "fail", "error": str(exc)}, status_code=500)
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None:
+            connection.close()
 
 
 @admin_bp.post("/add-column", name="admin.add_column")
@@ -264,6 +441,64 @@ async def add_column(request: Request):
     return RedirectResponse(
         url_for(request, "admin.dashboard", table=table_name), status_code=302
     )
+
+
+@admin_bp.post("/api/add-column", name="admin.api_add_column")
+async def api_add_column(request: Request):
+    guard = _admin_guard(request)
+    if guard is not None:
+        return guard
+
+    payload = await _get_payload(request)
+    table_name = (payload.get("table_name") or "").strip()
+    column_name = (payload.get("column_name") or "").strip()
+    column_type = (payload.get("column_type") or "").strip()
+
+    if not table_name or not column_name or not column_type:
+        flash(request, "テーブル名、カラム名、カラム定義は必須です。", "error")
+        return jsonify(
+            {"status": "fail", "error": "Required fields are missing."}, status_code=400
+        )
+
+    connection = None
+    cursor = None
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        tables = _fetch_tables(cursor)
+        if table_name not in tables:
+            flash(request, f"テーブル '{table_name}' は存在しません。", "error")
+            return jsonify(
+                {"status": "fail", "error": "Table does not exist."}, status_code=404
+            )
+
+        existing_columns = [column["name"] for column in _fetch_table_columns(cursor, table_name)]
+        normalized_existing_columns = {name.lower() for name in existing_columns}
+        if column_name.lower() in normalized_existing_columns:
+            flash(request, f"カラム '{column_name}' は既に存在します。", "error")
+            return jsonify(
+                {"status": "fail", "error": "Column already exists."}, status_code=400
+            )
+
+        cursor.execute(
+            f"ALTER TABLE {_quote_identifier(table_name)} ADD COLUMN {_quote_identifier(column_name)} {column_type}"
+        )
+        connection.commit()
+        flash(request, f"カラム '{column_name}' をテーブル '{table_name}' に追加しました。", "success")
+        return jsonify(
+            {
+                "status": "success",
+                "redirect": url_for(request, "admin.dashboard", table=table_name),
+            }
+        )
+    except Error as exc:
+        flash(request, f"カラムの追加に失敗しました: {exc}", "error")
+        return jsonify({"status": "fail", "error": str(exc)}, status_code=500)
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None:
+            connection.close()
 
 
 @admin_bp.post("/delete-column", name="admin.delete_column")
@@ -321,3 +556,72 @@ async def delete_column(request: Request):
     return RedirectResponse(
         url_for(request, "admin.dashboard", table=table_name), status_code=302
     )
+
+
+@admin_bp.post("/api/delete-column", name="admin.api_delete_column")
+async def api_delete_column(request: Request):
+    guard = _admin_guard(request)
+    if guard is not None:
+        return guard
+
+    payload = await _get_payload(request)
+    table_name = (payload.get("table_name") or "").strip()
+    column_name = (payload.get("column_name") or "").strip()
+
+    if not table_name or not column_name:
+        flash(request, "テーブル名とカラム名は必須です。", "error")
+        return jsonify(
+            {"status": "fail", "error": "Required fields are missing."}, status_code=400
+        )
+
+    connection = None
+    cursor = None
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        tables = _fetch_tables(cursor)
+        if table_name not in tables:
+            flash(request, f"テーブル '{table_name}' は存在しません。", "error")
+            return jsonify(
+                {"status": "fail", "error": "Table does not exist."}, status_code=404
+            )
+
+        columns = _fetch_table_columns(cursor, table_name)
+        existing_columns = [column["name"] for column in columns]
+        column_lookup = {name.lower(): name for name in existing_columns}
+        target_column = column_lookup.get(column_name.lower())
+        if target_column is None:
+            flash(request, f"カラム '{column_name}' は存在しません。", "error")
+            return jsonify(
+                {"status": "fail", "error": "Column does not exist."}, status_code=404
+            )
+
+        if len(existing_columns) <= 1:
+            flash(request, "テーブルには少なくとも1つのカラムが必要です。", "error")
+            return jsonify(
+                {"status": "fail", "error": "Cannot delete the last column."}, status_code=400
+            )
+
+        cursor.execute(
+            f"ALTER TABLE {_quote_identifier(table_name)} DROP COLUMN {_quote_identifier(target_column)}"
+        )
+        connection.commit()
+        flash(
+            request,
+            f"カラム '{target_column}' をテーブル '{table_name}' から削除しました。",
+            "success",
+        )
+        return jsonify(
+            {
+                "status": "success",
+                "redirect": url_for(request, "admin.dashboard", table=table_name),
+            }
+        )
+    except Error as exc:
+        flash(request, f"カラムの削除に失敗しました: {exc}", "error")
+        return jsonify({"status": "fail", "error": str(exc)}, status_code=500)
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None:
+            connection.close()

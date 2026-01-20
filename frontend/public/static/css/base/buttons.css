@@ -1,0 +1,210 @@
+/* buttons.css
+   丸ボタン、新規チャットボタン、アイコンボタン、プライマリーボタンなどボタン全般のスタイル
+*/
+
+
+/* ログイン前のボタンと同じ右上固定表示に */
+.settings-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 9999;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 固定サイズを除去 */
+  width: auto;
+  height: auto;
+  /* 余白を増量 */
+  padding: 0.25rem;             
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  /* padding を含めた box サイズに */
+  box-sizing: content-box;
+}
+
+.settings-btn .user-icon-img {
+  /* 画像サイズはそのまま */
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  /* 画像自体に余白を入れたい場合はこちらでも可 */
+  /* margin: 0.1rem; */
+}
+
+/* prompt-sharing / settings-btn は .circle-button を継承 */
+.prompt-sharing {
+  top: 10px;
+  right: 10px;
+}
+
+
+
+/* 新規チャットボタン */
+.new-chat-btn {
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.new-chat-btn i {
+  font-size: 1.2rem;
+}
+
+/* アイコンボタン */
+.icon-button {
+  padding: 0.8rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: white;
+}
+
+/* プライマリボタン */
+.primary-button {
+  background: var(--primary-color);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+}
+
+.primary-button:hover {
+  background: #16a367;
+  transform: scale(0.98);
+}
+
+
+/* ── 未ログイン時のログインボタン ── */
+#auth-buttons .auth-btn {
+  /* ログインボタンの背景が透過していたため、
+     通常の色付き背景になるよう修正 */
+  background-color: var(--primary-color);
+  color: var(--text-light);
+  border: none;
+
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+#auth-buttons .auth-btn i {
+  font-size: 1.4rem;
+  color: #000000;  /* アイコンも緑 */
+}
+
+#auth-buttons .auth-btn span {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #000000;  /* 文字も緑 */
+}
+
+#auth-buttons .auth-btn:hover {
+  background-color: #16a367;  /* ホバー時は少し濃い緑 */
+}
+
+@media (max-width: 768px) {
+  /* セットアップ画面より手前に表示 */
+  #auth-buttons {
+    z-index: 9999 !important;
+  }
+
+  /* モバイルではアイコンのみ＆円形 */
+  #auth-buttons .auth-btn {
+    padding: 0;                     /* 余白はなし */
+    width: 2.5rem;                  /* 高さと同じに */
+    height: 2.5rem;                 /* 幅と同じに */
+    justify-content: center;        /* アイコンを中央寄せ */
+    border-radius: 50%;             /* 完全な円形 */
+  }
+
+  /* 文字は非表示 */
+  #auth-buttons .auth-btn span {
+    display: none;
+  }
+}
+
+/* ─────────────────────────────────────
+   ユーザーメニューを右寄せ
+───────────────────────────────────── */
+#user-menu {
+  right: 10px !important;
+  left:  auto !important;
+}
+
+/* ─────────────────────────────────────
+   モバイル表示時の調整 (幅576px以下)
+───────────────────────────────────── */
+   @media (max-width: 576px) {
+    #user-menu.mobile-user-menu {
+      position: static !important;
+      top:      auto    !important;
+      right:    auto    !important;
+      left:     auto    !important;
+      margin:   1rem 0;          /* セットアップ内での余白 */
+      box-shadow: none !important;
+      border:     none !important;
+      background: transparent !important;
+      min-width:  auto !important;
+    }
+    /* 内部のメニュー項目は必要に応じて幅を100%に */
+    #user-menu.mobile-user-menu > div {
+      width: 100%;
+      background: #fff;
+      margin-bottom: .5rem;
+      border-radius: 6px;
+    }
+    #user-menu.mobile-user-menu > div:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+
+  .sidebar-toggle{
+    display:none;                         /* PC では非表示 */
+  }
+
+
+  @media (max-width:576px){
+    .sidebar-toggle{
+      display:inline-flex;                /* モバイルで表示 */
+    }
+    /* アイコンの線を太く */
+    .sidebar-toggle i {
+      -webkit-text-stroke: 1px currentColor;
+      text-stroke: 1px currentColor;
+    }
+
+    /* ボタンにプレス時のトランジションを設定 */
+    .sidebar-toggle {
+      transition: transform 0.1s ease, background-color 0.1s ease;
+    }
+
+    /* 押下時に縮小＆背景色変化で押した感を演出 */
+    .sidebar-toggle:active {
+      transform: scale(0.9);
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+  }

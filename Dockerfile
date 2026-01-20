@@ -24,8 +24,8 @@ RUN chmod +x /wait-for-it.sh
 # FastAPI の起動設定
 ENV PORT=5004
 
-# アプリケーションの起動コマンド（MySQLが準備できるまで待機してから実行）
+# アプリケーションの起動コマンド（PostgreSQLが準備できるまで待機してから実行）
 # --reload を付けてホットリロードを有効にする
-CMD ["./wait-for-it.sh", "db:3306", "--", "uvicorn", "app:app", "--host=0.0.0.0", "--port=5004", "--reload"]
+CMD ["./wait-for-it.sh", "db:5432", "--", "uvicorn", "app:app", "--host=0.0.0.0", "--port=5004", "--reload"]
 
 

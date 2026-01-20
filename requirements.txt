@@ -4,9 +4,10 @@ jinja2
 python-multipart
 itsdangerous
 werkzeug
-mysql-connector-python
+psycopg2-binary
 google-auth
 google-auth-oauthlib
 requests
 python-dotenv
 openai
+redis

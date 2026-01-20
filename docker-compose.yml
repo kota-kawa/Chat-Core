@@ -8,10 +8,13 @@ services:
       - GROQ_API_KEY=${GROQ_API_KEY}
       - Gemini_API_KEY=${Gemini_API_KEY}
       - PORT=5004
-      - MYSQL_HOST=db
-      - MYSQL_USER=chatuser
-      - MYSQL_PASSWORD=chatpass
-      - MYSQL_DATABASE=chat_db
+      - POSTGRES_HOST=db
+      - POSTGRES_USER=chatuser
+      - POSTGRES_PASSWORD=chatpass
+      - POSTGRES_DB=chat_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
       # FastAPI のホットリロード用（FLASK_ENV は SameSite/secure 切替に使用）
       - FLASK_ENV=development
       - FLASK_DEBUG=1
@@ -21,21 +24,26 @@ services:
       - .:/app           # ホストのカレントディレクトリをコンテナ内 /app にマウント
     depends_on:
       - db
+      - redis
 
   db:
-    image: mysql:8.0
-    container_name: mysql_db
+    image: postgres:15
+    container_name: postgres_db
     environment:
-      # root のパスワード
-      MYSQL_ROOT_PASSWORD: root_password
       # 作成するデータベース
-      MYSQL_DATABASE: chat_db
+      POSTGRES_DB: chat_db
       # ここで作成するユーザ
-      MYSQL_USER: chatuser
-      MYSQL_PASSWORD: chatpass
+      POSTGRES_USER: chatuser
+      POSTGRES_PASSWORD: chatpass
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  redis:
+    image: redis:7
+    container_name: redis_cache
+    ports:
+      - "6379:6379"
 
 volumes:
   db_data:

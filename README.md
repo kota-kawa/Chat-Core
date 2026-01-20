@@ -1,7 +1,7 @@
 # Strike_Chat
 
 ## 概要
-Strike_Chat は Flask で実装されたシンプルな AI チャットアプリケーションです。メールアドレスによる認証機構を備え、Groq や Google Gemini API と連携してチャットを行います。MySQL をバックエンドに使用し、プロンプト共有機能も提供しています。
+Strike_Chat は FastAPI で実装されたシンプルな AI チャットアプリケーションです。メールアドレスによる認証機構を備え、Groq や Google Gemini API と連携してチャットを行います。MySQL をバックエンドに使用し、プロンプト共有機能も提供しています。
 
 ## 主な機能
 - **メールアドレス認証**: 6 桁のコードをメール送信し、本人確認を行います。
@@ -17,9 +17,10 @@ Strike_Chat は Flask で実装されたシンプルな AI チャットアプリ
 アプリ起動前に以下の環境変数を設定してください。
 - `GROQ_API_KEY` : Groq API のキー
 - `Gemini_API_KEY` : Google Generative AI の API キー
-- `FLASK_SECRET_KEY` : Flask セッションで使用する秘密鍵
+- `FLASK_SECRET_KEY` : セッションで使用する秘密鍵
 - `SEND_ADDRESS` / `SEND_PASSWORD` : 認証メール送信用の Gmail アカウント
 - `MYSQL_HOST` / `MYSQL_USER` / `MYSQL_PASSWORD` / `MYSQL_DATABASE` : MySQL 接続情報
+- `FLASK_ENV` : `production` の場合は SameSite/secure 設定を強化します
 
 Docker Compose を利用する場合は `.env` ファイルに記述するか、`docker-compose.yml` の `environment` セクションを編集します。
 
@@ -35,7 +36,7 @@ cd Strike_Chat
 # ビルドして起動
 docker-compose up --build
 ```
-ブラウザで `http://localhost:5000` にアクセスするとアプリが利用できます。
+ブラウザで `http://localhost:5004` にアクセスするとアプリが利用できます。
 
 ### ローカル環境での実行
 Docker を使わない場合、Python 3.10 以上の環境で次を実行します。
@@ -44,11 +45,11 @@ pip install -r requirements.txt
 export GROQ_API_KEY=...
 export Gemini_API_KEY=...
 export FLASK_SECRET_KEY=...
-python app.py
+uvicorn app:app --reload --host 0.0.0.0 --port 5004
 ```
 
 ## ディレクトリ構成
-- `app.py` : Flask アプリケーションのエントリーポイント
+- `app.py` : FastAPI アプリケーションのエントリーポイント
 - `auth.py` / `verification.py` : ユーザー登録・ログイン関連
 - `chat/` : チャット機能のルートと処理（複数ファイルに分割）
 - `prompt_share/` : プロンプト共有モジュール
@@ -64,7 +65,7 @@ python app.py
 クラス名は BEM 風の `kebab-case` を推奨し、各CSSファイルの冒頭に目的と依存関係をコメントで記述します。HTML テンプレートでは各ページの `index.css` のみを読み込みます。
 
 ## 本番運用のポイント
-- `FLASK_DEBUG` を無効化し、`FLASK_SECRET_KEY` などの機密情報は環境変数から読み込むようにしてください。
+- `FLASK_ENV=production` にして SameSite/Secure を有効化し、`FLASK_SECRET_KEY` などの機密情報は環境変数から読み込むようにしてください。
 - 依存パッケージのバージョンを固定し、定期的にアップデートを行うと安全です。
 - 認証用メールアカウントの情報はリポジトリに含めず、秘密管理サービスの利用を検討してください。
 

@@ -1,8 +1,9 @@
-from flask import request, jsonify, session
 import re
 import json
 import html
 from datetime import date
+
+from fastapi import Request
 
 from services.db import get_db_connection
 from services.chat_service import (
@@ -10,6 +11,7 @@ from services.chat_service import (
     get_chat_room_messages,
 )
 from services.llm import get_gemini_response  # get_groq_response commented out
+from services.web import get_json, jsonify
 
 from . import (
     chat_bp,
@@ -19,25 +21,26 @@ from . import (
 )
 
 
-@chat_bp.route("/api/chat", methods=["POST"])
-def chat():
+@chat_bp.post("/api/chat", name="chat.chat")
+async def chat(request: Request):
     cleanup_ephemeral_chats()
-    data = request.get_json()
+    data = await get_json(request)
     if not data or "message" not in data:
-        return jsonify({"error": "'message' が必要です。"}), 400
+        return jsonify({"error": "'message' が必要です。"}, status_code=400)
 
     user_message = data["message"]
     chat_room_id = data.get("chat_room_id", "default")
     model = data.get("model", "gemini-1.5-flash")
 
     # 非ログインユーザーの場合、新規チャット・続けてのチャットの回数としてカウント
+    session = request.session
     if "user_id" not in session:
         today = date.today().isoformat()
         if session.get("free_chats_date") != today:
             session["free_chats_date"] = today
             session["free_chats_count"] = 0
         if session.get("free_chats_count", 0) >= 10:
-            return jsonify({"error": "1日10回までです"}), 403
+            return jsonify({"error": "1日10回までです"}, status_code=403)
         session["free_chats_count"] = session.get("free_chats_count", 0) + 1
 
     system_prompt = {
@@ -58,9 +61,9 @@ def chat():
             cursor.execute(check_q, (chat_room_id,))
             result = cursor.fetchone()
             if not result:
-                return jsonify({"error": "該当ルームが存在しません"}), 404
+                return jsonify({"error": "該当ルームが存在しません"}, status_code=404)
             if result[0] != session["user_id"]:
-                return jsonify({"error": "他ユーザーのチャットルームには投稿できません"}), 403
+                return jsonify({"error": "他ユーザーのチャットルームには投稿できません"}, status_code=403)
         finally:
             cursor.close()
             conn.close()
@@ -157,19 +160,20 @@ def chat():
     if "user_id" in session:
         save_message_to_db(chat_room_id, bot_reply, "assistant")
     else:
-        sid = get_session_id()
+        sid = get_session_id(session)
         ephemeral_chats[sid][chat_room_id]["messages"].append({"role": "assistant", "content": bot_reply})
 
     return jsonify({"response": bot_reply})
 
 
-@chat_bp.route("/api/get_chat_history", methods=["GET"])
-def get_chat_history():
+@chat_bp.get("/api/get_chat_history", name="chat.get_chat_history")
+async def get_chat_history(request: Request):
     cleanup_ephemeral_chats()
-    chat_room_id = request.args.get('room_id')
+    chat_room_id = request.query_params.get('room_id')
     if not chat_room_id:
-        return jsonify({"error": "room_id is required"}), 400
+        return jsonify({"error": "room_id is required"}, status_code=400)
 
+    session = request.session
     if "user_id" in session:
         try:
             conn = get_db_connection()
@@ -178,13 +182,13 @@ def get_chat_history():
             cursor.execute(check_q, (chat_room_id,))
             result = cursor.fetchone()
             if not result:
-                return jsonify({"error": "該当ルームが存在しません"}), 404
+                return jsonify({"error": "該当ルームが存在しません"}, status_code=404)
             if result[0] != session["user_id"]:
-                return jsonify({"error": "他ユーザーのチャット履歴は見れません"}), 403
+                return jsonify({"error": "他ユーザーのチャット履歴は見れません"}, status_code=403)
             cursor.close()
             conn.close()
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}, status_code=500)
 
         try:
             conn = get_db_connection()
@@ -206,14 +210,14 @@ def get_chat_history():
                 })
             return jsonify({"messages": messages})
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}, status_code=500)
         finally:
             cursor.close()
             conn.close()
     else:
-        sid = get_session_id()
+        sid = get_session_id(session)
         if sid not in ephemeral_chats or chat_room_id not in ephemeral_chats[sid]:
-            return jsonify({"error": "該当ルームが存在しません"}), 404
+            return jsonify({"error": "該当ルームが存在しません"}, status_code=404)
 
         messages = ephemeral_chats[sid][chat_room_id]["messages"]
         return jsonify({"messages": messages})

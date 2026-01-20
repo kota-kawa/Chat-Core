@@ -1,18 +1,20 @@
 # prompt_share/prompt_share_api.py
-from flask import Blueprint, request, jsonify, session
+from fastapi import APIRouter, Request
+
 from services.db import get_db_connection
+from services.web import get_json, jsonify
 
-prompt_share_api_bp = Blueprint('prompt_share_api', __name__, url_prefix='/prompt_share/api')
+prompt_share_api_bp = APIRouter(prefix="/prompt_share/api")
 
 
-@prompt_share_api_bp.route('/prompts', methods=['GET'])
-def get_prompts():
+@prompt_share_api_bp.get('/prompts', name="prompt_share_api.get_prompts")
+async def get_prompts(request: Request):
     """
     保存されている全プロンプトを取得するエンドポイント
     """
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    user_id = session.get('user_id')
+    user_id = request.session.get('user_id')
     try:
         cursor.execute("""
             SELECT id, title, category, content, author, input_examples, output_examples, created_at
@@ -57,13 +59,13 @@ def get_prompts():
 
         return jsonify({'prompts': prompts})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e)}, status_code=500)
     finally:
         cursor.close()
         conn.close()
 
-@prompt_share_api_bp.route('/prompts', methods=['POST'])
-def create_prompt():
+@prompt_share_api_bp.post('/prompts', name="prompt_share_api.create_prompt")
+async def create_prompt(request: Request):
     """
     新しいプロンプトを投稿するエンドポイント
     JSON で必要なフィールド: title, category, content, author
@@ -71,11 +73,11 @@ def create_prompt():
     """
 
     # セッションからログインユーザーのuser_idを取得
-    if 'user_id' not in session:
-        return jsonify({'error': 'ログインしていません'}), 401
-    user_id = session['user_id']
+    if 'user_id' not in request.session:
+        return jsonify({'error': 'ログインしていません'}, status_code=401)
+    user_id = request.session['user_id']
 
-    data = request.get_json()
+    data = await get_json(request)
     title = data.get('title')
     category = data.get('category')
     content = data.get('content')
@@ -86,7 +88,7 @@ def create_prompt():
     is_public = True
 
     if not title or not category or not content or not author:
-        return jsonify({'error': '必要なフィールドが不足しています。'}), 400
+        return jsonify({'error': '必要なフィールドが不足しています。'}, status_code=400)
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -98,22 +100,22 @@ def create_prompt():
         cursor.execute(query, (title, category, content, author, input_examples, output_examples, user_id, is_public))
         conn.commit()
         prompt_id = cursor.lastrowid
-        return jsonify({'message': 'プロンプトが作成されました。', 'prompt_id': prompt_id}), 201
+        return jsonify({'message': 'プロンプトが作成されました。', 'prompt_id': prompt_id}, status_code=201)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e)}, status_code=500)
     finally:
         cursor.close()
         conn.close()
 
 
-@prompt_share_api_bp.route('/bookmark', methods=['POST'])
-def add_bookmark():
+@prompt_share_api_bp.post('/bookmark', name="prompt_share_api.add_bookmark")
+async def add_bookmark(request: Request):
     # ログインしていない場合はエラーを返す
-    if 'user_id' not in session:
-        return jsonify({'error': 'ログインしていません'}), 401
-    user_id = session['user_id']
+    if 'user_id' not in request.session:
+        return jsonify({'error': 'ログインしていません'}, status_code=401)
+    user_id = request.session['user_id']
 
-    data = request.get_json()
+    data = await get_json(request)
     title = data.get('title')
     content = data.get('content')
     input_examples = data.get('input_examples', '')
@@ -121,7 +123,7 @@ def add_bookmark():
 
     # 必須項目チェック
     if not title or not content:
-        return jsonify({'error': '必要なフィールドが不足しています'}), 400
+        return jsonify({'error': '必要なフィールドが不足しています'}, status_code=400)
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -132,7 +134,7 @@ def add_bookmark():
         )
         existing = cursor.fetchone()
         if existing:
-            return jsonify({'message': 'すでに保存されています。', 'saved_id': existing['id']}), 200
+            return jsonify({'message': 'すでに保存されています。', 'saved_id': existing['id']}, status_code=200)
 
         # user_id を必ず INSERT して、自分のタスクとして登録
         cursor.execute(
@@ -144,26 +146,26 @@ def add_bookmark():
             (user_id, title, content, input_examples, output_examples)
         )
         conn.commit()
-        return jsonify({'message': 'ブックマークが保存されました。', 'saved_id': cursor.lastrowid}), 201
+        return jsonify({'message': 'ブックマークが保存されました。', 'saved_id': cursor.lastrowid}, status_code=201)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e)}, status_code=500)
     finally:
         cursor.close()
         conn.close()
 
 
 
-@prompt_share_api_bp.route('/bookmark', methods=['DELETE'])
-def remove_bookmark():
+@prompt_share_api_bp.delete('/bookmark', name="prompt_share_api.remove_bookmark")
+async def remove_bookmark(request: Request):
     # ログイン状態チェック
-    if 'user_id' not in session:
-        return jsonify({'error': 'ログインしていません'}), 401
-    user_id = session['user_id']
+    if 'user_id' not in request.session:
+        return jsonify({'error': 'ログインしていません'}, status_code=401)
+    user_id = request.session['user_id']
 
-    data = request.get_json()
+    data = await get_json(request)
     title = data.get('title')
     if not title:
-        return jsonify({'error': '必要なフィールドが不足しています'}), 400
+        return jsonify({'error': '必要なフィールドが不足しています'}, status_code=400)
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -176,19 +178,19 @@ def remove_bookmark():
         conn.commit()
         return jsonify({'message': 'ブックマークが削除されました。'})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e)}, status_code=500)
     finally:
         cursor.close()
         conn.close()
 
 
-@prompt_share_api_bp.route('/prompt_list', methods=['POST'])
-def add_prompt_to_list():
-    if 'user_id' not in session:
-        return jsonify({'error': 'ログインしていません'}), 401
-    user_id = session['user_id']
+@prompt_share_api_bp.post('/prompt_list', name="prompt_share_api.add_prompt_to_list")
+async def add_prompt_to_list(request: Request):
+    if 'user_id' not in request.session:
+        return jsonify({'error': 'ログインしていません'}, status_code=401)
+    user_id = request.session['user_id']
 
-    data = request.get_json() or {}
+    data = await get_json(request) or {}
     prompt_id = data.get('prompt_id')
     title = data.get('title')
     category = data.get('category', '')
@@ -197,7 +199,7 @@ def add_prompt_to_list():
     output_examples = data.get('output_examples', '')
 
     if not title or not content:
-        return jsonify({'error': '必要なフィールドが不足しています'}), 400
+        return jsonify({'error': '必要なフィールドが不足しています'}, status_code=400)
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -213,7 +215,7 @@ def add_prompt_to_list():
             )
             existing = cursor.fetchone()
             if existing:
-                return jsonify({'message': 'すでに保存されています。', 'saved_id': existing['id']}), 200
+                return jsonify({'message': 'すでに保存されています。', 'saved_id': existing['id']}, status_code=200)
 
         cursor.execute(
             """
@@ -225,7 +227,7 @@ def add_prompt_to_list():
         )
         existing_by_title = cursor.fetchone()
         if existing_by_title:
-            return jsonify({'message': 'すでに保存されています。', 'saved_id': existing_by_title['id']}), 200
+            return jsonify({'message': 'すでに保存されています。', 'saved_id': existing_by_title['id']}, status_code=200)
 
         cursor.execute(
             """
@@ -244,11 +246,10 @@ def add_prompt_to_list():
             ),
         )
         conn.commit()
-        return jsonify({'message': 'プロンプトリストに保存しました。', 'saved_id': cursor.lastrowid}), 201
+        return jsonify({'message': 'プロンプトリストに保存しました。', 'saved_id': cursor.lastrowid}, status_code=201)
     except Exception as e:
         conn.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e)}, status_code=500)
     finally:
         cursor.close()
         conn.close()
-

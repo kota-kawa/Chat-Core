@@ -1,4 +1,9 @@
-flask
+fastapi
+uvicorn
+jinja2
+python-multipart
+itsdangerous
+werkzeug
 mysql-connector-python
 google-auth
 google-auth-oauthlib

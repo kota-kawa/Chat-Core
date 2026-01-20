@@ -1,7 +1,11 @@
+import asyncio
+import json
 import unittest
 from unittest.mock import patch
 
-from app import app
+from starlette.requests import Request
+
+from blueprints.chat.tasks import edit_task
 
 
 class FakeCursor:
@@ -43,32 +47,50 @@ class FakeConnection:
         self.closed = True
 
 
+def make_request(json_body, session=None):
+    body = json.dumps(json_body).encode("utf-8")
+    scope = {
+        "type": "http",
+        "asgi": {"spec_version": "2.3", "version": "3.0"},
+        "http_version": "1.1",
+        "method": "POST",
+        "scheme": "http",
+        "path": "/api/edit_task",
+        "raw_path": b"/api/edit_task",
+        "query_string": b"",
+        "headers": [(b"content-type", b"application/json")],
+        "client": ("testclient", 50000),
+        "server": ("testserver", 80),
+        "session": session or {},
+    }
+
+    async def receive():
+        nonlocal body
+        if body is None:
+            return {"type": "http.request", "body": b"", "more_body": False}
+        data = body
+        body = None
+        return {"type": "http.request", "body": data, "more_body": False}
+
+    return Request(scope, receive)
+
+
 class EditDefaultTaskTestCase(unittest.TestCase):
-    def setUp(self):
-        self.client = app.test_client()
-        self.app_context = app.app_context()
-        self.app_context.push()
-
-    def tearDown(self):
-        self.app_context.pop()
-
     def test_editing_copied_default_task_is_allowed(self):
         fake_connection = FakeConnection()
+        request = make_request(
+            {
+                "old_task": "Default Task",
+                "new_task": "Updated Task",
+                "prompt_template": "Prompt",
+                "input_examples": "input",
+                "output_examples": "output",
+            },
+            session={"user_id": 123},
+        )
 
         with patch("blueprints.chat.tasks.get_db_connection", return_value=fake_connection):
-            with self.client.session_transaction() as sess:
-                sess["user_id"] = 123
-
-            response = self.client.post(
-                "/api/edit_task",
-                json={
-                    "old_task": "Default Task",
-                    "new_task": "Updated Task",
-                    "prompt_template": "Prompt",
-                    "input_examples": "input",
-                    "output_examples": "output",
-                },
-            )
+            response = asyncio.run(edit_task(request))
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(fake_connection.committed)

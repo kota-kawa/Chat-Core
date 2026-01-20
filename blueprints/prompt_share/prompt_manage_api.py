@@ -1,15 +1,17 @@
 # prompt_manage_api.py
-from flask import Blueprint, request, jsonify, session
+from fastapi import APIRouter, Request
+
 from services.db import get_db_connection  # 既存の DB 接続関数を利用
+from services.web import get_json, jsonify
 
-prompt_manage_api_bp = Blueprint('prompt_manage_api', __name__, url_prefix='/prompt_manage/api')
+prompt_manage_api_bp = APIRouter(prefix="/prompt_manage/api")
 
-@prompt_manage_api_bp.route('/my_prompts', methods=['GET'])
-def get_my_prompts():
+@prompt_manage_api_bp.get('/my_prompts', name="prompt_manage_api.get_my_prompts")
+async def get_my_prompts(request: Request):
     """ログインユーザーが投稿したプロンプト一覧を取得するエンドポイント"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'ログインしていません'}), 401
-    user_id = session['user_id']
+    if 'user_id' not in request.session:
+        return jsonify({'error': 'ログインしていません'}, status_code=401)
+    user_id = request.session['user_id']
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
@@ -23,19 +25,19 @@ def get_my_prompts():
         prompts = cursor.fetchall()
         return jsonify({'prompts': prompts})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e)}, status_code=500)
     finally:
         cursor.close()
         conn.close()
 
 
-@prompt_manage_api_bp.route('/saved_prompts', methods=['GET'])
-def get_saved_prompts():
+@prompt_manage_api_bp.get('/saved_prompts', name="prompt_manage_api.get_saved_prompts")
+async def get_saved_prompts(request: Request):
     """ログインユーザーが保存したプロンプト（ブックマーク）一覧を取得するエンドポイント"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'ログインしていません'}), 401
+    if 'user_id' not in request.session:
+        return jsonify({'error': 'ログインしていません'}, status_code=401)
 
-    user_id = session['user_id']
+    user_id = request.session['user_id']
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
@@ -49,19 +51,19 @@ def get_saved_prompts():
         prompts = cursor.fetchall()
         return jsonify({'prompts': prompts})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e)}, status_code=500)
     finally:
         cursor.close()
         conn.close()
 
 
-@prompt_manage_api_bp.route('/prompt_list', methods=['GET'])
-def get_prompt_list():
+@prompt_manage_api_bp.get('/prompt_list', name="prompt_manage_api.get_prompt_list")
+async def get_prompt_list(request: Request):
     """ログインユーザーのプロンプトリストを取得するエンドポイント"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'ログインしていません'}), 401
+    if 'user_id' not in request.session:
+        return jsonify({'error': 'ログインしていません'}, status_code=401)
 
-    user_id = session['user_id']
+    user_id = request.session['user_id']
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
@@ -75,19 +77,19 @@ def get_prompt_list():
         prompts = cursor.fetchall()
         return jsonify({'prompts': prompts})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e)}, status_code=500)
     finally:
         cursor.close()
         conn.close()
 
 
-@prompt_manage_api_bp.route('/prompt_list/<int:entry_id>', methods=['DELETE'])
-def delete_prompt_list_entry(entry_id):
+@prompt_manage_api_bp.delete('/prompt_list/{entry_id}', name="prompt_manage_api.delete_prompt_list_entry")
+async def delete_prompt_list_entry(entry_id: int, request: Request):
     """プロンプトリストからエントリを削除するエンドポイント"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'ログインしていません'}), 401
+    if 'user_id' not in request.session:
+        return jsonify({'error': 'ログインしていません'}, status_code=401)
 
-    user_id = session['user_id']
+    user_id = request.session['user_id']
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -95,22 +97,22 @@ def delete_prompt_list_entry(entry_id):
         cursor.execute(query, (entry_id, user_id))
         conn.commit()
         if cursor.rowcount == 0:
-            return jsonify({'error': '対象のプロンプトが見つかりませんでした。'}), 404
+            return jsonify({'error': '対象のプロンプトが見つかりませんでした。'}, status_code=404)
         return jsonify({'message': 'プロンプトを削除しました。'})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e)}, status_code=500)
     finally:
         cursor.close()
         conn.close()
 
 
-@prompt_manage_api_bp.route('/saved_prompts/<int:prompt_id>', methods=['DELETE'])
-def delete_saved_prompt(prompt_id):
+@prompt_manage_api_bp.delete('/saved_prompts/{prompt_id}', name="prompt_manage_api.delete_saved_prompt")
+async def delete_saved_prompt(prompt_id: int, request: Request):
     """保存したプロンプトを削除するエンドポイント"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'ログインしていません'}), 401
+    if 'user_id' not in request.session:
+        return jsonify({'error': 'ログインしていません'}, status_code=401)
 
-    user_id = session['user_id']
+    user_id = request.session['user_id']
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -118,28 +120,28 @@ def delete_saved_prompt(prompt_id):
         cursor.execute(query, (prompt_id, user_id))
         conn.commit()
         if cursor.rowcount == 0:
-            return jsonify({'error': '対象の保存済みプロンプトが見つかりませんでした。'}), 404
+            return jsonify({'error': '対象の保存済みプロンプトが見つかりませんでした。'}, status_code=404)
         return jsonify({'message': '保存したプロンプトを削除しました。'})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e)}, status_code=500)
     finally:
         cursor.close()
         conn.close()
 
-@prompt_manage_api_bp.route('/prompts/<int:prompt_id>', methods=['PUT'])
-def update_prompt(prompt_id):
+@prompt_manage_api_bp.put('/prompts/{prompt_id}', name="prompt_manage_api.update_prompt")
+async def update_prompt(prompt_id: int, request: Request):
     """投稿済みプロンプトの内容を更新するエンドポイント"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'ログインしていません'}), 401
-    user_id = session['user_id']
-    data = request.get_json()
+    if 'user_id' not in request.session:
+        return jsonify({'error': 'ログインしていません'}, status_code=401)
+    user_id = request.session['user_id']
+    data = await get_json(request)
     title = data.get('title')
     category = data.get('category')
     content = data.get('content')
     input_examples = data.get('input_examples', '')
     output_examples = data.get('output_examples', '')
     if not title or not category or not content:
-        return jsonify({'error': '必要なフィールドが不足しています。'}), 400
+        return jsonify({'error': '必要なフィールドが不足しています。'}, status_code=400)
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -151,20 +153,20 @@ def update_prompt(prompt_id):
         cursor.execute(query, (title, category, content, input_examples, output_examples, prompt_id, user_id))
         conn.commit()
         if cursor.rowcount == 0:
-            return jsonify({'error': '対象のプロンプトが見つかりませんでした。'}), 404
+            return jsonify({'error': '対象のプロンプトが見つかりませんでした。'}, status_code=404)
         return jsonify({'message': 'プロンプトが更新されました。'})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e)}, status_code=500)
     finally:
         cursor.close()
         conn.close()
 
-@prompt_manage_api_bp.route('/prompts/<int:prompt_id>', methods=['DELETE'])
-def delete_prompt(prompt_id):
+@prompt_manage_api_bp.delete('/prompts/{prompt_id}', name="prompt_manage_api.delete_prompt")
+async def delete_prompt(prompt_id: int, request: Request):
     """投稿済みプロンプトを削除するエンドポイント"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'ログインしていません'}), 401
-    user_id = session['user_id']
+    if 'user_id' not in request.session:
+        return jsonify({'error': 'ログインしていません'}, status_code=401)
+    user_id = request.session['user_id']
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -172,10 +174,10 @@ def delete_prompt(prompt_id):
         cursor.execute(query, (prompt_id, user_id))
         conn.commit()
         if cursor.rowcount == 0:
-            return jsonify({'error': '対象のプロンプトが見つかりませんでした。'}), 404
+            return jsonify({'error': '対象のプロンプトが見つかりませんでした。'}, status_code=404)
         return jsonify({'message': 'プロンプトが削除されました。'})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e)}, status_code=500)
     finally:
         cursor.close()
         conn.close()

@@ -1,34 +1,56 @@
 # app.py
-from flask import Flask
+import os
 import threading
 import time
 from datetime import timedelta
-import os
+
 from dotenv import load_dotenv
-from blueprints.chat import cleanup_ephemeral_chats  # chat.py に定義されたクリーンアップ関数をインポート
+from fastapi import FastAPI
+from starlette.staticfiles import StaticFiles
+
+from blueprints.chat import cleanup_ephemeral_chats
+from services.session_middleware import PermanentSessionMiddleware
 
 # Load environment variables
 load_dotenv()
 
-# Flaskアプリを生成
-app = Flask(__name__)
-app.secret_key = "YOUR_SECRET_KEY"  # セッション暗号化キー
-app.permanent_session_lifetime = timedelta(days=30)
+app = FastAPI()
 
-# Google OAuth での初回ログインがリダイレクトされない問題を防ぐため
-# セッションクッキーをクロスサイトでも送信できるように設定
+secret_key = os.getenv("FLASK_SECRET_KEY", "YOUR_SECRET_KEY")
+permanent_max_age = int(timedelta(days=30).total_seconds())
+
 if os.getenv("FLASK_ENV") == "production":
-    app.config.update(
-        SESSION_COOKIE_SAMESITE="None",
-        SESSION_COOKIE_SECURE=True,
-    )
+    same_site = "none"
+    https_only = True
 else:
-    app.config.update(
-        SESSION_COOKIE_SAMESITE="Lax",
-        SESSION_COOKIE_SECURE=False,
-    )
+    same_site = "lax"
+    https_only = False
 
-# 各Blueprintをimportする
+app.add_middleware(
+    PermanentSessionMiddleware,
+    secret_key=secret_key,
+    session_cookie="session",
+    max_age=permanent_max_age,
+    same_site=same_site,
+    https_only=https_only,
+)
+
+app.state.session_secret = secret_key
+app.state.session_cookie = "session"
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount(
+    "/prompt_share/static",
+    StaticFiles(directory="blueprints/prompt_share/static"),
+    name="prompt_share.static",
+)
+app.mount(
+    "/memo/static",
+    StaticFiles(directory="blueprints/memo/static"),
+    name="memo.static",
+)
+
+# 各Routerをimportする
 from blueprints.auth import auth_bp
 from blueprints.verification import verification_bp
 from blueprints.chat import chat_bp
@@ -39,16 +61,17 @@ from blueprints.prompt_share.prompt_manage_api import prompt_manage_api_bp
 from blueprints.admin import admin_bp
 from blueprints.memo import memo_bp
 
-# Blueprintを登録
-app.register_blueprint(auth_bp)
-app.register_blueprint(verification_bp)
-app.register_blueprint(chat_bp)
-app.register_blueprint(prompt_share_bp)
-app.register_blueprint(prompt_share_api_bp)
-app.register_blueprint(search_bp)
-app.register_blueprint(prompt_manage_api_bp)
-app.register_blueprint(admin_bp)
-app.register_blueprint(memo_bp)
+# Routerを登録
+app.include_router(auth_bp)
+app.include_router(verification_bp)
+app.include_router(chat_bp)
+app.include_router(prompt_share_bp)
+app.include_router(prompt_share_api_bp)
+app.include_router(search_bp)
+app.include_router(prompt_manage_api_bp)
+app.include_router(admin_bp)
+app.include_router(memo_bp)
+
 
 def periodic_cleanup():
     while True:
@@ -56,8 +79,15 @@ def periodic_cleanup():
         # 1分ごとにエフェメラルチャットのクリーンアップ処理を実行
         time.sleep(6000)
 
-if __name__ == '__main__':
-    # バックグラウンドスレッドで定期クリーンアップを開始
+
+@app.on_event("startup")
+def start_cleanup_thread():
     cleanup_thread = threading.Thread(target=periodic_cleanup, daemon=True)
     cleanup_thread.start()
-    app.run(debug=True, host='0.0.0.0')
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    port = int(os.getenv("PORT", "5004"))
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)

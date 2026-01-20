@@ -82,11 +82,13 @@ def create_user(email):
             """
             INSERT INTO users (email, is_verified)
             VALUES (%s, FALSE)
+            RETURNING id
             """,
             (email,)
         )
         conn.commit()
-        return cursor.lastrowid
+        row = cursor.fetchone()
+        return row[0] if row else None
     finally:
         cursor.close()
         conn.close()

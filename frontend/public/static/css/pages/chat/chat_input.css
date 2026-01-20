@@ -1,0 +1,37 @@
+/* chat_input.css
+   メッセージ入力フォーム、送信ボタン、タイピングインジケータのスタイル
+*/
+.input-container{
+  padding:.75rem 1rem;
+  background:#fff;
+  border-top:1px solid #e0e0e0;
+  position:sticky;      /* 画面下部に固定 */
+  bottom:0;
+  z-index:1000;
+}
+
+/* モバイル表示での入力フォーム固定 */
+@media (max-width:576px){
+  .input-container{
+    position:fixed;     /* モバイルでは fixed で画面下部に固定 */
+    bottom:0;
+    left:0;
+    right:0;
+    z-index:1100;      /* サイドバーより上に表示 */
+  }
+  
+  /* 入力フォームの下に隠れないよう、チャットメッセージエリアに下パディング */
+  .chat-messages{
+    padding-bottom:5rem; /* 入力フォームの高さ分のスペースを確保 */
+  }
+}
+.input-wrapper{display:flex;gap:.5rem;align-items:center;max-width:800px;margin:0 auto;}
+#user-input{
+  flex:1;padding:.6rem .8rem;border:2px solid #e0e0e0;border-radius:15px;font-size:1rem;transition:.3s;background:#fff;
+}
+#user-input:focus{border-color:var(--primary-color);box-shadow:0 0 0 3px rgba(25,195,125,.2);}
+/* タイピングドット */
+.typing-indicator{display:inline-flex;padding:.75rem;background:var(--secondary-color);border-radius:12px;}
+.typing-dot{width:8px;height:8px;margin:0 3px;background:#ccc;border-radius:50%;animation:typing 1.4s infinite ease-in-out;}
+
+

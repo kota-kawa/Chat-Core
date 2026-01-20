@@ -17,7 +17,7 @@ from . import (
     chat_bp,
     get_session_id,
     cleanup_ephemeral_chats,
-    ephemeral_chats,
+    ephemeral_store,
 )
 
 
@@ -74,18 +74,14 @@ async def chat(request: Request):
         save_message_to_db(chat_room_id, formatted_user_message, "user")
         all_messages = get_chat_room_messages(chat_room_id)
     else:
-        sid = get_session_id()
-        if sid not in ephemeral_chats or chat_room_id not in ephemeral_chats[sid]:
+        sid = get_session_id(session)
+        if not ephemeral_store.room_exists(sid, chat_room_id):
             return jsonify({"error": "該当ルームが存在しません"}), 404
 
         escaped = html.escape(user_message)
         formatted_user_message = escaped.replace("\n", "<br>")
-        ephemeral_chats[sid][chat_room_id]["messages"].append({
-            "role": "user",
-            "content": formatted_user_message
-        })
-
-        all_messages = ephemeral_chats[sid][chat_room_id]["messages"]
+        ephemeral_store.append_message(sid, chat_room_id, "user", formatted_user_message)
+        all_messages = ephemeral_store.get_messages(sid, chat_room_id)
 
     extra_prompt = None
     prompt_data = None  # prompt_data を初期化
@@ -161,7 +157,7 @@ async def chat(request: Request):
         save_message_to_db(chat_room_id, bot_reply, "assistant")
     else:
         sid = get_session_id(session)
-        ephemeral_chats[sid][chat_room_id]["messages"].append({"role": "assistant", "content": bot_reply})
+        ephemeral_store.append_message(sid, chat_room_id, "assistant", bot_reply)
 
     return jsonify({"response": bot_reply})
 
@@ -216,8 +212,8 @@ async def get_chat_history(request: Request):
             conn.close()
     else:
         sid = get_session_id(session)
-        if sid not in ephemeral_chats or chat_room_id not in ephemeral_chats[sid]:
+        if not ephemeral_store.room_exists(sid, chat_room_id):
             return jsonify({"error": "該当ルームが存在しません"}, status_code=404)
 
-        messages = ephemeral_chats[sid][chat_room_id]["messages"]
+        messages = ephemeral_store.get_messages(sid, chat_room_id)
         return jsonify({"messages": messages})

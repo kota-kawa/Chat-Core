@@ -1,0 +1,553 @@
+/* user_settings.css
+   Styles specific to the user settings page. Base styles are imported via
+   index.css. */
+:root {
+  --primary-color-light: #e8f9f3; /* Primary color の薄い版 */
+  --sidebar-bg: #ffffff;
+  --content-bg: #f4f7f6; /* variables.css の secondary-color に近いが、少し調整 */
+  --card-bg: #ffffff;
+  --text-muted: #6c757d;
+  --border-color: #dee2e6;
+  --input-bg: #ffffff; /* 入力フィールドの背景 */
+}
+
+/* ───────── 戻るボタン（.settings-btn）基本スタイル ───────── */
+.settings-btn {
+  background: var(--primary-color) !important; /* 緑色 */
+  color: var(--text-light);
+  width: 3rem;           /* 正円サイズ */
+  height: 3rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;    /* まん丸 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  /* 影など任意で */
+  /* box-shadow: 0 2px 4px rgba(0,0,0,0.15); */
+}
+
+/* ───────── 画面幅 577px 以上（PC/タブレット）─────────
+   サイドバー幅 260px ＋ コンテンツの内側余白 1rem だけ右へ寄せ、
+   ヘッダ行の少し下 (top: 1rem) に固定配置します。
+*/
+@media (min-width: 577px) {
+  .settings-btn {
+    position: fixed;
+    top: 1rem;
+    left: calc(260px + 1rem); /* サイドバー幅 + 余白 */
+    right: auto;              /* 右固定を解除 */
+    z-index: 10000;
+  }
+}
+
+/* ───────── 画面幅 576px 以下（スマホ）─────────
+   画面左上に固定しますが、チャット画面ほど高い位置ではない適切な位置に配置
+*/
+@media (max-width: 576px) {
+  .settings-btn {
+    position: fixed !important;
+    top: 1.5rem !important;   /* チャット画面より低い位置に調整 */
+    left: 0.75rem !important;
+    right: auto !important;
+    z-index: 10000;
+  }
+}
+
+/* ─────────────────────────── */
+/* セクション管理               */
+/* ─────────────────────────── */
+.settings-section {
+  display: none;
+}
+
+.settings-section.active {
+  display: block;
+}
+
+/* ─────────────────────────── */
+/* プロンプト管理用スタイル       */
+/* ─────────────────────────── */
+.header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  color: var(--primary-color);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.prompt-grid {
+  --prompt-card-width: clamp(280px, 30vw, 350px);
+  --prompt-grid-gap: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--prompt-card-width), var(--prompt-card-width)));
+  gap: var(--prompt-grid-gap);
+  margin-top: 2rem;
+  justify-content: flex-start;
+  width: min(100%, calc(var(--prompt-card-width) * 2 + var(--prompt-grid-gap)));
+}
+
+.prompt-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid #e0e0e0;
+}
+
+.prompt-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.prompt-card h3 {
+  color: var(--primary-color);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 0.5rem;
+}
+
+.prompt-card p {
+  color: var(--text-dark);
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+  font-size: 0.95rem;
+}
+
+.prompt-card .meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.prompt-card .btn-group {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.prompt-card .btn {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.prompt-card .btn-warning {
+  background-color: #ffc107;
+  border-color: #ffc107;
+  color: #000;
+}
+
+.prompt-card .btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: #fff;
+}
+
+/* モーダル用スタイル */
+.modal-form .form-group {
+  margin-bottom: 1rem;
+}
+
+.modal-form .form-label {
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+}
+
+.modal-form .input-field {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.modal-form .form-actions {
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .prompt-grid {
+    --prompt-card-width: 100%;
+    --prompt-grid-gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(var(--prompt-card-width), 1fr));
+    width: 100%;
+  }
+
+  .prompt-card {
+    padding: 1rem;
+  }
+}
+
+
+
+/* global.css の body スタイルをこのページ専用に上書き */
+.user-settings-body {
+  background: var(--content-bg); /* ページ全体の背景 */
+  min-height: 100vh;
+  display: block; /* 中央寄せを解除 */
+  padding: 0;     /* global.css の padding をリセット */
+  font-family: 'Roboto', sans-serif;
+}
+
+.user-settings-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* 左サイドバー */
+.settings-sidebar {
+  width: 260px;
+  background: var(--sidebar-bg);
+  padding: 1.5rem;
+  box-shadow: 2px 0 15px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  position: fixed; /* 固定表示 */
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 1000; /* 他の要素より手前に */
+}
+
+.settings-sidebar .sidebar-header {
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settings-sidebar .sidebar-header h3 {
+  color: var(--text-dark);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.settings-sidebar .nav-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.settings-sidebar .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 8px;
+  color: var(--text-dark);
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  font-weight: 500;
+}
+
+.settings-sidebar .nav-link i {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.settings-sidebar .nav-link:hover {
+  background-color: var(--primary-color-light);
+  color: var(--primary-color);
+}
+
+.settings-sidebar .nav-link:hover i {
+  color: var(--primary-color);
+}
+
+.settings-sidebar .nav-link.active {
+  background-color: var(--primary-color);
+  color: var(--text-light);
+  font-weight: 700;
+}
+
+.settings-sidebar .nav-link.active i {
+  color: var(--text-light);
+}
+
+.settings-sidebar .sidebar-footer {
+  margin-top: auto; /* フッターを一番下に配置 */
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.settings-sidebar .sidebar-footer p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+
+/* 右コンテンツエリア */
+.settings-content {
+  flex: 1;
+  padding: 2rem;
+  margin-left: 260px; /* サイドバーの幅分をオフセット */
+  overflow-y: auto;
+}
+
+.settings-card {
+  background: var(--card-bg);
+  padding: 2.5rem; /* パディングを増やす */
+  border-radius: 16px; /* 角丸を調整 */
+  box-shadow: var(--shadow);
+  max-width: 700px;
+  margin: 2rem auto; /* 上下のマージンを追加し、中央寄せ */
+}
+
+.settings-card h2 {
+  text-align: left; /* 左寄せに変更 */
+  color: var(--text-dark); /* variables.css の text-dark を使用 */
+  margin-bottom: 2rem; /* マージンを増やす */
+  font-size: 1.75rem; /* フォントサイズ調整 */
+  font-weight: 700;
+}
+
+/* 共通フォーム要素 */
+.form-group {
+  margin-bottom: 1.75rem; /* グループ間のマージンを増やす */
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 700; /* ラベルの太さ */
+  color: var(--text-dark);
+}
+
+.custom-form-control {
+  width: 100%;
+  padding: 0.85rem 1rem; /* パディング調整 */
+  border: 1px solid var(--border-color); /* 枠線を少し濃く */
+  border-radius: 8px; /* 角丸を調整 */
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: var(--input-bg);
+}
+
+.custom-form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(25, 195, 125, 0.25); /* Bootstrap風のフォーカス */
+  outline: none;
+}
+
+.custom-form-control::placeholder {
+  color: var(--text-muted);
+}
+
+
+/* アバタープレビュー */
+.avatar-group {
+  text-align: left; /* 左寄せ */
+  margin-bottom: 2rem;
+}
+
+.avatar-preview-wrapper {
+  position: relative;
+  display: inline-block; /* 適切なサイズに */
+  margin-top: 0.5rem;
+}
+
+.avatar-preview {
+  width: 120px; /* サイズを少し大きく */
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--border-color); /* 枠線を調整 */
+  background-color: var(--secondary-color);
+}
+
+.change-avatar-btn {
+  position: absolute;
+  bottom: 5px; /* 位置調整 */
+  right: 5px;  /* 位置調整 */
+    width: 2.2rem; /* 例: 幅を設定 */
+  height: 2.2rem; /* 例: 高さを幅と同じ値に設定 */
+  background: var(--primary-color);
+  color: #fff;
+  padding: 0.6rem; /* パディング調整 */
+  border-radius: 50%; /* ここを 50% に設定または確認 */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: background-color 0.2s, transform 0.2s;
+  border: none; /* 枠線削除 */
+  cursor: pointer; /* カーソルをポインタに変更 */
+}
+
+.change-avatar-btn:hover {
+  background: var(--accent-color); /* buttons.css の hover と合わせるか検討 */
+  transform: scale(1.1);
+}
+
+.change-avatar-btn i {
+    font-size: 1rem; /* アイコンサイズ調整 */
+}
+
+
+/* パスワード表示切替 */
+.password-wrapper {
+  position: relative;
+}
+
+.toggle-password-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 0.75rem; /* 位置調整 */
+  background: transparent;
+  color: var(--text-muted); /* 色を少し濃く */
+  border: none; /* 枠線削除 */
+  padding: 0.5rem;
+}
+
+.toggle-password-btn:hover {
+    color: var(--primary-color);
+}
+
+.toggle-password-btn i {
+    font-size: 1.2rem;
+}
+
+/* ボタン配置 */
+.button-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2.5rem; /* マージンを増やす */
+}
+
+/* プライマリボタン (buttons.css のスタイルを継承しつつ、微調整が必要な場合はここに記述) */
+.primary-button {
+  padding: 0.85rem 1.5rem; /* パディング調整 */
+  font-weight: 700;
+}
+
+/* セカンダリボタン (buttons.css のスタイルを参考に新規作成または調整) */
+.secondary-button {
+  padding: 0.85rem 1.5rem;
+  font-weight: 700;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  border-radius: 12px; /* primary-button と合わせる */
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.secondary-button:hover {
+  background: var(--secondary-color); /* variables.css の secondary-color */
+  color: var(--text-dark);
+  border-color: var(--text-muted);
+}
+
+/* レスポンシブ対応 (基本的な例) */
+@media (max-width: 992px) {
+  .settings-sidebar {
+    width: 220px;
+  }
+  .settings-content {
+    margin-left: 220px;
+  }
+  .settings-card {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .user-settings-layout {
+    flex-direction: column;
+  }
+  .settings-sidebar {
+    width: 100%;
+    height: auto;
+    position: static; /* モバイルでは固定解除 */
+    box-shadow: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .settings-sidebar .sidebar-header h3 {
+    font-size: 1.25rem;
+  }
+  .settings-sidebar .nav-menu {
+    display: flex; /* 横並びにするか検討 */
+    overflow-x: auto; /* 横スクロール可能に */
+    padding-bottom: 0.5rem; /* スクロールバーとのスペース */
+  }
+  .settings-sidebar .nav-link {
+    padding: 0.75rem;
+    white-space: nowrap; /* テキストを折り返さない */
+  }
+  .settings-sidebar .sidebar-footer {
+    display: none; /* モバイルではフッター非表示も検討 */
+  }
+
+  .settings-content {
+    margin-left: 0;
+    padding: 1.5rem;
+  }
+  .settings-card {
+    margin: 1rem auto; /* モバイルでのマージン調整 */
+    padding: 1.5rem;
+  }
+  .settings-card h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .button-group {
+    flex-direction: column-reverse; /* ボタンを縦積みにし、保存を上に */
+    gap: 0.75rem;
+  }
+  .primary-button, .secondary-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+    .settings-content {
+        padding: 1rem;
+    }
+    .settings-card {
+        padding: 1rem;
+        border-radius: 12px;
+    }
+    .avatar-preview {
+        width: 100px;
+        height: 100px;
+    }
+    .form-label {
+        font-size: 0.9rem;
+    }
+    .custom-form-control {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+}
+
+
+/* ───────── スマホ版のみ「設定」テキストを中央揃え ───────── */
+@media (max-width: 576px) {
+  .settings-sidebar .sidebar-header h3 {
+    /* 変更前（左寄せ・何も書かれていない状態） */
+    /* text-align: left; */
+
+    /* 変更後：中央揃え */
+    text-align: center;
+    width: 100%;   /* 幅いっぱいにして中央寄せを有効化 */
+  }
+}

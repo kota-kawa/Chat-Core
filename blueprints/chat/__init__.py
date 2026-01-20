@@ -1,16 +1,15 @@
 from fastapi import APIRouter
-from datetime import datetime
 import uuid
+
+from services.ephemeral_store import EphemeralChatStore
 
 chat_bp = APIRouter()
 
 # エフェメラルチャットの有効期限（秒）
 EXPIRATION_TIME = 3600  # 1時間
 
-# 未ログインユーザー用のエフェメラルチャットをサーバ側に保存する辞書
-# キー: セッションID (get_session_id() で取得)
-# 値: { room_id1: {"title": ..., "messages": [...], "created_at": datetime}, room_id2: ... }
-ephemeral_chats = {}
+# 未ログインユーザー用のエフェメラルチャットを保持するストア
+ephemeral_store = EphemeralChatStore(EXPIRATION_TIME)
 
 
 # セッションIDを取得するヘルパー関数
@@ -22,20 +21,7 @@ def get_session_id(session: dict) -> str:
 
 # エフェメラルチャットのデータをクリーンアップする関数
 def cleanup_ephemeral_chats():
-    now = datetime.now()
-    sids_to_delete = []
-    for sid, rooms in ephemeral_chats.items():
-        room_ids_to_delete = []
-        for room_id, room_data in rooms.items():
-            created_at = room_data.get("created_at")
-            if created_at and (now - created_at).total_seconds() > EXPIRATION_TIME:
-                room_ids_to_delete.append(room_id)
-        for room_id in room_ids_to_delete:
-            del rooms[room_id]
-        if not rooms:
-            sids_to_delete.append(sid)
-    for sid in sids_to_delete:
-        del ephemeral_chats[sid]
+    ephemeral_store.cleanup()
 
 
 # ルートハンドラを登録
@@ -45,6 +31,6 @@ __all__ = [
     "chat_bp",
     "cleanup_ephemeral_chats",
     "get_session_id",
-    "ephemeral_chats",
+    "ephemeral_store",
     "EXPIRATION_TIME",
 ]

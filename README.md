@@ -1,7 +1,7 @@
 # Strike_Chat
 
 ## 概要
-Strike_Chat は FastAPI で実装されたシンプルな AI チャットアプリケーションです。メールアドレスによる認証機構を備え、Groq や Google Gemini API と連携してチャットを行います。MySQL をバックエンドに使用し、プロンプト共有機能も提供しています。
+Strike_Chat は FastAPI で実装されたシンプルな AI チャットアプリケーションです。メールアドレスによる認証機構を備え、Groq や Google Gemini API と連携してチャットを行います。PostgreSQL をバックエンドに使用し、プロンプト共有機能も提供しています。
 
 ## 主な機能
 - **メールアドレス認証**: 6 桁のコードをメール送信し、本人確認を行います。
@@ -19,7 +19,8 @@ Strike_Chat は FastAPI で実装されたシンプルな AI チャットアプ�
 - `Gemini_API_KEY` : Google Generative AI の API キー
 - `FLASK_SECRET_KEY` : セッションで使用する秘密鍵
 - `SEND_ADDRESS` / `SEND_PASSWORD` : 認証メール送信用の Gmail アカウント
-- `MYSQL_HOST` / `MYSQL_USER` / `MYSQL_PASSWORD` / `MYSQL_DATABASE` : MySQL 接続情報
+- `POSTGRES_HOST` / `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` : PostgreSQL 接続情報
+- `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` / `REDIS_PASSWORD` (任意): Redis 接続情報
 - `FLASK_ENV` : `production` の場合は SameSite/secure 設定を強化します
 
 Docker Compose を利用する場合は `.env` ファイルに記述するか、`docker-compose.yml` の `environment` セクションを編集します。

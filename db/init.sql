@@ -1,16 +1,13 @@
--- utf8mb4 を利用するよう明示
-SET NAMES utf8mb4;
-
 -- usersテーブル
 CREATE TABLE users (
-    id          INT             AUTO_INCREMENT PRIMARY KEY,
+    id          SERIAL PRIMARY KEY,
     email       VARCHAR(255)    NOT NULL UNIQUE,
     username    VARCHAR(255)    NOT NULL DEFAULT 'トマト',
     bio         TEXT            NULL,
     avatar_url  VARCHAR(255)    NOT NULL DEFAULT '/static/user-icon.png',
     is_verified BOOLEAN         DEFAULT FALSE,
     created_at  TIMESTAMP       DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- chat_roomsテーブル
 CREATE TABLE chat_rooms (
@@ -23,18 +20,16 @@ CREATE TABLE chat_rooms (
 
 -- chat_historyテーブル
 CREATE TABLE chat_history (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     chat_room_id VARCHAR(255),
     message TEXT,
-    sender ENUM('user','assistant'),
+    sender VARCHAR(20) CHECK (sender IN ('user','assistant')),
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
-
 -- 個人ユーザーが管理するプロンプトとfew shot
 CREATE TABLE task_with_examples (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   -- 追加: タスクの所有ユーザー
   user_id INT NULL,
   name VARCHAR(255) NOT NULL,
@@ -42,21 +37,20 @@ CREATE TABLE task_with_examples (
   input_examples TEXT,
   output_examples TEXT,
   display_order INT DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   -- 外部キー制約
   CONSTRAINT fk_task_user
     FOREIGN KEY (user_id)
     REFERENCES users(id)
     ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
+);
 
 -- プロンプト共有のためのテーブル
 CREATE TABLE IF NOT EXISTS prompts (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,  -- ユーザーIDを追加
-    is_public TINYINT(1) NOT NULL DEFAULT 0,  -- 0: 非公開、1: 公開（Booleanと同様の扱い）
+    is_public BOOLEAN NOT NULL DEFAULT FALSE,
     title VARCHAR(255) NOT NULL,
     category VARCHAR(50) NOT NULL,
     content TEXT NOT NULL,
@@ -65,14 +59,11 @@ CREATE TABLE IF NOT EXISTS prompts (
     output_examples TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci;
-
+);
 
 -- プロンプトリストを管理するテーブル
 CREATE TABLE IF NOT EXISTS prompt_list_entries (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
     prompt_id INT NULL,
     title VARCHAR(255) NOT NULL,
@@ -81,8 +72,7 @@ CREATE TABLE IF NOT EXISTS prompt_list_entries (
     input_examples TEXT,
     output_examples TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_prompt_list_user_prompt (user_id, prompt_id),
-    KEY idx_prompt_list_user_title (user_id, title(191)),
+    UNIQUE (user_id, prompt_id),
     CONSTRAINT fk_prompt_list_user
         FOREIGN KEY (user_id)
         REFERENCES users(id)
@@ -91,31 +81,47 @@ CREATE TABLE IF NOT EXISTS prompt_list_entries (
         FOREIGN KEY (prompt_id)
         REFERENCES prompts(id)
         ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
+CREATE INDEX idx_prompt_list_user_title
+    ON prompt_list_entries (user_id, title);
 
 -- AIメモを保存するためのテーブル
 CREATE TABLE IF NOT EXISTS memo_entries (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     user_id INT NULL,
-    input_content LONGTEXT NOT NULL,
-    ai_response LONGTEXT NOT NULL,
+    input_content TEXT NOT NULL,
+    ai_response TEXT NOT NULL,
     title VARCHAR(255) NOT NULL,
     tags VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_memo_user
         FOREIGN KEY (user_id)
         REFERENCES users(id)
         ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = CURRENT_TIMESTAMP;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
+CREATE TRIGGER trg_task_with_examples_updated_at
+BEFORE UPDATE ON task_with_examples
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
 
-
+CREATE TRIGGER trg_memo_entries_updated_at
+BEFORE UPDATE ON memo_entries
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
 
 -- メール作成
-INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
+INSERT INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
   '📧 メール作成',
   '状況や作業環境をもとに、メールを作成して。',
   '新製品リリースの案内のメール作成をしたい。',
@@ -124,7 +130,7 @@ INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, ou
 );
 
 -- アイデア発想
-INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
+INSERT INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
   '💡 アイデア発想',
   '独創的なアイデアの発想をしてほしい。',
   '店舗の集客を増やすためのアイデアを考えて。',
@@ -133,7 +139,7 @@ INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, ou
 );
 
 -- 要約
-INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
+INSERT INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
   '📄 要約',
   '状況・作業環境に入力された文を要約して。',
   '長編小説のストーリーを簡潔にまとめたいので、要約して。',
@@ -142,7 +148,7 @@ INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, ou
 );
 
 -- 問題解決
-INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
+INSERT INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
   '🛠️ 問題解決',
   '問題解決に協力してほしい。',
   '人事トラブル（メンバー同士の衝突）の問題解決をしたい。',
@@ -151,7 +157,7 @@ INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, ou
 );
 
 -- 問題へ回答
-INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
+INSERT INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
   '📋 問題へ回答',
   '問題へ回答するのを手伝ってほしい。',
   '物理の問題：自由落下の公式を教えてください。',
@@ -160,7 +166,7 @@ INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, ou
 );
 
 -- 情報提供
-INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
+INSERT INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
   'ℹ️ 情報提供',
   '状況・作業環境に入力されたものについての情報提供をしてほしい。',
   '新型コロナウイルスの最新情報が知りたい。',
@@ -169,7 +175,7 @@ INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, ou
 );
 
 -- レシピ
-INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
+INSERT INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
   '🍳 レシピ',
   '状況・作業環境に入力された情報をもとにレシピを考えて。',
   '野菜がメインで、ヘルシーな朝食のレシピが知りたい。',
@@ -178,7 +184,7 @@ INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, ou
 );
 
 -- 旅行計画
-INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
+INSERT INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
   '✈️ 旅行計画',
   '状況・作業環境の内容をもとに、旅行計画を立ててほしい。',
   '国内旅行、2泊3日、温泉と自然を満喫したいので、旅行計画を考えて。',
@@ -187,7 +193,7 @@ INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, ou
 );
 
 -- 悩み相談
-INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
+INSERT INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
   '💬 悩み相談',
   '悩み相談にのってほしい。',
   '恋愛で告白する勇気が出ないです。',
@@ -196,7 +202,7 @@ INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, ou
 );
 
 -- メッセージへの返答
-INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
+INSERT INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
   '📨 メッセージへの返答',
   '状況・作業環境の内容を踏まえて、メッセージへの返答を一緒に考えてほしい。',
   '上司から「すぐに会議室に来て」とLINEで連絡がきた場合にどのようにメッセージに返答すればよい？',
@@ -205,7 +211,7 @@ INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, ou
 );
 
 -- デート計画
-INSERT IGNORE INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
+INSERT INTO task_with_examples (name, prompt_template, input_examples, output_examples, display_order) VALUES (
   '💑 デート計画',
   '状況・作業環境の内容を踏まえて、デートの計画を立ててほしい。',
   '花火大会に行く予定、夜メインで楽しみたいので、デート計画を立てて。',

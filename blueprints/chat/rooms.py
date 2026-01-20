@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date
 
 from fastapi import Request
 
@@ -10,7 +10,7 @@ from services.chat_service import (
 
 from services.web import get_json, jsonify
 
-from . import chat_bp, cleanup_ephemeral_chats, ephemeral_chats, get_session_id
+from . import chat_bp, cleanup_ephemeral_chats, ephemeral_store, get_session_id
 
 
 @chat_bp.post("/api/new_chat_room", name="chat.new_chat_room")
@@ -48,12 +48,8 @@ async def new_chat_room(request: Request):
             return jsonify({"error": "1日10回までです"}, status_code=403)
         session["free_chats_count"] = session.get("free_chats_count", 0) + 1
 
-        # セッションIDをキーにして、サーバ側メモリに保持
         sid = get_session_id(session)
-        if sid not in ephemeral_chats:
-            ephemeral_chats[sid] = {}
-        # ルーム作成時に現在時刻も記録
-        ephemeral_chats[sid][room_id] = {"title": title, "messages": [], "created_at": datetime.now()}
+        ephemeral_store.create_room(sid, room_id, title)
 
         return jsonify(
             {
@@ -135,14 +131,9 @@ async def delete_chat_room(request: Request):
             conn.close()
     else:
         sid = get_session_id(session)
-        if sid not in ephemeral_chats:
+        if not ephemeral_store.delete_room(sid, room_id):
             return jsonify({"error": "該当ルームが存在しません"}, status_code=404)
-
-        if room_id in ephemeral_chats[sid]:
-            del ephemeral_chats[sid][room_id]
-            return jsonify({"message": "エフェメラルチャットルームを削除しました"}, status_code=200)
-        else:
-            return jsonify({"error": "該当ルームが存在しません"}, status_code=404)
+        return jsonify({"message": "エフェメラルチャットルームを削除しました"}, status_code=200)
 
 
 @chat_bp.post("/api/rename_chat_room", name="chat.rename_chat_room")
@@ -175,8 +166,6 @@ async def rename_chat_room(request: Request):
             return jsonify({"error": str(e)}, status_code=500)
     else:
         sid = get_session_id(session)
-        if sid not in ephemeral_chats or room_id not in ephemeral_chats[sid]:
+        if not ephemeral_store.rename_room(sid, room_id, new_title):
             return jsonify({"error": "該当ルームが存在しません"}, status_code=404)
-
-        ephemeral_chats[sid][room_id]["title"] = new_title
         return jsonify({"message": "ルーム名を変更しました"}, status_code=200)

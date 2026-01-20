@@ -5,11 +5,11 @@
 - `blueprints/` contains feature modules (auth, chat, memo, prompt_share, admin) and their routes/templates/static assets.
 - `services/` holds shared integrations (DB, LLM, email, user helpers).
 - `templates/` and `static/` are global HTML/CSS/JS assets; blueprint-specific assets live under each blueprint’s `templates/` and `static/` folders.
-- `db/init.sql` defines the initial MySQL schema.
+- `db/init.sql` defines the initial PostgreSQL schema.
 - `tests/` contains unit tests (currently `unittest`).
 
 ## Build, Test, and Development Commands
-- `docker-compose up --build` builds and runs the full stack (FastAPI + MySQL) via Docker.
+- `docker-compose up --build` builds and runs the full stack (FastAPI + PostgreSQL) via Docker.
 - `pip install -r requirements.txt` installs Python dependencies for local dev.
 - `python app.py` starts the FastAPI app locally (ensure required env vars are set).
 - `python -m unittest` runs the test suite; target a file with `python -m unittest tests.test_edit_default_task`.
@@ -30,5 +30,5 @@
 - PRs should include: a clear description, linked issue (if any), test notes (commands + results), and screenshots or screen captures for UI changes.
 
 ## Security & Configuration Tips
-- Required environment variables include `GROQ_API_KEY`, `Gemini_API_KEY`, `FLASK_SECRET_KEY`, email credentials, and MySQL settings. Keep secrets in environment variables or `.env` and out of git.
+- Required environment variables include `GROQ_API_KEY`, `Gemini_API_KEY`, `FLASK_SECRET_KEY`, email credentials, PostgreSQL settings, and Redis settings (if using Redis auth). Keep secrets in environment variables or `.env` and out of git.
 - Disable `FLASK_DEBUG` in production and review Docker defaults before deploying.

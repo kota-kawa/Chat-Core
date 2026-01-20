@@ -1,0 +1,218 @@
+/* setup.css
+  最初の画面（フォーム、モーダル、タスク選択ヘッダー）のレイアウトと入力要素スタイル
+*/
+#setup-container {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 560px;
+  backdrop-filter: blur(10px);
+  animation: slideUp 0.5s ease-out;
+}
+
+.setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  position: relative;
+}
+
+.form-label {
+  position: absolute;
+  top: -10px;
+  left: 15px;
+  background: white;
+  padding: 0 5px;
+  font-size: 0.9rem;
+  color: var(--primary-color);
+}
+
+.setup-form textarea,
+.setup-form select {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.setup-form textarea:focus,
+.setup-form select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(25,195,125,0.2);
+  outline: none;
+}
+
+/* ２列レイアウトの設定（.task-wrapper にサイズ指定） */
+.task-selection {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+}
+
+.task-selection .task-wrapper {
+  flex: 0 0 calc(50% - 0.5rem);
+  max-width: calc(50% - 0.5rem);
+  display: flex;
+}
+
+
+/* カード本体のスタイル */
+.prompt-card {
+  background: white;
+  padding: 1.2rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #e0e0e0;
+  width: 100%;
+  text-align: center;      /* すべて中央揃え */
+  position: relative;      /* 絶対配置の子要素の基準 */
+  overflow: visible;
+  min-height: 70px;        /* 最小高さを設定 */
+  font-size: 1.05rem;      /* フォントサイズを少し大きく */
+}
+
+.prompt-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  border-color: var(--primary-color);
+}
+
+
+
+
+
+
+
+/* 入出力例コンテナ：カード内で絶対配置 */
+.io-container {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -30px;              /* カード上部から少し上に配置 */
+  padding: 0.5rem;
+  background-color: #f7f7f7;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  z-index: 1000;           /* 以前の 100 から 1000 に変更 */
+  width: calc(100% - 1rem);
+  text-align: center;
+  will-change: transform;  /* 再描画をスムーズに */
+}
+
+/* トグルボタンを右寄せするために使うカードヘッダー */
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;  /* 左: タスク名, 右: ボタン */
+  width: 100%;
+}
+
+
+
+/* モーダルの全体（背景部分含む） */
+#io-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  display: none; /* 初期は非表示 */
+}
+
+/* モーダル内のコンテンツ領域 */
+.io-modal-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #edf6f1;
+  border-radius: 8px;
+  padding: 1.5rem;
+  max-width: 480px;
+  width: 90%;
+  text-align: center;
+  max-height: 80vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-wrap: break-word;
+}
+
+
+
+
+/* タスク選択ヘッダーを横並びに */
+.task-selection-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;       /* ボタン間の隙間 */
+  flex-wrap: nowrap; /* 折り返し禁止 */
+}
+
+/* 「新しいプロンプトを投稿」ボタンを左側のテキストから右へ押し出す */
+.task-selection-header #openNewPromptModal {
+  margin-left: auto;
+}
+
+/* タスク編集ボタンとの間に適度な隙間を */
+.task-selection-header #edit-task-order-btn {
+  margin-left: 0.5rem;
+}
+
+.task-selection-header p#task-selection-text {
+  flex: 1;           /* テキスト部分を伸縮させてボタンを右側に押し出す */
+  margin: 0;         /* デフォルトの余白をリセット */
+}
+
+/* ===== Mobile Responsive Styles ===== */
+
+/* タブレット表示 (768px以下) */
+@media (max-width: 768px) {
+  .prompt-card {
+    font-size: 1rem;      /* フォントサイズを少し小さく */
+    min-height: 80px;     /* タブレットでは少し高く */
+  }
+}
+
+/* スマホ表示 (576px以下) */
+@media (max-width: 576px) {
+  .task-selection {
+    gap: 0.8rem;          /* カード間の隙間を狭く */
+  }
+
+  .task-selection .task-wrapper {
+    flex: 1 1 100%;       /* スマホでは1列表示 */
+    max-width: 100%;
+  }
+  
+  .prompt-card {
+    height: 100px;        /* 固定の高さに設定 */
+    min-height: 100px;    /* 最小高さも同じに */
+    max-height: 100px;    /* 最大高さも同じに設定して一定に */
+    font-size: 1.1rem;   /* スマホでは文字サイズを小さく */
+    padding: 1rem;       /* パディングを少し小さく */
+    overflow: hidden;    /* はみ出したコンテンツを隠す */
+    display: flex;       /* flexレイアウトでセンタリング */
+    align-items: center; /* 縦方向中央揃え */
+    justify-content: center; /* 横方向中央揃え */
+    text-overflow: ellipsis; /* 長いテキストは省略記号で表示 */
+    white-space: nowrap; /* 改行を禁止してテキストを1行に */
+  }
+  
+  /* スマホでの入出力例コンテナも調整 */
+  .io-container {
+    font-size: 0.8rem;   /* 入出力例のフォントも小さく */
+    width: calc(100% - 0.5rem); /* 幅も少し小さく */
+  }
+}

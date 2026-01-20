@@ -96,10 +96,12 @@ async def create_prompt(request: Request):
         query = """
             INSERT INTO prompts (title, category, content, author, input_examples, output_examples, user_id, is_public, created_at)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
+            RETURNING id
         """
         cursor.execute(query, (title, category, content, author, input_examples, output_examples, user_id, is_public))
         conn.commit()
-        prompt_id = cursor.lastrowid
+        row = cursor.fetchone()
+        prompt_id = row[0] if row else None
         return jsonify({'message': 'プロンプトが作成されました。', 'prompt_id': prompt_id}, status_code=201)
     except Exception as e:
         return jsonify({'error': str(e)}, status_code=500)
@@ -142,11 +144,14 @@ async def add_bookmark(request: Request):
             INSERT INTO task_with_examples
                 (user_id, name, prompt_template, input_examples, output_examples)
             VALUES (%s,      %s,   %s,               %s,             %s)
+            RETURNING id
             """,
             (user_id, title, content, input_examples, output_examples)
         )
         conn.commit()
-        return jsonify({'message': 'ブックマークが保存されました。', 'saved_id': cursor.lastrowid}, status_code=201)
+        row = cursor.fetchone()
+        saved_id = row[0] if row else None
+        return jsonify({'message': 'ブックマークが保存されました。', 'saved_id': saved_id}, status_code=201)
     except Exception as e:
         return jsonify({'error': str(e)}, status_code=500)
     finally:
@@ -234,6 +239,7 @@ async def add_prompt_to_list(request: Request):
             INSERT INTO prompt_list_entries
                 (user_id, prompt_id, title, category, content, input_examples, output_examples)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
             """,
             (
                 user_id,
@@ -246,7 +252,9 @@ async def add_prompt_to_list(request: Request):
             ),
         )
         conn.commit()
-        return jsonify({'message': 'プロンプトリストに保存しました。', 'saved_id': cursor.lastrowid}, status_code=201)
+        row = cursor.fetchone()
+        saved_id = row[0] if row else None
+        return jsonify({'message': 'プロンプトリストに保存しました。', 'saved_id': saved_id}, status_code=201)
     except Exception as e:
         conn.rollback()
         return jsonify({'error': str(e)}, status_code=500)

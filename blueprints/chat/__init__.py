@@ -1,8 +1,8 @@
-from flask import Blueprint, session
+from fastapi import APIRouter
 from datetime import datetime
 import uuid
 
-chat_bp = Blueprint('chat', __name__)
+chat_bp = APIRouter()
 
 # エフェメラルチャットの有効期限（秒）
 EXPIRATION_TIME = 3600  # 1時間
@@ -14,7 +14,7 @@ ephemeral_chats = {}
 
 
 # セッションIDを取得するヘルパー関数
-def get_session_id():
+def get_session_id(session: dict) -> str:
     if "sid" not in session:
         session["sid"] = str(uuid.uuid4())
     return session["sid"]

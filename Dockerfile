@@ -21,16 +21,11 @@ RUN chmod +x /wait-for-it.sh
 # ----
 # COPY . .
 
-# Flask の環境変数を設定
-ENV FLASK_APP=app.py
-ENV FLASK_RUN_HOST=0.0.0.0
-ENV FLASK_ENV=development  
-# デバッグモード（自動リロード）を有効にする
-ENV FLASK_DEBUG=1          
-# 同上
+# FastAPI の起動設定
+ENV PORT=5004
 
 # アプリケーションの起動コマンド（MySQLが準備できるまで待機してから実行）
 # --reload を付けてホットリロードを有効にする
-CMD ["./wait-for-it.sh", "db:3306", "--", "flask", "run", "--port=5004", "--reload"]
+CMD ["./wait-for-it.sh", "db:3306", "--", "uvicorn", "app:app", "--host=0.0.0.0", "--port=5004", "--reload"]
 
 

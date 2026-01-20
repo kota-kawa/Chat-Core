@@ -1,17 +1,12 @@
 from functools import wraps
 from typing import Optional
+import inspect
 
-from flask import (
-    flash,
-    redirect,
-    render_template,
-    request,
-    session,
-    url_for,
-)
-from mysql.connector import Error
+from fastapi import Request
+from starlette.responses import RedirectResponse
 
-from services.db import get_db_connection
+from services.db import Error, get_db_connection
+from services.web import flash, render_template, url_for
 
 from . import admin_bp
 
@@ -24,35 +19,50 @@ def _quote_identifier(name: str) -> str:
 
 def admin_required(view_func):
     @wraps(view_func)
-    def wrapper(*args, **kwargs):
-        if not session.get("is_admin"):
-            next_url = request.url
-            return redirect(url_for("admin.login", next=next_url))
+    async def wrapper(*args, **kwargs):
+        request = kwargs.get("request")
+        if request is None:
+            for arg in args:
+                if isinstance(arg, Request):
+                    request = arg
+                    break
+        if request is None:
+            raise RuntimeError("Request is required for admin routes")
+
+        if not request.session.get("is_admin"):
+            next_url = str(request.url)
+            return RedirectResponse(
+                url_for(request, "admin.login", next=next_url), status_code=302
+            )
+
+        if inspect.iscoroutinefunction(view_func):
+            return await view_func(*args, **kwargs)
         return view_func(*args, **kwargs)
 
     return wrapper
 
 
-@admin_bp.route("/login", methods=["GET", "POST"])
-def login():
+@admin_bp.api_route("/login", methods=["GET", "POST"], name="admin.login")
+async def login(request: Request):
     if request.method == "POST":
-        password = request.form.get("password", "")
-        next_url = request.form.get("next") or url_for("admin.dashboard")
+        form = await request.form()
+        password = form.get("password", "")
+        next_url = form.get("next") or url_for(request, "admin.dashboard")
         if password == ADMIN_PASSWORD:
-            session["is_admin"] = True
-            flash("Logged in as administrator.", "success")
-            return redirect(next_url)
-        flash("Invalid password.", "error")
-    next_url = request.args.get("next", url_for("admin.dashboard"))
-    return render_template("admin_login.html", next_url=next_url)
+            request.session["is_admin"] = True
+            flash(request, "Logged in as administrator.", "success")
+            return RedirectResponse(next_url, status_code=302)
+        flash(request, "Invalid password.", "error")
+    next_url = request.query_params.get("next") or url_for(request, "admin.dashboard")
+    return render_template(request, "admin_login.html", next_url=next_url)
 
 
-@admin_bp.route("/logout")
+@admin_bp.get("/logout", name="admin.logout")
 @admin_required
-def logout():
-    session.pop("is_admin", None)
-    flash("Logged out of administrator session.", "success")
-    return redirect(url_for("admin.login"))
+async def logout(request: Request):
+    request.session.pop("is_admin", None)
+    flash(request, "Logged out of administrator session.", "success")
+    return RedirectResponse(url_for(request, "admin.login"), status_code=302)
 
 
 def _fetch_tables(cursor) -> list[str]:
@@ -85,10 +95,10 @@ def _fetch_table_preview(cursor, table_name: str) -> tuple[list[str], list[tuple
     return column_names, rows
 
 
-@admin_bp.route("/", methods=["GET"])
+@admin_bp.get("/", name="admin.dashboard")
 @admin_required
-def dashboard():
-    selected_table: Optional[str] = request.args.get("table")
+async def dashboard(request: Request):
+    selected_table: Optional[str] = request.query_params.get("table")
     tables: list[str] = []
     column_names: list[str] = []
     column_details: list[dict[str, object]] = []
@@ -109,7 +119,7 @@ def dashboard():
                 column_details = _fetch_table_columns(cursor, selected_table)
                 existing_columns = [column["name"] for column in column_details]
             else:
-                flash("The selected table does not exist.", "error")
+                flash(request, "The selected table does not exist.", "error")
                 selected_table = None
     except Error as exc:  # pragma: no cover - defensive logging
         error = str(exc)
@@ -120,6 +130,7 @@ def dashboard():
             connection.close()
 
     return render_template(
+        request,
         "admin_dashboard.html",
         tables=tables,
         selected_table=selected_table,
@@ -131,22 +142,23 @@ def dashboard():
     )
 
 
-@admin_bp.route("/create-table", methods=["POST"])
+@admin_bp.post("/create-table", name="admin.create_table")
 @admin_required
-def create_table():
-    table_name = request.form.get("table_name", "").strip()
-    column_definitions = request.form.get("columns", "").strip()
-    table_options = request.form.get("table_options", "").strip()
+async def create_table(request: Request):
+    form = await request.form()
+    table_name = form.get("table_name", "").strip()
+    column_definitions = form.get("columns", "").strip()
+    table_options = form.get("table_options", "").strip()
 
     if not table_name or not column_definitions:
-        flash("Table name and column definition are required.", "error")
-        return redirect(url_for("admin.dashboard"))
+        flash(request, "Table name and column definition are required.", "error")
+        return RedirectResponse(url_for(request, "admin.dashboard"), status_code=302)
 
     if table_options:
         normalized_options = table_options.rstrip(";").strip()
         if ";" in normalized_options:
-            flash("テーブルオプションに複数の文を含めることはできません。", "error")
-            return redirect(url_for("admin.dashboard"))
+            flash(request, "テーブルオプションに複数の文を含めることはできません。", "error")
+            return RedirectResponse(url_for(request, "admin.dashboard"), status_code=302)
         table_options = normalized_options
 
     connection = None
@@ -159,26 +171,27 @@ def create_table():
             create_sql = f"{create_sql} {table_options}"
         cursor.execute(create_sql)
         connection.commit()
-        flash(f"Table '{table_name}' created successfully.", "success")
+        flash(request, f"Table '{table_name}' created successfully.", "success")
     except Error as exc:
-        flash(f"Failed to create table: {exc}", "error")
+        flash(request, f"Failed to create table: {exc}", "error")
     finally:
         if cursor is not None:
             cursor.close()
         if connection is not None:
             connection.close()
 
-    return redirect(url_for("admin.dashboard"))
+    return RedirectResponse(url_for(request, "admin.dashboard"), status_code=302)
 
 
-@admin_bp.route("/delete-table", methods=["POST"])
+@admin_bp.post("/delete-table", name="admin.delete_table")
 @admin_required
-def delete_table():
-    table_name = request.form.get("table_name", "").strip()
+async def delete_table(request: Request):
+    form = await request.form()
+    table_name = form.get("table_name", "").strip()
 
     if not table_name:
-        flash("Table name is required for deletion.", "error")
-        return redirect(url_for("admin.dashboard"))
+        flash(request, "Table name is required for deletion.", "error")
+        return RedirectResponse(url_for(request, "admin.dashboard"), status_code=302)
 
     connection = None
     cursor = None
@@ -187,32 +200,35 @@ def delete_table():
         cursor = connection.cursor()
         existing_tables = _fetch_tables(cursor)
         if table_name not in existing_tables:
-            flash(f"Table '{table_name}' does not exist.", "error")
-            return redirect(url_for("admin.dashboard"))
+            flash(request, f"Table '{table_name}' does not exist.", "error")
+            return RedirectResponse(url_for(request, "admin.dashboard"), status_code=302)
         cursor.execute(f"DROP TABLE {_quote_identifier(table_name)}")
         connection.commit()
-        flash(f"Table '{table_name}' deleted successfully.", "success")
+        flash(request, f"Table '{table_name}' deleted successfully.", "success")
     except Error as exc:
-        flash(f"Failed to delete table: {exc}", "error")
+        flash(request, f"Failed to delete table: {exc}", "error")
     finally:
         if cursor is not None:
             cursor.close()
         if connection is not None:
             connection.close()
 
-    return redirect(url_for("admin.dashboard"))
+    return RedirectResponse(url_for(request, "admin.dashboard"), status_code=302)
 
 
-@admin_bp.route("/add-column", methods=["POST"])
+@admin_bp.post("/add-column", name="admin.add_column")
 @admin_required
-def add_column():
-    table_name = request.form.get("table_name", "").strip()
-    column_name = request.form.get("column_name", "").strip()
-    column_type = request.form.get("column_type", "").strip()
+async def add_column(request: Request):
+    form = await request.form()
+    table_name = form.get("table_name", "").strip()
+    column_name = form.get("column_name", "").strip()
+    column_type = form.get("column_type", "").strip()
 
     if not table_name or not column_name or not column_type:
-        flash("テーブル名、カラム名、カラム定義は必須です。", "error")
-        return redirect(url_for("admin.dashboard", table=table_name))
+        flash(request, "テーブル名、カラム名、カラム定義は必須です。", "error")
+        return RedirectResponse(
+            url_for(request, "admin.dashboard", table=table_name), status_code=302
+        )
 
     connection = None
     cursor = None
@@ -221,40 +237,47 @@ def add_column():
         cursor = connection.cursor()
         tables = _fetch_tables(cursor)
         if table_name not in tables:
-            flash(f"テーブル '{table_name}' は存在しません。", "error")
-            return redirect(url_for("admin.dashboard"))
+            flash(request, f"テーブル '{table_name}' は存在しません。", "error")
+            return RedirectResponse(url_for(request, "admin.dashboard"), status_code=302)
 
         existing_columns = [column["name"] for column in _fetch_table_columns(cursor, table_name)]
         normalized_existing_columns = {name.lower() for name in existing_columns}
         if column_name.lower() in normalized_existing_columns:
-            flash(f"カラム '{column_name}' は既に存在します。", "error")
-            return redirect(url_for("admin.dashboard", table=table_name))
+            flash(request, f"カラム '{column_name}' は既に存在します。", "error")
+            return RedirectResponse(
+                url_for(request, "admin.dashboard", table=table_name), status_code=302
+            )
 
         cursor.execute(
             f"ALTER TABLE {_quote_identifier(table_name)} ADD COLUMN {_quote_identifier(column_name)} {column_type}"
         )
         connection.commit()
-        flash(f"カラム '{column_name}' をテーブル '{table_name}' に追加しました。", "success")
+        flash(request, f"カラム '{column_name}' をテーブル '{table_name}' に追加しました。", "success")
     except Error as exc:
-        flash(f"カラムの追加に失敗しました: {exc}", "error")
+        flash(request, f"カラムの追加に失敗しました: {exc}", "error")
     finally:
         if cursor is not None:
             cursor.close()
         if connection is not None:
             connection.close()
 
-    return redirect(url_for("admin.dashboard", table=table_name))
+    return RedirectResponse(
+        url_for(request, "admin.dashboard", table=table_name), status_code=302
+    )
 
 
-@admin_bp.route("/delete-column", methods=["POST"])
+@admin_bp.post("/delete-column", name="admin.delete_column")
 @admin_required
-def delete_column():
-    table_name = request.form.get("table_name", "").strip()
-    column_name = request.form.get("column_name", "").strip()
+async def delete_column(request: Request):
+    form = await request.form()
+    table_name = form.get("table_name", "").strip()
+    column_name = form.get("column_name", "").strip()
 
     if not table_name or not column_name:
-        flash("テーブル名とカラム名は必須です。", "error")
-        return redirect(url_for("admin.dashboard", table=table_name))
+        flash(request, "テーブル名とカラム名は必須です。", "error")
+        return RedirectResponse(
+            url_for(request, "admin.dashboard", table=table_name), status_code=302
+        )
 
     connection = None
     cursor = None
@@ -263,32 +286,38 @@ def delete_column():
         cursor = connection.cursor()
         tables = _fetch_tables(cursor)
         if table_name not in tables:
-            flash(f"テーブル '{table_name}' は存在しません。", "error")
-            return redirect(url_for("admin.dashboard"))
+            flash(request, f"テーブル '{table_name}' は存在しません。", "error")
+            return RedirectResponse(url_for(request, "admin.dashboard"), status_code=302)
 
         columns = _fetch_table_columns(cursor, table_name)
         existing_columns = [column["name"] for column in columns]
         column_lookup = {name.lower(): name for name in existing_columns}
         target_column = column_lookup.get(column_name.lower())
         if target_column is None:
-            flash(f"カラム '{column_name}' は存在しません。", "error")
-            return redirect(url_for("admin.dashboard", table=table_name))
+            flash(request, f"カラム '{column_name}' は存在しません。", "error")
+            return RedirectResponse(
+                url_for(request, "admin.dashboard", table=table_name), status_code=302
+            )
 
         if len(existing_columns) <= 1:
-            flash("テーブルには少なくとも1つのカラムが必要です。", "error")
-            return redirect(url_for("admin.dashboard", table=table_name))
+            flash(request, "テーブルには少なくとも1つのカラムが必要です。", "error")
+            return RedirectResponse(
+                url_for(request, "admin.dashboard", table=table_name), status_code=302
+            )
 
         cursor.execute(
             f"ALTER TABLE {_quote_identifier(table_name)} DROP COLUMN {_quote_identifier(target_column)}"
         )
         connection.commit()
-        flash(f"カラム '{target_column}' をテーブル '{table_name}' から削除しました。", "success")
+        flash(request, f"カラム '{target_column}' をテーブル '{table_name}' から削除しました。", "success")
     except Error as exc:
-        flash(f"カラムの削除に失敗しました: {exc}", "error")
+        flash(request, f"カラムの削除に失敗しました: {exc}", "error")
     finally:
         if cursor is not None:
             cursor.close()
         if connection is not None:
             connection.close()
 
-    return redirect(url_for("admin.dashboard", table=table_name))
+    return RedirectResponse(
+        url_for(request, "admin.dashboard", table=table_name), status_code=302
+    )

@@ -1,14 +1,16 @@
-from flask import render_template
+from fastapi import Request
+
+from services.web import render_template
 
 from . import chat_bp, cleanup_ephemeral_chats
 
 
-@chat_bp.route("/")
-def index():
+@chat_bp.get("/", name="chat.index")
+async def index(request: Request):
     cleanup_ephemeral_chats()
-    return render_template("home.html")
+    return render_template(request, "home.html")
 
 
-@chat_bp.route("/settings")
-def settings():
-    return render_template("user_settings.html")
+@chat_bp.get("/settings", name="chat.settings")
+async def settings(request: Request):
+    return render_template(request, "user_settings.html")

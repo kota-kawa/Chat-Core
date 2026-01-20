@@ -1,15 +1,18 @@
 # search_module.py
-from flask import Blueprint, request, jsonify
+from fastapi import APIRouter, Request
+
 from services.db import get_db_connection  # 既存の DB 接続関数を利用
+from services.web import jsonify
 
-search_bp = Blueprint('search', __name__, url_prefix='/search')
+search_bp = APIRouter(prefix="/search")
 
-@search_bp.route('/prompts', methods=['GET'])
-def search_prompts():
+
+@search_bp.get('/prompts', name="search.search_prompts")
+async def search_prompts(request: Request):
     """
     クエリパラメータ q に基づいてプロンプトを検索するエンドポイント
     """
-    query = request.args.get('q', '').strip()
+    query = request.query_params.get('q', '').strip()
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
@@ -46,7 +49,7 @@ def search_prompts():
             prompts = []
         return jsonify({'prompts': prompts})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e)}, status_code=500)
     finally:
         cursor.close()
         conn.close()

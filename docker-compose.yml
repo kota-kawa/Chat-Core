@@ -7,11 +7,12 @@ services:
     environment:
       - GROQ_API_KEY=${GROQ_API_KEY}
       - Gemini_API_KEY=${Gemini_API_KEY}
+      - PORT=5004
       - MYSQL_HOST=db
       - MYSQL_USER=chatuser
       - MYSQL_PASSWORD=chatpass
       - MYSQL_DATABASE=chat_db
-      # Flask のホットリロード用（Dockerfile で ENV FLASK_ENV=development を設定しているので省略可）
+      # FastAPI のホットリロード用（FLASK_ENV は SameSite/secure 切替に使用）
       - FLASK_ENV=development
       - FLASK_DEBUG=1
     ports:

@@ -1,6 +1,6 @@
-from flask import Blueprint
+from fastapi import APIRouter
 
-admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+admin_bp = APIRouter(prefix="/admin")
 
 from . import views  # noqa: F401
 

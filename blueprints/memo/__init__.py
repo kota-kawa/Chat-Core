@@ -2,18 +2,13 @@ from __future__ import annotations
 
 from typing import List
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
-from mysql.connector import Error
+from fastapi import APIRouter, Request
+from starlette.responses import RedirectResponse
 
-from services.db import get_db_connection
+from services.db import Error, get_db_connection
+from services.web import flash, render_template, url_for
 
-memo_bp = Blueprint(
-    "memo",
-    __name__,
-    template_folder="templates",
-    static_folder="static",
-    url_prefix="/memo",
-)
+memo_bp = APIRouter(prefix="/memo")
 
 
 def _ensure_title(ai_response: str, provided_title: str) -> str:
@@ -61,16 +56,22 @@ def _fetch_recent_memos(limit: int = 10) -> List[dict]:
             connection.close()
 
 
-@memo_bp.route("", methods=["GET", "POST"])
-def create_memo():
-    input_content = request.form.get("input_content", "").strip()
-    ai_response = request.form.get("ai_response", "").strip()
-    title = request.form.get("title", "").strip()
-    tags = request.form.get("tags", "").strip()
+@memo_bp.api_route("", methods=["GET", "POST"], name="memo.create_memo")
+async def create_memo(request: Request):
+    input_content = ""
+    ai_response = ""
+    title = ""
+    tags = ""
 
     if request.method == "POST":
+        form = await request.form()
+        input_content = (form.get("input_content") or "").strip()
+        ai_response = (form.get("ai_response") or "").strip()
+        title = (form.get("title") or "").strip()
+        tags = (form.get("tags") or "").strip()
+
         if not ai_response:
-            flash("AIの回答を入力してください。", "error")
+            flash(request, "AIの回答を入力してください。", "error")
         else:
             resolved_title = _ensure_title(ai_response, title)
             connection = None
@@ -86,10 +87,10 @@ def create_memo():
                     (input_content, ai_response, resolved_title, tags or None),
                 )
                 connection.commit()
-                flash("メモを保存しました。", "success")
-                return redirect(url_for("memo.create_memo"))
+                flash(request, "メモを保存しました。", "success")
+                return RedirectResponse(url_for(request, "memo.create_memo"), status_code=302)
             except Error as exc:
-                flash(f"メモの保存に失敗しました: {exc}", "error")
+                flash(request, f"メモの保存に失敗しました: {exc}", "error")
             finally:
                 if cursor is not None:
                     cursor.close()
@@ -99,6 +100,7 @@ def create_memo():
     recent_memos = _fetch_recent_memos()
 
     return render_template(
+        request,
         "memo_create.html",
         input_content=input_content,
         ai_response=ai_response,

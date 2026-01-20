@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `app.py` is the Flask entry point and app factory usage for the main server.
+- `app.py` is the FastAPI entry point for the main server.
 - `blueprints/` contains feature modules (auth, chat, memo, prompt_share, admin) and their routes/templates/static assets.
 - `services/` holds shared integrations (DB, LLM, email, user helpers).
 - `templates/` and `static/` are global HTML/CSS/JS assets; blueprint-specific assets live under each blueprint’s `templates/` and `static/` folders.
@@ -9,9 +9,9 @@
 - `tests/` contains unit tests (currently `unittest`).
 
 ## Build, Test, and Development Commands
-- `docker-compose up --build` builds and runs the full stack (Flask + MySQL) via Docker.
+- `docker-compose up --build` builds and runs the full stack (FastAPI + MySQL) via Docker.
 - `pip install -r requirements.txt` installs Python dependencies for local dev.
-- `python app.py` starts the Flask app locally (ensure required env vars are set).
+- `python app.py` starts the FastAPI app locally (ensure required env vars are set).
 - `python -m unittest` runs the test suite; target a file with `python -m unittest tests.test_edit_default_task`.
 
 ## Coding Style & Naming Conventions
@@ -23,7 +23,7 @@
 ## Testing Guidelines
 - Framework: `unittest` (see `tests/test_edit_default_task.py`).
 - Naming: place tests in `tests/` and prefix files with `test_`.
-- Focus on request/response behavior for Flask routes and mock external services/DB connections.
+- Focus on request/response behavior for FastAPI routes and mock external services/DB connections.
 
 ## Commit & Pull Request Guidelines
 - Recent commits use short, descriptive summaries (English and Japanese are both present). No strict conventional-commit prefix is used—keep messages concise and action-oriented.

@@ -30,6 +30,6 @@ ENV PORT=5004
 
 # アプリケーションの起動コマンド（PostgreSQLが準備できるまで待機してから実行）
 # --reload を付けてホットリロードを有効にする
-CMD ["./wait-for-it.sh", "db:5432", "--timeout=60", "--strict", "--", "uvicorn", "app:app", "--host=0.0.0.0", "--port=5004", "--reload"]
+CMD ["/wait-for-it.sh", "db:5432", "--timeout=60", "--strict", "--", "uvicorn", "app:app", "--host=0.0.0.0", "--port=5004", "--reload"]
 
 

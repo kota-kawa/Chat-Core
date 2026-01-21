@@ -1,4 +1,5 @@
 from .db import get_db_connection
+from .default_tasks import default_task_rows
 
 
 def copy_default_tasks_for_user(user_id):
@@ -15,6 +16,8 @@ def copy_default_tasks_for_user(user_id):
         """
     )
     defaults = cursor.fetchall()
+    if not defaults:
+        defaults = default_task_rows()
 
     for name, tmpl, inp, out, disp in defaults:
         cursor.execute(

@@ -7,10 +7,10 @@ const bodyMarkup = `
 
   <!-- 既存の settings-btn のすぐ下あたりに追加 -->
   <!-- 未ログイン時の認証ボタン -->
-  <div id="auth-buttons" style="display:none; position:absolute; top:10px; right:10px;">
+  <div id="auth-buttons" style="position:fixed; top:10px; right:10px; z-index: 2000;">
     <button id="login-btn" class="auth-btn">
       <i class="bi bi-person-circle"></i>
-      <span>ログイン</span>
+      <span>ログイン / 登録</span>
     </button>
   </div>
 
@@ -215,7 +215,7 @@ const bodyMarkup = `
   <!-- タスク関連＋プロンプトモーダル -->
 `;
 
-export default function HomePage() {{
+export default function HomePage() {
   return (
     <>
       <Head>

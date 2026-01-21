@@ -60,7 +60,7 @@ const bodyMarkup = `
     </div>
 `;
 
-export default function PromptManagePage() {{
+export default function PromptManagePage() {
   return (
     <>
       <Head>

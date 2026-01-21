@@ -249,7 +249,7 @@ const bodyMarkup = `
   <!-- 例: HTML の末尾に追加 -->
 `;
 
-export default function PromptSharePage() {{
+export default function PromptSharePage() {
   return (
     <>
       <Head>

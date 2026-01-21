@@ -18,43 +18,64 @@ async def get_tasks(request: Request):
     conn = None
     cursor = None
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-
         session = request.session
-        if "user_id" in session:
-            cursor.execute(
-                """
-              SELECT name,
-                     prompt_template,
-                     input_examples,
-                     output_examples,
-                     FALSE AS is_default
-                FROM task_with_examples
-               WHERE user_id = %s
-               ORDER BY COALESCE(display_order, 99999),
-                        id
-            """,
-                (session["user_id"],),
-            )
-        else:
-            cursor.execute(
-                """
-              SELECT name,
-                     prompt_template,
-                     input_examples,
-                     output_examples,
-                     TRUE AS is_default
-                FROM task_with_examples
-               WHERE user_id IS NULL
-               ORDER BY COALESCE(display_order, 99999), id
-            """
-            )
+        # user_id が None や空文字の場合は未ログインとして扱う
+        user_id = session.get("user_id")
+        if not user_id:
+            user_id = None
 
-        tasks = cursor.fetchall()
-        if "user_id" not in session and not tasks:
+        tasks = []
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+
+            if user_id:
+                cursor.execute(
+                    """
+                  SELECT name,
+                         prompt_template,
+                         input_examples,
+                         output_examples,
+                         FALSE AS is_default
+                    FROM task_with_examples
+                   WHERE user_id = %s
+                   ORDER BY COALESCE(display_order, 99999),
+                            id
+                """,
+                    (user_id,),
+                )
+            else:
+                cursor.execute(
+                    """
+                  SELECT name,
+                         prompt_template,
+                         input_examples,
+                         output_examples,
+                         TRUE AS is_default
+                    FROM task_with_examples
+                   WHERE user_id IS NULL
+                   ORDER BY COALESCE(display_order, 99999), id
+                """
+                )
+
+            tasks = cursor.fetchall()
+
+        except Exception as db_err:
+            print(f"Database error in get_tasks: {db_err}")
+            # ログインユーザーの場合、DBエラーはそのままエラーとして扱う（または空リスト？）
+            # ここでは安全のためエラーをログに出しつつ、
+            # もし未ログインならデフォルトタスクを返すようにフローを継続する
+            if user_id:
+                # ユーザーがいるのにDBエラーなら500にする（frontendでハンドリングされる）
+                raise db_err
+            # 未ログインならDBエラーでも続行（tasks=[] のまま）
+
+        # 未ログイン かつ タスクが取得できていない場合はデフォルトタスクを使用
+        if not user_id and not tasks:
             tasks = default_task_payloads()
+
         return jsonify({"tasks": tasks})
+
     except Exception as e:
         return jsonify({"error": str(e)}, status_code=500)
     finally:

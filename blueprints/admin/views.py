@@ -1,12 +1,21 @@
 from functools import wraps
 from typing import Optional
+from urllib.parse import urlencode
 import inspect
 
 from fastapi import Request
 from starlette.responses import RedirectResponse
 
 from services.db import Error, get_db_connection
-from services.web import flash, get_flashed_messages, get_json, jsonify, render_template, url_for
+from services.web import (
+    flash,
+    frontend_url,
+    get_flashed_messages,
+    get_json,
+    jsonify,
+    redirect_to_frontend,
+    url_for,
+)
 
 from . import admin_bp
 
@@ -15,6 +24,10 @@ ADMIN_PASSWORD = "[REMOVED_SECRET]"
 
 def _quote_identifier(name: str) -> str:
     return f"`{name.replace('`', '``')}`"
+
+
+def frontend_admin_dashboard_url(request: Request, **params) -> str:
+    return frontend_url(url_for(request, "admin.dashboard", **params))
 
 
 def admin_required(view_func):
@@ -30,10 +43,13 @@ def admin_required(view_func):
             raise RuntimeError("Request is required for admin routes")
 
         if not request.session.get("is_admin"):
-            next_url = str(request.url)
-            return RedirectResponse(
-                url_for(request, "admin.login", next=next_url), status_code=302
+            next_path = request.url.path
+            if request.url.query:
+                next_path = f"{next_path}?{request.url.query}"
+            login_url = frontend_url(
+                "/admin/login", query=urlencode({"next": next_path})
             )
+            return RedirectResponse(login_url, status_code=302)
 
         if inspect.iscoroutinefunction(view_func):
             return await view_func(*args, **kwargs)
@@ -58,29 +74,25 @@ async def _get_payload(request: Request) -> dict:
 
 @admin_bp.api_route("/login", methods=["GET", "POST"], name="admin.login")
 async def login(request: Request):
-    if request.method == "POST":
-        form = await request.form()
-        password = form.get("password", "")
-        next_url = form.get("next") or url_for(request, "admin.dashboard")
-        if password == ADMIN_PASSWORD:
-            request.session["is_admin"] = True
-            flash(request, "Logged in as administrator.", "success")
-            return RedirectResponse(next_url, status_code=302)
-        flash(request, "Invalid password.", "error")
-    next_url = request.query_params.get("next") or url_for(request, "admin.dashboard")
-    return render_template(request, "admin_login.html", next_url=next_url)
+    status_code = 302 if request.method == "GET" else 303
+    return redirect_to_frontend(request, path="/admin/login", status_code=status_code)
 
 
 @admin_bp.post("/api/login", name="admin.api_login")
 async def api_login(request: Request):
     payload = await _get_payload(request)
     password = (payload.get("password") or "").strip()
-    next_url = payload.get("next") or url_for(request, "admin.dashboard")
+    next_url = payload.get("next") or "/admin"
 
     if password == ADMIN_PASSWORD:
         request.session["is_admin"] = True
         flash(request, "Logged in as administrator.", "success")
-        return jsonify({"status": "success", "redirect": next_url})
+        redirect_url = (
+            next_url
+            if next_url.startswith(("http://", "https://"))
+            else frontend_url(next_url)
+        )
+        return jsonify({"status": "success", "redirect": redirect_url})
 
     return jsonify({"status": "fail", "error": "Invalid password."}, status_code=401)
 
@@ -89,7 +101,9 @@ async def api_login(request: Request):
 async def api_logout(request: Request):
     request.session.pop("is_admin", None)
     flash(request, "Logged out of administrator session.", "success")
-    return jsonify({"status": "success", "redirect": url_for(request, "admin.login")})
+    return jsonify(
+        {"status": "success", "redirect": frontend_url("/admin/login")}
+    )
 
 
 @admin_bp.get("/logout", name="admin.logout")
@@ -97,7 +111,7 @@ async def api_logout(request: Request):
 async def logout(request: Request):
     request.session.pop("is_admin", None)
     flash(request, "Logged out of administrator session.", "success")
-    return RedirectResponse(url_for(request, "admin.login"), status_code=302)
+    return RedirectResponse(frontend_url("/admin/login"), status_code=302)
 
 
 def _fetch_tables(cursor) -> list[str]:
@@ -133,48 +147,7 @@ def _fetch_table_preview(cursor, table_name: str) -> tuple[list[str], list[tuple
 @admin_bp.get("/", name="admin.dashboard")
 @admin_required
 async def dashboard(request: Request):
-    selected_table: Optional[str] = request.query_params.get("table")
-    tables: list[str] = []
-    column_names: list[str] = []
-    column_details: list[dict[str, object]] = []
-    existing_columns: list[str] = []
-    rows: list[tuple] = []
-    error: Optional[str] = None
-    connection = None
-    cursor = None
-
-    try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        tables = _fetch_tables(cursor)
-
-        if selected_table:
-            if selected_table in tables:
-                column_names, rows = _fetch_table_preview(cursor, selected_table)
-                column_details = _fetch_table_columns(cursor, selected_table)
-                existing_columns = [column["name"] for column in column_details]
-            else:
-                flash(request, "The selected table does not exist.", "error")
-                selected_table = None
-    except Error as exc:  # pragma: no cover - defensive logging
-        error = str(exc)
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if connection is not None:
-            connection.close()
-
-    return render_template(
-        request,
-        "admin_dashboard.html",
-        tables=tables,
-        selected_table=selected_table,
-        column_names=column_names,
-        column_details=column_details,
-        existing_columns=existing_columns,
-        rows=rows,
-        error=error,
-    )
+    return redirect_to_frontend(request)
 
 
 @admin_bp.get("/api/dashboard", name="admin.api_dashboard")
@@ -240,13 +213,13 @@ async def create_table(request: Request):
 
     if not table_name or not column_definitions:
         flash(request, "Table name and column definition are required.", "error")
-        return RedirectResponse(url_for(request, "admin.dashboard"), status_code=302)
+        return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
 
     if table_options:
         normalized_options = table_options.rstrip(";").strip()
         if ";" in normalized_options:
             flash(request, "テーブルオプションに複数の文を含めることはできません。", "error")
-            return RedirectResponse(url_for(request, "admin.dashboard"), status_code=302)
+            return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
         table_options = normalized_options
 
     connection = None
@@ -268,7 +241,7 @@ async def create_table(request: Request):
         if connection is not None:
             connection.close()
 
-    return RedirectResponse(url_for(request, "admin.dashboard"), status_code=302)
+    return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
 
 
 @admin_bp.post("/api/create-table", name="admin.api_create_table")
@@ -309,7 +282,7 @@ async def api_create_table(request: Request):
         cursor.execute(create_sql)
         connection.commit()
         flash(request, f"Table '{table_name}' created successfully.", "success")
-        return jsonify({"status": "success", "redirect": url_for(request, "admin.dashboard")})
+        return jsonify({"status": "success", "redirect": frontend_admin_dashboard_url(request)})
     except Error as exc:
         flash(request, f"Failed to create table: {exc}", "error")
         return jsonify({"status": "fail", "error": str(exc)}, status_code=500)
@@ -328,7 +301,7 @@ async def delete_table(request: Request):
 
     if not table_name:
         flash(request, "Table name is required for deletion.", "error")
-        return RedirectResponse(url_for(request, "admin.dashboard"), status_code=302)
+        return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
 
     connection = None
     cursor = None
@@ -338,7 +311,7 @@ async def delete_table(request: Request):
         existing_tables = _fetch_tables(cursor)
         if table_name not in existing_tables:
             flash(request, f"Table '{table_name}' does not exist.", "error")
-            return RedirectResponse(url_for(request, "admin.dashboard"), status_code=302)
+            return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
         cursor.execute(f"DROP TABLE {_quote_identifier(table_name)}")
         connection.commit()
         flash(request, f"Table '{table_name}' deleted successfully.", "success")
@@ -350,7 +323,7 @@ async def delete_table(request: Request):
         if connection is not None:
             connection.close()
 
-    return RedirectResponse(url_for(request, "admin.dashboard"), status_code=302)
+    return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
 
 
 @admin_bp.post("/api/delete-table", name="admin.api_delete_table")
@@ -382,7 +355,7 @@ async def api_delete_table(request: Request):
         cursor.execute(f"DROP TABLE {_quote_identifier(table_name)}")
         connection.commit()
         flash(request, f"Table '{table_name}' deleted successfully.", "success")
-        return jsonify({"status": "success", "redirect": url_for(request, "admin.dashboard")})
+        return jsonify({"status": "success", "redirect": frontend_admin_dashboard_url(request)})
     except Error as exc:
         flash(request, f"Failed to delete table: {exc}", "error")
         return jsonify({"status": "fail", "error": str(exc)}, status_code=500)
@@ -404,7 +377,7 @@ async def add_column(request: Request):
     if not table_name or not column_name or not column_type:
         flash(request, "テーブル名、カラム名、カラム定義は必須です。", "error")
         return RedirectResponse(
-            url_for(request, "admin.dashboard", table=table_name), status_code=302
+            frontend_admin_dashboard_url(request, table=table_name), status_code=302
         )
 
     connection = None
@@ -415,14 +388,14 @@ async def add_column(request: Request):
         tables = _fetch_tables(cursor)
         if table_name not in tables:
             flash(request, f"テーブル '{table_name}' は存在しません。", "error")
-            return RedirectResponse(url_for(request, "admin.dashboard"), status_code=302)
+            return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
 
         existing_columns = [column["name"] for column in _fetch_table_columns(cursor, table_name)]
         normalized_existing_columns = {name.lower() for name in existing_columns}
         if column_name.lower() in normalized_existing_columns:
             flash(request, f"カラム '{column_name}' は既に存在します。", "error")
             return RedirectResponse(
-                url_for(request, "admin.dashboard", table=table_name), status_code=302
+                frontend_admin_dashboard_url(request, table=table_name), status_code=302
             )
 
         cursor.execute(
@@ -439,7 +412,7 @@ async def add_column(request: Request):
             connection.close()
 
     return RedirectResponse(
-        url_for(request, "admin.dashboard", table=table_name), status_code=302
+        frontend_admin_dashboard_url(request, table=table_name), status_code=302
     )
 
 
@@ -488,7 +461,7 @@ async def api_add_column(request: Request):
         return jsonify(
             {
                 "status": "success",
-                "redirect": url_for(request, "admin.dashboard", table=table_name),
+                "redirect": frontend_admin_dashboard_url(request, table=table_name),
             }
         )
     except Error as exc:
@@ -511,7 +484,7 @@ async def delete_column(request: Request):
     if not table_name or not column_name:
         flash(request, "テーブル名とカラム名は必須です。", "error")
         return RedirectResponse(
-            url_for(request, "admin.dashboard", table=table_name), status_code=302
+            frontend_admin_dashboard_url(request, table=table_name), status_code=302
         )
 
     connection = None
@@ -522,7 +495,7 @@ async def delete_column(request: Request):
         tables = _fetch_tables(cursor)
         if table_name not in tables:
             flash(request, f"テーブル '{table_name}' は存在しません。", "error")
-            return RedirectResponse(url_for(request, "admin.dashboard"), status_code=302)
+            return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
 
         columns = _fetch_table_columns(cursor, table_name)
         existing_columns = [column["name"] for column in columns]
@@ -531,13 +504,13 @@ async def delete_column(request: Request):
         if target_column is None:
             flash(request, f"カラム '{column_name}' は存在しません。", "error")
             return RedirectResponse(
-                url_for(request, "admin.dashboard", table=table_name), status_code=302
+                frontend_admin_dashboard_url(request, table=table_name), status_code=302
             )
 
         if len(existing_columns) <= 1:
             flash(request, "テーブルには少なくとも1つのカラムが必要です。", "error")
             return RedirectResponse(
-                url_for(request, "admin.dashboard", table=table_name), status_code=302
+                frontend_admin_dashboard_url(request, table=table_name), status_code=302
             )
 
         cursor.execute(
@@ -554,7 +527,7 @@ async def delete_column(request: Request):
             connection.close()
 
     return RedirectResponse(
-        url_for(request, "admin.dashboard", table=table_name), status_code=302
+        frontend_admin_dashboard_url(request, table=table_name), status_code=302
     )
 
 
@@ -614,7 +587,7 @@ async def api_delete_column(request: Request):
         return jsonify(
             {
                 "status": "success",
-                "redirect": url_for(request, "admin.dashboard", table=table_name),
+                "redirect": frontend_admin_dashboard_url(request, table=table_name),
             }
         )
     except Error as exc:

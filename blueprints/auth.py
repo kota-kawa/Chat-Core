@@ -15,7 +15,9 @@ except ModuleNotFoundError:  # pragma: no cover - optional for test envs
 from services.web import (
     get_json,
     jsonify,
-    render_template,
+    frontend_login_url,
+    frontend_url,
+    redirect_to_frontend,
     set_session_permanent,
     url_for,
 )
@@ -58,7 +60,7 @@ auth_bp = APIRouter()
 @auth_bp.get("/register", name="auth.register_page")
 async def register_page(request: Request):
     """登録ページ(統合認証ページを返す)"""
-    return render_template(request, "auth.html")
+    return redirect_to_frontend(request)
 
 @auth_bp.get("/api/current_user", name="auth.api_current_user")
 async def api_current_user(request: Request):
@@ -83,12 +85,12 @@ async def api_current_user(request: Request):
 @auth_bp.get("/login", name="auth.login")
 async def login(request: Request):
     """ログインページ（統合認証ページを返す）"""
-    return render_template(request, "auth.html")
+    return redirect_to_frontend(request)
 
 @auth_bp.get("/logout", name="auth.logout")
 async def logout(request: Request):
     request.session.clear()
-    return RedirectResponse(url_for(request, "auth.login"), status_code=302)
+    return RedirectResponse(frontend_login_url(), status_code=302)
 
 
 @auth_bp.get("/google-login", name="auth.google_login")
@@ -118,7 +120,7 @@ async def google_callback(request: Request):
     session = request.session
     state = session.get("google_oauth_state")
     if not state:
-        return RedirectResponse(url_for(request, "auth.login"), status_code=302)
+        return RedirectResponse(frontend_login_url(), status_code=302)
     redirect_uri = session.get("google_redirect_uri") or os.getenv(
         "GOOGLE_REDIRECT_URI"
     )
@@ -143,7 +145,7 @@ async def google_callback(request: Request):
     ).json()
     email = user_info.get("email")
     if not email:
-        return RedirectResponse(url_for(request, "auth.login"), status_code=302)
+        return RedirectResponse(frontend_login_url(), status_code=302)
     user = get_user_by_email(email)
     if not user:
         user_id = create_user(email)
@@ -155,7 +157,7 @@ async def google_callback(request: Request):
     session["user_id"] = user_id
     session["user_email"] = email
     set_session_permanent(session, True)
-    return RedirectResponse(url_for(request, "chat.index"), status_code=302)
+    return RedirectResponse(frontend_url("/"), status_code=302)
 
 @auth_bp.post("/api/send_login_code", name="auth.api_send_login_code")
 async def api_send_login_code(request: Request):

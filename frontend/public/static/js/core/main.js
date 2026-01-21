@@ -38,6 +38,14 @@ function initApp() {
   const backToSetupBtn= document.getElementById("back-to-setup");  // Added missing definition
   const chatMessages  = document.getElementById("chat-messages");  // Added missing definition
 
+  const callShowSetupForm = () => {
+    if (typeof window.showSetupForm === 'function') window.showSetupForm();
+  };
+
+  const callSendMessage = () => {
+    if (typeof window.sendMessage === 'function') window.sendMessage();
+  };
+
   const applyAuthUI = loggedIn => {
     if (!authButtons || !userIconEl) return;
 
@@ -98,7 +106,7 @@ function initApp() {
   if (typeof initSetupTaskCards === 'function') initSetupTaskCards();
 
   // 初期表示はセットアップ
-  if (typeof showSetupForm === 'function') showSetupForm();
+  callShowSetupForm();
   if (typeof loadChatRooms === 'function') loadChatRooms();
 
 
@@ -108,7 +116,7 @@ function initApp() {
       currentChatRoomId = null;
       localStorage.removeItem('currentChatRoomId');
       if (chatMessages) chatMessages.innerHTML = '';
-      if (typeof showSetupForm === 'function') showSetupForm();
+      callShowSetupForm();
     });
   }
 
@@ -139,14 +147,14 @@ function initApp() {
   }
 
   // 送信
-  if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+  if (sendBtn) sendBtn.addEventListener('click', callSendMessage);
 
   // Enter 送信 (Shift+Enter で改行)
   if (userInput) {
     userInput.addEventListener('keypress', e => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        sendMessage();
+        callSendMessage();
       }
     });
 
@@ -158,7 +166,7 @@ function initApp() {
   }
 
   // 戻るボタン
-  if (backToSetupBtn) backToSetupBtn.addEventListener('click', showSetupForm);
+  if (backToSetupBtn) backToSetupBtn.addEventListener('click', callShowSetupForm);
 
   // 画面クリックでサイドメニューの 3 点メニューを閉じる
   document.addEventListener('click', () => {

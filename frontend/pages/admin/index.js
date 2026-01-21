@@ -2,326 +2,6 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { useState } from "react";
 
-const styles = `
-:root {
-  color-scheme: light;
-  --primary: #2f6fed;
-  --primary-dark: #214bba;
-  --surface: #ffffff;
-  --surface-alt: rgba(255, 255, 255, 0.72);
-  --text-main: #1f2933;
-  --text-muted: #52606d;
-  --border: rgba(47, 111, 237, 0.16);
-  --shadow: 0 18px 40px rgba(33, 62, 125, 0.12);
-  --radius-lg: 18px;
-}
-* {
-  box-sizing: border-box;
-}
-body {
-  font-family: "Noto Sans JP", "Helvetica Neue", Arial, sans-serif;
-  margin: 0;
-  min-height: 100vh;
-  background: radial-gradient(120% 120% at 10% 0%, #f2f6ff 0%, #eef1f9 35%, #e3ebff 100%);
-  color: var(--text-main);
-}
-header {
-  background: linear-gradient(120deg, var(--primary), #6f9dff);
-  color: #fff;
-  padding: 1.4rem 3rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  box-shadow: 0 12px 30px rgba(47, 111, 237, 0.2);
-}
-header h1 {
-  margin: 0;
-  font-size: 1.8rem;
-  letter-spacing: 0.04em;
-}
-.header-actions {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-}
-header a {
-  color: #fff;
-  text-decoration: none;
-  font-weight: 600;
-  padding: 0.5rem 1.4rem;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  border-radius: 999px;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
-}
-header a:hover {
-  background: rgba(255, 255, 255, 0.18);
-  transform: translateY(-1px);
-}
-header a.back-link {
-  background: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.32);
-}
-main {
-  padding: 2.5rem clamp(1.5rem, 3vw, 3rem) 3.5rem;
-  max-width: min(95vw, 1500px);
-  margin: 0 auto;
-  overflow-x: hidden;
-}
-.flash-area {
-  display: grid;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-.flash {
-  padding: 0.9rem 1.1rem;
-  border-radius: 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-weight: 500;
-}
-.flash::before {
-  content: "";
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-.flash.error {
-  border-color: rgba(225, 29, 72, 0.35);
-  color: #b91c1c;
-}
-.flash.error::before {
-  background: #f43f5e;
-}
-.flash.success {
-  border-color: rgba(16, 185, 129, 0.35);
-  color: #0f766e;
-}
-.flash.success::before {
-  background: #34d399;
-}
-.content {
-  display: grid;
-  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
-  gap: 2rem;
-}
-.right-column {
-  display: grid;
-  gap: 2rem;
-  align-content: start;
-}
-.panel {
-  background-color: var(--surface-alt);
-  backdrop-filter: blur(12px);
-  border-radius: var(--radius-lg);
-  padding: 1.8rem;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: var(--shadow);
-}
-.panel h2 {
-  margin: 0 0 1.2rem;
-  font-size: 1.3rem;
-  letter-spacing: 0.02em;
-}
-.panel h3 {
-  margin-top: 2.2rem;
-  font-size: 1.05rem;
-  color: var(--text-muted);
-}
-ul.table-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 0.75rem;
-}
-ul.table-list li {
-  padding: 0.65rem 0.9rem;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(47, 111, 237, 0.12);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-ul.table-list li:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(41, 81, 173, 0.18);
-}
-ul.table-list a {
-  color: var(--primary);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-.table-preview-meta {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-  margin-bottom: 1rem;
-}
-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  margin-top: 1.2rem;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
-  background: #fff;
-  table-layout: auto;
-}
-table th, table td {
-  padding: 0.75rem 1rem;
-  text-align: left;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.24);
-  font-size: 0.95rem;
-  vertical-align: top;
-  word-break: break-word;
-  white-space: normal;
-}
-table th.wide-column, table td.wide-column {
-  min-width: clamp(240px, 28vw, 420px);
-}
-table th {
-  background: rgba(47, 111, 237, 0.08);
-  font-weight: 600;
-  color: var(--text-muted);
-}
-table tbody tr:last-child td {
-  border-bottom: none;
-}
-table tbody tr:nth-child(even) {
-  background: rgba(226, 232, 240, 0.35);
-}
-details.cell-details {
-  border-radius: 12px;
-  background: rgba(248, 250, 255, 0.75);
-  border: 1px solid rgba(47, 111, 237, 0.14);
-  padding: 0.55rem 0.75rem;
-}
-details.cell-details > summary {
-  cursor: pointer;
-  font-weight: 600;
-  color: var(--primary);
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  overflow: hidden;
-}
-details.cell-details > summary::after {
-  content: "＋";
-  font-weight: 700;
-  margin-left: auto;
-  color: var(--primary);
-}
-details.cell-details > summary::-webkit-details-marker {
-  display: none;
-}
-details.cell-details[open] > summary {
-  margin-bottom: 0.5rem;
-}
-details.cell-details[open] > summary::after {
-  content: "−";
-}
-.cell-summary-text {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.cell-details-body {
-  white-space: pre-wrap;
-  color: #1f2937;
-}
-.schema-table-container {
-  margin-bottom: 2rem;
-}
-.schema-table {
-  margin-top: 0.8rem;
-}
-label {
-  display: block;
-  font-size: 0.92rem;
-  margin: 0.9rem 0 0.4rem;
-  color: var(--text-muted);
-  font-weight: 600;
-}
-input, textarea, select {
-  width: 100%;
-  padding: 0.7rem 0.85rem;
-  border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  background: rgba(255, 255, 255, 0.9);
-  font-size: 0.95rem;
-  font-family: inherit;
-}
-textarea {
-  min-height: 120px;
-}
-button {
-  margin-top: 1rem;
-  padding: 0.7rem 1.1rem;
-  border-radius: 999px;
-  border: none;
-  background: linear-gradient(135deg, var(--primary), #4f86ff);
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(47, 111, 237, 0.3);
-}
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.help-text {
-  margin-top: 0.65rem;
-  color: #ef4444;
-  font-size: 0.9rem;
-}
-.error-text {
-  margin-top: 1rem;
-  color: #dc2626;
-  font-weight: 600;
-}
-@media (max-width: 1024px) {
-  .content {
-    grid-template-columns: 1fr;
-  }
-}
-@media (max-width: 768px) {
-  header {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1.4rem 1.5rem;
-    align-items: flex-start;
-  }
-  .header-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-  .header-actions a {
-    width: 100%;
-    text-align: center;
-  }
-  main {
-    padding: 2rem 1.25rem 3rem;
-  }
-}
-`;
-
 export async function getServerSideProps(context) {
   const backendUrl = process.env.BACKEND_URL || "http://localhost:5004";
   const cookie = context.req.headers.cookie || "";
@@ -388,6 +68,24 @@ export default function AdminDashboard({
     "input_examples",
     "output_examples"
   ];
+  const panelClass =
+    "rounded-3xl border border-white/70 bg-white/80 p-6 shadow-xl shadow-indigo-100/40 backdrop-blur";
+  const labelClass = "text-sm font-semibold text-slate-700";
+  const inputClass =
+    "w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-2.5 text-sm text-slate-700 shadow-sm transition focus:border-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-100";
+  const buttonClass =
+    "rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-200/60 transition hover:-translate-y-0.5 hover:shadow-indigo-300/70 disabled:cursor-not-allowed disabled:opacity-60";
+  const flashTone = (category) => {
+    if (category === "success") {
+      return "border-emerald-400/70 bg-emerald-50 text-emerald-700";
+    }
+    if (category === "error") {
+      return "border-rose-400/70 bg-rose-50 text-rose-700";
+    }
+    return "border-slate-200 bg-slate-50 text-slate-600";
+  };
+  const cellWidthClass = (columnName) =>
+    wideColumns.includes(columnName) ? "min-w-[240px] max-w-[420px]" : "min-w-[140px]";
 
   const submitForm = async (event, endpoint) => {
     event.preventDefault();
@@ -432,230 +130,327 @@ export default function AdminDashboard({
         <meta charSet="UTF-8" />
         <title>管理コンソール</title>
         <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png" />
-        <style dangerouslySetInnerHTML={{ __html: styles }} />
       </Head>
-      <header>
-        <h1>管理コンソール</h1>
-        <nav className="header-actions">
-          <a className="back-link" href="/admin">
-            管理トップへ戻る
-          </a>
-          <a href="/admin/logout" onClick={handleLogout}>
-            ログアウト
-          </a>
-        </nav>
-      </header>
-      <main>
-        <div className="flash-area">
-          {messages.map(([category, message], index) => (
-            <div className={`flash ${category}`} key={`${category}-${index}`}>
-              {message}
+      <div className="relative min-h-screen overflow-hidden bg-slate-50">
+        <div className="pointer-events-none absolute -top-24 right-[-12rem] h-72 w-72 rounded-full bg-indigo-200/50 blur-3xl"></div>
+        <div className="pointer-events-none absolute top-40 -left-24 h-96 w-96 rounded-full bg-emerald-200/40 blur-3xl"></div>
+
+        <header className="sticky top-0 z-20 border-b border-white/60 bg-white/80 backdrop-blur">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-600 text-xl text-white shadow-lg shadow-indigo-200">
+                ⚙️
+              </span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-indigo-500">
+                  Admin Console
+                </p>
+                <h1 className="text-xl font-semibold text-slate-900">管理コンソール</h1>
+              </div>
             </div>
-          ))}
-          {localMessage ? (
-            <div className={`flash ${localMessage.type}`}>{localMessage.text}</div>
-          ) : null}
-        </div>
-
-        <div className="content">
-          <section className="panel">
-            <h2>テーブル一覧</h2>
-            <ul className="table-list">
-              {tables.length ? (
-                tables.map((table) => (
-                  <li key={table}>
-                    <span>{table}</span>
-                    <a href={`/admin?table=${encodeURIComponent(table)}`}>開く</a>
-                  </li>
-                ))
-              ) : (
-                <li>テーブルが見つかりません。</li>
-              )}
-            </ul>
-
-            <form onSubmit={(event) => submitForm(event, "/admin/api/delete-table")}>
-              <h3>テーブルの削除</h3>
-              <label htmlFor="delete-table-name">テーブル名</label>
-              <input type="text" id="delete-table-name" name="table_name" required />
-              <button type="submit">削除</button>
-            </form>
-          </section>
-
-          <div className="right-column">
-            <section className="panel">
-              <h2>テーブルプレビュー</h2>
-              {selectedTable ? (
-                <>
-                  <p className="table-preview-meta">
-                    最大100件の行を表示しています：<strong>{selectedTable}</strong>
-                  </p>
-                  {columnDetails.length ? (
-                    <div className="schema-table-container">
-                      <h3>テーブル定義</h3>
-                      <table className="schema-table">
-                        <thead>
-                          <tr>
-                            <th>カラム名</th>
-                            <th>型</th>
-                            <th>NULL</th>
-                            <th>キー</th>
-                            <th>デフォルト</th>
-                            <th>追加情報</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {columnDetails.map((column) => (
-                            <tr key={column.name}>
-                              <td>{column.name}</td>
-                              <td>{column.type}</td>
-                              <td>{column.nullable ? "許可" : "不可"}</td>
-                              <td>{column.key || "—"}</td>
-                              <td>{column.default !== null && column.default !== undefined ? column.default : "—"}</td>
-                              <td>{column.extra || "—"}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : null}
-
-                  {columnNames.length ? (
-                    <table>
-                      <thead>
-                        <tr>
-                          {columnNames.map((column) => {
-                            const headerClass = wideColumns.includes(column) ? "wide-column" : "";
-                            return (
-                              <th className={headerClass} key={column}>
-                                {column}
-                              </th>
-                            );
-                          })}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.length ? (
-                          rows.map((row, rowIndex) => (
-                            <tr key={rowIndex}>
-                              {row.map((value, colIndex) => {
-                                const columnName = columnNames[colIndex];
-                                const cellClass = wideColumns.includes(columnName) ? "wide-column" : "";
-                                const cellText = value === null || value === undefined ? "" : String(value);
-                                if (cellText.length > 160) {
-                                  const summaryText = cellText
-                                    .slice(0, 160)
-                                    .replace(/\n/g, " ")
-                                    .replace(/\r/g, " ");
-                                  return (
-                                    <td className={cellClass} key={`${rowIndex}-${colIndex}`}>
-                                      <details className="cell-details">
-                                        <summary>
-                                          <span className="cell-summary-text">{summaryText}…</span>
-                                        </summary>
-                                        <div className="cell-details-body">{cellText}</div>
-                                      </details>
-                                    </td>
-                                  );
-                                }
-                                return (
-                                  <td className={cellClass} key={`${rowIndex}-${colIndex}`}>
-                                    <div className="cell-details-body">{cellText}</div>
-                                  </td>
-                                );
-                              })}
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={columnNames.length}>表示できるデータがありません。</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <p>表示できるデータがありません。</p>
-                  )}
-                </>
-              ) : (
-                <p className="table-preview-meta">内容を確認するテーブルを選択してください。</p>
-              )}
-            </section>
-
-            <section className="panel">
-              <h2>テーブル操作</h2>
-              {selectedTable ? (
-                <>
-                  <h3>カラムの追加</h3>
-                  <form onSubmit={(event) => submitForm(event, "/admin/api/add-column")}>
-                    <input type="hidden" name="table_name" value={selectedTable} />
-                    <label htmlFor="add-column-name">カラム名</label>
-                    <input type="text" id="add-column-name" name="column_name" required />
-                    <label htmlFor="add-column-type">カラム定義（例：VARCHAR(255) NOT NULL）</label>
-                    <input type="text" id="add-column-type" name="column_type" required />
-                    <button type="submit">カラムを追加</button>
-                  </form>
-
-                  <h3>カラムの削除</h3>
-                  <form onSubmit={(event) => submitForm(event, "/admin/api/delete-column")}>
-                    <input type="hidden" name="table_name" value={selectedTable} />
-                    <label htmlFor="delete-column-name">削除するカラム</label>
-                    <select
-                      id="delete-column-name"
-                      name="column_name"
-                      disabled={deleteDisabled}
-                      required
-                      defaultValue=""
-                    >
-                      <option value="" disabled>
-                        カラムを選択
-                      </option>
-                      {columnDetails.map((column) => (
-                        <option value={column.name} key={column.name}>
-                          {column.name}
-                          {column.type ? ` (${column.type})` : ""}
-                        </option>
-                      ))}
-                    </select>
-                    <button type="submit" disabled={deleteDisabled}>
-                      カラムを削除
-                    </button>
-                    {deleteDisabled ? (
-                      <p className="help-text">テーブルのカラムが1つしかないため削除できません。</p>
-                    ) : null}
-                  </form>
-                </>
-              ) : (
-                <>
-                  <p className="table-preview-meta">カラムの変更を行うテーブルを選択してください。</p>
-
-                  <h3>テーブルの作成</h3>
-                  <form onSubmit={(event) => submitForm(event, "/admin/api/create-table")}>
-                    <label htmlFor="create-table-name">テーブル名</label>
-                    <input type="text" id="create-table-name" name="table_name" required />
-                    <label htmlFor="column-definitions">カラム定義（SQL）</label>
-                    <textarea
-                      id="column-definitions"
-                      name="columns"
-                      placeholder="id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL"
-                      required
-                    ></textarea>
-                    <label htmlFor="table-options">テーブルオプション（例：ENGINE=InnoDB DEFAULT CHARSET=utf8mb4）</label>
-                    <input
-                      type="text"
-                      id="table-options"
-                      name="table_options"
-                      placeholder="ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-                    />
-                    <button type="submit">作成</button>
-                  </form>
-                </>
-              )}
-
-              {error ? <p className="error-text">エラー：{error}</p> : null}
-            </section>
+            <nav className="flex flex-wrap gap-3">
+              <a
+                className="inline-flex items-center justify-center rounded-full border border-indigo-200 bg-white px-4 py-2 text-xs font-semibold text-indigo-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-indigo-50"
+                href="/admin"
+              >
+                管理トップへ戻る
+              </a>
+              <a
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50"
+                href="/admin/logout"
+                onClick={handleLogout}
+              >
+                ログアウト
+              </a>
+            </nav>
           </div>
-        </div>
-      </main>
+        </header>
+
+        <main className="relative z-10 mx-auto max-w-6xl px-6 py-10 lg:py-12">
+          <div className="mb-8 grid gap-3">
+            {messages.map(([category, message], index) => (
+              <div
+                className={`rounded-2xl border border-transparent border-l-4 px-4 py-3 text-sm font-semibold ${flashTone(
+                  category
+                )}`}
+                key={`${category}-${index}`}
+              >
+                {message}
+              </div>
+            ))}
+            {localMessage ? (
+              <div
+                className={`rounded-2xl border border-transparent border-l-4 px-4 py-3 text-sm font-semibold ${flashTone(
+                  localMessage.type
+                )}`}
+              >
+                {localMessage.text}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="grid gap-8 xl:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
+            <section className={panelClass}>
+              <h2 className="text-lg font-semibold text-slate-900">テーブル一覧</h2>
+              <ul className="mt-4 space-y-3">
+                {tables.length ? (
+                  tables.map((table) => (
+                    <li
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white/80 px-4 py-3 text-sm shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md"
+                      key={table}
+                    >
+                      <span className="font-semibold text-slate-700">{table}</span>
+                      <a
+                        className="inline-flex items-center rounded-full border border-indigo-200 bg-white px-3 py-1 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-50"
+                        href={`/admin?table=${encodeURIComponent(table)}`}
+                      >
+                        開く
+                      </a>
+                    </li>
+                  ))
+                ) : (
+                  <li className="rounded-2xl border border-dashed border-slate-200 bg-white/60 px-4 py-3 text-sm text-slate-500">
+                    テーブルが見つかりません。
+                  </li>
+                )}
+              </ul>
+
+              <form className="mt-6 space-y-4" onSubmit={(event) => submitForm(event, "/admin/api/delete-table")}>
+                <h3 className="text-base font-semibold text-slate-700">テーブルの削除</h3>
+                <div className="space-y-2">
+                  <label className={labelClass} htmlFor="delete-table-name">
+                    テーブル名
+                  </label>
+                  <input type="text" id="delete-table-name" name="table_name" required className={inputClass} />
+                </div>
+                <button
+                  type="submit"
+                  className="rounded-full bg-gradient-to-r from-rose-500 to-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-200/60 transition hover:-translate-y-0.5 hover:shadow-rose-300/70"
+                >
+                  削除
+                </button>
+              </form>
+            </section>
+
+            <div className="space-y-8">
+              <section className={panelClass}>
+                <h2 className="text-lg font-semibold text-slate-900">テーブルプレビュー</h2>
+                {selectedTable ? (
+                  <>
+                    <p className="mt-3 text-sm text-slate-500">
+                      最大100件の行を表示しています：<strong className="text-slate-700">{selectedTable}</strong>
+                    </p>
+                    {columnDetails.length ? (
+                      <div className="mt-6">
+                        <h3 className="text-base font-semibold text-slate-700">テーブル定義</h3>
+                        <div className="mt-3 overflow-x-auto rounded-2xl border border-slate-100 bg-white">
+                          <table className="min-w-full text-left text-sm text-slate-700">
+                            <thead className="bg-slate-100/70 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                              <tr>
+                                <th className="px-4 py-3">カラム名</th>
+                                <th className="px-4 py-3">型</th>
+                                <th className="px-4 py-3">NULL</th>
+                                <th className="px-4 py-3">キー</th>
+                                <th className="px-4 py-3">デフォルト</th>
+                                <th className="px-4 py-3">追加情報</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {columnDetails.map((column) => (
+                                <tr className="even:bg-slate-50/60" key={column.name}>
+                                  <td className="px-4 py-3">{column.name}</td>
+                                  <td className="px-4 py-3">{column.type}</td>
+                                  <td className="px-4 py-3">{column.nullable ? "許可" : "不可"}</td>
+                                  <td className="px-4 py-3">{column.key || "—"}</td>
+                                  <td className="px-4 py-3">
+                                    {column.default !== null && column.default !== undefined
+                                      ? column.default
+                                      : "—"}
+                                  </td>
+                                  <td className="px-4 py-3">{column.extra || "—"}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {columnNames.length ? (
+                      <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-100 bg-white">
+                        <table className="min-w-full text-left text-sm text-slate-700">
+                          <thead className="bg-slate-100/70 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            <tr>
+                              {columnNames.map((column) => (
+                                <th className={`px-4 py-3 ${cellWidthClass(column)}`} key={column}>
+                                  {column}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {rows.length ? (
+                              rows.map((row, rowIndex) => (
+                                <tr className="even:bg-slate-50/60" key={rowIndex}>
+                                  {row.map((value, colIndex) => {
+                                    const columnName = columnNames[colIndex];
+                                    const cellText = value === null || value === undefined ? "" : String(value);
+                                    if (cellText.length > 160) {
+                                      const summaryText = cellText
+                                        .slice(0, 160)
+                                        .replace(/\n/g, " ")
+                                        .replace(/\r/g, " ");
+                                      return (
+                                        <td className={`px-4 py-3 align-top ${cellWidthClass(columnName)}`} key={`${rowIndex}-${colIndex}`}>
+                                          <details className="group rounded-xl border border-slate-200/70 bg-slate-50/80 p-3 text-sm text-slate-700">
+                                            <summary className="flex cursor-pointer list-none items-start gap-2 text-indigo-600">
+                                              <span className="flex-1 truncate">{summaryText}…</span>
+                                              <span className="ml-auto text-indigo-400 group-open:hidden">＋</span>
+                                              <span className="ml-auto hidden text-indigo-400 group-open:inline">−</span>
+                                            </summary>
+                                            <div className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
+                                              {cellText}
+                                            </div>
+                                          </details>
+                                        </td>
+                                      );
+                                    }
+                                    return (
+                                      <td className={`px-4 py-3 align-top ${cellWidthClass(columnName)}`} key={`${rowIndex}-${colIndex}`}>
+                                        <div className="whitespace-pre-wrap text-sm text-slate-700">{cellText}</div>
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td className="px-4 py-4 text-sm text-slate-500" colSpan={columnNames.length}>
+                                  表示できるデータがありません。
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="mt-4 text-sm text-slate-500">表示できるデータがありません。</p>
+                    )}
+                  </>
+                ) : (
+                  <p className="mt-3 text-sm text-slate-500">内容を確認するテーブルを選択してください。</p>
+                )}
+              </section>
+
+              <section className={panelClass}>
+                <h2 className="text-lg font-semibold text-slate-900">テーブル操作</h2>
+                {selectedTable ? (
+                  <>
+                    <h3 className="mt-4 text-base font-semibold text-slate-700">カラムの追加</h3>
+                    <form className="mt-3 space-y-4" onSubmit={(event) => submitForm(event, "/admin/api/add-column")}>
+                      <input type="hidden" name="table_name" value={selectedTable} />
+                      <div className="space-y-2">
+                        <label className={labelClass} htmlFor="add-column-name">
+                          カラム名
+                        </label>
+                        <input type="text" id="add-column-name" name="column_name" required className={inputClass} />
+                      </div>
+                      <div className="space-y-2">
+                        <label className={labelClass} htmlFor="add-column-type">
+                          カラム定義（例：VARCHAR(255) NOT NULL）
+                        </label>
+                        <input type="text" id="add-column-type" name="column_type" required className={inputClass} />
+                      </div>
+                      <button type="submit" className={buttonClass}>
+                        カラムを追加
+                      </button>
+                    </form>
+
+                    <h3 className="mt-6 text-base font-semibold text-slate-700">カラムの削除</h3>
+                    <form className="mt-3 space-y-4" onSubmit={(event) => submitForm(event, "/admin/api/delete-column")}>
+                      <input type="hidden" name="table_name" value={selectedTable} />
+                      <div className="space-y-2">
+                        <label className={labelClass} htmlFor="delete-column-name">
+                          削除するカラム
+                        </label>
+                        <select
+                          id="delete-column-name"
+                          name="column_name"
+                          disabled={deleteDisabled}
+                          required
+                          defaultValue=""
+                          className={inputClass}
+                        >
+                          <option value="" disabled>
+                            カラムを選択
+                          </option>
+                          {columnDetails.map((column) => (
+                            <option value={column.name} key={column.name}>
+                              {column.name}
+                              {column.type ? ` (${column.type})` : ""}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <button type="submit" className={buttonClass} disabled={deleteDisabled}>
+                        カラムを削除
+                      </button>
+                      {deleteDisabled ? (
+                        <p className="text-xs font-semibold text-rose-600">
+                          テーブルのカラムが1つしかないため削除できません。
+                        </p>
+                      ) : null}
+                    </form>
+                  </>
+                ) : (
+                  <>
+                    <p className="mt-3 text-sm text-slate-500">カラムの変更を行うテーブルを選択してください。</p>
+
+                    <h3 className="mt-6 text-base font-semibold text-slate-700">テーブルの作成</h3>
+                    <form className="mt-3 space-y-4" onSubmit={(event) => submitForm(event, "/admin/api/create-table")}>
+                      <div className="space-y-2">
+                        <label className={labelClass} htmlFor="create-table-name">
+                          テーブル名
+                        </label>
+                        <input type="text" id="create-table-name" name="table_name" required className={inputClass} />
+                      </div>
+                      <div className="space-y-2">
+                        <label className={labelClass} htmlFor="column-definitions">
+                          カラム定義（SQL）
+                        </label>
+                        <textarea
+                          id="column-definitions"
+                          name="columns"
+                          placeholder="id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL"
+                          required
+                          className={`${inputClass} min-h-[140px]`}
+                        ></textarea>
+                      </div>
+                      <div className="space-y-2">
+                        <label className={labelClass} htmlFor="table-options">
+                          テーブルオプション（例：ENGINE=InnoDB DEFAULT CHARSET=utf8mb4）
+                        </label>
+                        <input
+                          type="text"
+                          id="table-options"
+                          name="table_options"
+                          placeholder="ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+                          className={inputClass}
+                        />
+                      </div>
+                      <button type="submit" className={buttonClass}>
+                        作成
+                      </button>
+                    </form>
+                  </>
+                )}
+
+                {error ? <p className="mt-4 text-sm font-semibold text-rose-600">エラー：{error}</p> : null}
+              </section>
+            </div>
+          </div>
+        </main>
+      </div>
     </>
   );
 }

@@ -8,6 +8,7 @@ from fastapi import Request
 from starlette.responses import JSONResponse, RedirectResponse
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 async def get_json(request: Request) -> Dict[str, Any] | None:

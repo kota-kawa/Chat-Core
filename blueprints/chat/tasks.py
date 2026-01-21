@@ -1,6 +1,7 @@
 from fastapi import Request
 
 from services.db import get_db_connection
+from services.default_tasks import default_task_payloads
 from services.web import get_json, jsonify
 
 from . import chat_bp
@@ -51,6 +52,8 @@ async def get_tasks(request: Request):
             )
 
         tasks = cursor.fetchall()
+        if "user_id" not in session and not tasks:
+            tasks = default_task_payloads()
         return jsonify({"tasks": tasks})
     except Exception as e:
         return jsonify({"error": str(e)}, status_code=500)

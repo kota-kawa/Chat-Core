@@ -214,7 +214,7 @@ const bodyMarkup = `
   </div>
 `;
 
-export default function UserSettingsPage() {{
+export default function UserSettingsPage() {
   useEffect(() => {{
     document.body.classList.add("user-settings-body");
     return () => document.body.classList.remove("user-settings-body");

@@ -34,22 +34,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginBtn      = document.getElementById("login-btn");
 
   const applyAuthUI = loggedIn => {
-    if (!authButtons || !newPromptBtn || !accessChatBtn || !userIconEl) return;
+    if (!authButtons || !userIconEl) return;
 
     if (loggedIn) {
       // ログイン時：認証ボタンは隠し、ユーザーアイコンを表示
       authButtons.style.display = "none";
       userIconEl.style.display  = "";
 
-      newPromptBtn.style.display  = "";
-      accessChatBtn.style.display = "";
+      if (newPromptBtn) newPromptBtn.style.display = "";
+      if (accessChatBtn) accessChatBtn.style.display = "";
 
       if (window.initTaskOrderEditing) {
         window.initTaskOrderEditing();
       }
     } else {
       // 未ログイン時：認証ボタンだけ表示、ユーザーアイコンは隠す
-      authButtons.style.display = "";
+      authButtons.style.display = "flex";
       userIconEl.style.display  = "none";
 
       if (loginBtn) {
@@ -63,8 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (editBtn) editBtn.remove();
 
       // 新規プロンプト＆過去チャット閲覧ボタンを非表示
-      newPromptBtn.style.display  = "none";
-      accessChatBtn.style.display = "none";
+      if (newPromptBtn) newPromptBtn.style.display = "none";
+      if (accessChatBtn) accessChatBtn.style.display = "none";
     }
   };
 

@@ -48,7 +48,7 @@ async def user_profile(request: Request):
     avatar_url = None
     if avatar_f and avatar_f.filename:
         fname = secure_filename(avatar_f.filename)
-        upload_dir = os.path.join(BASE_DIR, 'static', 'uploads')
+        upload_dir = os.path.join(BASE_DIR, 'frontend', 'public', 'static', 'uploads')
         os.makedirs(upload_dir, exist_ok=True)
         filepath = os.path.join(upload_dir, fname)
         with open(filepath, "wb") as out_f:

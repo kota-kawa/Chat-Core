@@ -6,7 +6,6 @@ from datetime import timedelta
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from starlette.staticfiles import StaticFiles
 
 from blueprints.chat import cleanup_ephemeral_chats
 from services.session_middleware import PermanentSessionMiddleware
@@ -38,17 +37,6 @@ app.add_middleware(
 app.state.session_secret = secret_key
 app.state.session_cookie = "session"
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-app.mount(
-    "/prompt_share/static",
-    StaticFiles(directory="blueprints/prompt_share/static"),
-    name="prompt_share.static",
-)
-app.mount(
-    "/memo/static",
-    StaticFiles(directory="blueprints/memo/static"),
-    name="memo.static",
-)
 
 # 各Routerをimportする
 from blueprints.auth import auth_bp

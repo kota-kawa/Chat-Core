@@ -2,109 +2,15 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { useState } from "react";
 
-const styles = `
-:root {
-  color-scheme: light;
-  --primary: #2f6fed;
-  --primary-dark: #214bba;
-  --surface: rgba(255, 255, 255, 0.82);
-  --border: rgba(255, 255, 255, 0.65);
-  --text-main: #1f2933;
-}
-* {
-  box-sizing: border-box;
-}
-body {
-  font-family: "Noto Sans JP", "Helvetica Neue", Arial, sans-serif;
-  background: radial-gradient(110% 110% at 10% 0%, #f2f6ff 0%, #d9e4ff 40%, #eef1ff 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  margin: 0;
-  padding: 1.5rem;
-}
-.login-container {
-  background: var(--surface);
-  padding: 2.2rem 2.4rem;
-  border-radius: 22px;
-  box-shadow: 0 20px 45px rgba(47, 111, 237, 0.18);
-  width: min(360px, 100%);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(12px);
-}
-h1 {
-  font-size: 1.45rem;
-  margin-bottom: 1.6rem;
-  text-align: center;
-  letter-spacing: 0.04em;
-  color: var(--text-main);
-}
-label {
-  display: block;
-  margin-bottom: 0.55rem;
-  font-weight: 600;
-  font-size: 0.92rem;
-  color: rgba(31, 41, 51, 0.75);
-}
-input[type="password"] {
-  width: 100%;
-  padding: 0.7rem 0.85rem;
-  margin-bottom: 1.1rem;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  border-radius: 12px;
-  font-size: 1rem;
-  font-family: inherit;
-  background: rgba(255, 255, 255, 0.92);
-  transition: border 0.2s ease, box-shadow 0.2s ease;
-}
-input[type="password"]:focus {
-  outline: none;
-  border-color: rgba(47, 111, 237, 0.6);
-  box-shadow: 0 0 0 4px rgba(47, 111, 237, 0.18);
-}
-button {
-  width: 100%;
-  padding: 0.75rem;
-  font-size: 1rem;
-  background: linear-gradient(135deg, var(--primary), #4f86ff);
-  color: #ffffff;
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 28px rgba(47, 111, 237, 0.25);
-}
-.flash {
-  margin-bottom: 1.2rem;
-  padding: 0.85rem 1rem;
-  border-radius: 14px;
-  font-weight: 500;
-  text-align: center;
-  backdrop-filter: blur(8px);
-}
-.flash.error {
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  background: rgba(254, 226, 226, 0.85);
-  color: #b91c1c;
-}
-.flash.success {
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  background: rgba(209, 250, 229, 0.85);
-  color: #047857;
-}
-`;
-
 export default function AdminLogin() {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const messageTone =
+    message?.type === "success"
+      ? "border-emerald-400/70 bg-emerald-50 text-emerald-700"
+      : "border-rose-400/70 bg-rose-50 text-rose-700";
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -143,25 +49,62 @@ export default function AdminLogin() {
         <meta charSet="UTF-8" />
         <title>管理者ログイン</title>
         <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png" />
-        <style dangerouslySetInnerHTML={{ __html: styles }} />
       </Head>
-      <div className="login-container">
-        <h1>管理者ログイン</h1>
-        {message ? <div className={`flash ${message.type}`}>{message.text}</div> : null}
-        <form onSubmit={handleSubmit}>
-          <label htmlFor="password">パスワード</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-          <button type="submit" disabled={submitting}>
-            ログイン
-          </button>
-        </form>
+      <div className="relative min-h-screen overflow-hidden bg-slate-50">
+        <div className="pointer-events-none absolute -top-24 right-[-10rem] h-72 w-72 rounded-full bg-indigo-200/50 blur-3xl"></div>
+        <div className="pointer-events-none absolute bottom-0 left-[-6rem] h-80 w-80 rounded-full bg-emerald-200/40 blur-3xl"></div>
+
+        <div className="relative z-10 flex min-h-screen items-center justify-center px-6 py-12">
+          <div className="w-full max-w-md rounded-3xl border border-white/70 bg-white/90 p-8 shadow-2xl shadow-indigo-100/50 backdrop-blur">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-2xl text-white shadow-lg shadow-indigo-200">
+                🔐
+              </span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-indigo-500">
+                  Admin Access
+                </p>
+                <h1 className="mt-2 text-2xl font-semibold text-slate-900">管理者ログイン</h1>
+              </div>
+            </div>
+
+            <p className="mt-4 text-sm text-slate-500">
+              セキュアな管理コンソールへアクセスするための認証です。
+            </p>
+
+            {message ? (
+              <div
+                className={`mt-6 rounded-2xl border border-transparent border-l-4 px-4 py-3 text-sm font-semibold ${messageTone}`}
+              >
+                {message.text}
+              </div>
+            ) : null}
+
+            <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700" htmlFor="password">
+                  パスワード
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  required
+                  className="w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm transition focus:border-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-100"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-200/60 transition hover:-translate-y-0.5 hover:shadow-indigo-300/70 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={submitting}
+              >
+                ログイン
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
     </>
   );

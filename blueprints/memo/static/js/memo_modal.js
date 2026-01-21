@@ -7,6 +7,8 @@ const setupMemoModal = () => {
   const authButtons = document.getElementById('auth-buttons');
   const userIcon = document.getElementById('userIcon');
   const loginBtn = document.getElementById('login-btn');
+  const overlay = modal.querySelector('[data-modal-overlay]');
+  const content = modal.querySelector('[data-modal-content]');
 
   const notifyAuthState = (loggedIn) => {
     window.loggedIn = loggedIn;
@@ -19,10 +21,10 @@ const setupMemoModal = () => {
 
   const applyAuthUI = (loggedIn) => {
     if (authButtons) {
-      authButtons.style.display = loggedIn ? 'none' : '';
+      authButtons.classList.toggle('hidden', loggedIn);
     }
     if (userIcon) {
-      userIcon.style.display = loggedIn ? '' : 'none';
+      userIcon.classList.toggle('hidden', !loggedIn);
     }
     if (!loggedIn && loginBtn) {
       loginBtn.onclick = () => {
@@ -67,7 +69,8 @@ const setupMemoModal = () => {
     tagsEl.innerHTML = '';
     if (!tags || !tags.length) {
       const emptyTag = document.createElement('span');
-      emptyTag.className = 'memo-tag memo-tag--muted';
+      emptyTag.className =
+        'inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-400';
       emptyTag.textContent = 'タグなし';
       tagsEl.appendChild(emptyTag);
       return;
@@ -76,7 +79,8 @@ const setupMemoModal = () => {
     tags.forEach((tag) => {
       if (!tag) return;
       const chip = document.createElement('span');
-      chip.className = 'memo-tag';
+      chip.className =
+        'inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700';
       chip.textContent = tag;
       tagsEl.appendChild(chip);
     });
@@ -89,14 +93,36 @@ const setupMemoModal = () => {
     renderTags(memo.tags);
     inputEl.textContent = memo.input || '';
     responseEl.textContent = memo.response || '';
-    modal.classList.add('is-visible');
-    document.body.classList.add('modal-open');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.classList.add('overflow-hidden');
+    requestAnimationFrame(() => {
+      if (overlay) {
+        overlay.classList.remove('opacity-0');
+        overlay.classList.add('opacity-100');
+      }
+      if (content) {
+        content.classList.remove('opacity-0', 'translate-y-4', 'scale-95');
+        content.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+      }
+    });
   };
 
   const closeModal = () => {
-    modal.classList.remove('is-visible');
-    document.body.classList.remove('modal-open');
-    setTimeout(clearModal, 200);
+    if (overlay) {
+      overlay.classList.remove('opacity-100');
+      overlay.classList.add('opacity-0');
+    }
+    if (content) {
+      content.classList.remove('opacity-100', 'translate-y-0', 'scale-100');
+      content.classList.add('opacity-0', 'translate-y-4', 'scale-95');
+    }
+    document.body.classList.remove('overflow-hidden');
+    setTimeout(() => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      clearModal();
+    }, 200);
   };
 
   closeTargets.forEach((trigger) => {
@@ -104,7 +130,7 @@ const setupMemoModal = () => {
   });
 
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && modal.classList.contains('is-visible')) {
+    if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
       closeModal();
     }
   });

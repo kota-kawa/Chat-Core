@@ -1,0 +1,95 @@
+import Head from "next/head";
+import Script from "next/script";
+
+const bodyMarkup = `
+<header class="main-header">
+      <div class="container">
+        <h1 class="logo">Prompt Manager</h1>
+      </div>
+    </header>
+
+    <main class="container main-container">
+      <div class="header-bar">
+        <h2 class="section-title">My Prompts</h2>
+      </div>
+      <div id="promptList" class="prompt-grid">
+        <!-- プロンプトカードは JavaScript により動的に生成 -->
+      </div>
+    </main>
+
+    <!-- 編集用モーダル -->
+    <div id="editModal" class="modal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>プロンプト編集</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editForm" class="modal-form">
+              <input type="hidden" id="editPromptId">
+              <div class="form-group">
+                <label for="editTitle" class="form-label">タイトル</label>
+                <input type="text" class="form-control input-field" id="editTitle" required>
+              </div>
+              <div class="form-group">
+                <label for="editCategory" class="form-label">カテゴリ</label>
+                <input type="text" class="form-control input-field" id="editCategory" required>
+              </div>
+              <div class="form-group">
+                <label for="editContent" class="form-label">内容</label>
+                <textarea class="form-control input-field" id="editContent" rows="5" required></textarea>
+              </div>
+              <div class="form-group">
+                <label for="editInputExamples" class="form-label">入力例</label>
+                <textarea class="form-control input-field" id="editInputExamples" rows="3"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="editOutputExamples" class="form-label">出力例</label>
+                <textarea class="form-control input-field" id="editOutputExamples" rows="3"></textarea>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary w-100">
+                  <i class="bi bi-save me-2"></i>更新する
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+`;
+
+export default function PromptManagePage() {{
+  return (
+    <>
+      <Head>
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>マイプロンプト管理</title>
+        <link rel="icon" type="image/webp" href="/static/favicon.webp" />
+        <link rel="icon" type="image/png" href="/static/favicon.png" />
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+        />
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+        <link rel="stylesheet" href="/prompt_share/static/css/pages/prompt_manage.css" />
+      </Head>
+      <div dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
+
+      <Script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+        strategy="afterInteractive"
+      />
+      <Script src="/prompt_share/static/js/prompt_manage.js" strategy="afterInteractive" />
+    </>
+  );
+}

@@ -5,12 +5,6 @@ const nextConfig = {
   reactStrictMode: true,
   async rewrites() {
     return [
-      { source: "/", destination: "/legacy/home.html" },
-      { source: "/login", destination: "/legacy/auth.html" },
-      { source: "/register", destination: "/legacy/auth.html" },
-      { source: "/settings", destination: "/legacy/user_settings.html" },
-      { source: "/prompt_share", destination: "/legacy/prompt_share.html" },
-      { source: "/prompt_share/manage_prompts", destination: "/legacy/prompt_manage.html" },
       { source: "/api/:path*", destination: `${backendUrl}/api/:path*` },
       { source: "/prompt_share/api/:path*", destination: `${backendUrl}/prompt_share/api/:path*` },
       { source: "/prompt_manage/api/:path*", destination: `${backendUrl}/prompt_manage/api/:path*` },

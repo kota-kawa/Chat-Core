@@ -55,6 +55,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.9rem;
+  min-height: 100px; /* Ensure visibility */
 }
 
 .task-selection .task-wrapper {

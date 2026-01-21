@@ -26,12 +26,17 @@ function notifyAuthState(loggedIn) {
   }));
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   const authButtons   = document.getElementById("auth-buttons");
   const newPromptBtn  = document.getElementById("openNewPromptModal");
   const accessChatBtn = document.getElementById("access-chat-btn");
   const userIconEl    = document.getElementById('userIcon');
   const loginBtn      = document.getElementById("login-btn");
+  const newChatBtn    = document.getElementById("new-chat-btn"); // Added missing definition
+  const sendBtn       = document.getElementById("send-btn");       // Added missing definition
+  const userInput     = document.getElementById("user-input");     // Added missing definition
+  const backToSetupBtn= document.getElementById("back-to-setup");  // Added missing definition
+  const chatMessages  = document.getElementById("chat-messages");  // Added missing definition
 
   const applyAuthUI = loggedIn => {
     if (!authButtons || !userIconEl) return;
@@ -89,72 +94,84 @@ document.addEventListener('DOMContentLoaded', () => {
     currentChatRoomId = localStorage.getItem('currentChatRoomId');
 
   // ▼初期化
-  initToggleTasks();
-  initSetupTaskCards();
+  if (typeof initToggleTasks === 'function') initToggleTasks();
+  if (typeof initSetupTaskCards === 'function') initSetupTaskCards();
 
   // 初期表示はセットアップ
-  showSetupForm();
-  loadChatRooms();
+  if (typeof showSetupForm === 'function') showSetupForm();
+  if (typeof loadChatRooms === 'function') loadChatRooms();
 
 
   // 新規チャット
-  newChatBtn.addEventListener('click', () => {
-    currentChatRoomId = null;
-    localStorage.removeItem('currentChatRoomId');
-    chatMessages.innerHTML = '';
-    showSetupForm();
-  });
+  if (newChatBtn) {
+    newChatBtn.addEventListener('click', () => {
+      currentChatRoomId = null;
+      localStorage.removeItem('currentChatRoomId');
+      if (chatMessages) chatMessages.innerHTML = '';
+      if (typeof showSetupForm === 'function') showSetupForm();
+    });
+  }
 
   // 「これまでのチャットを見る」
-  accessChatBtn.addEventListener('click', () => {
-    fetch('/api/get_chat_rooms')
-      .then(res => res.json())
-      .then(data => {
-        const rooms = data.rooms || [];
-        if (rooms.length > 0) {
-          // 1件目が最も新しいルームなので切り替え
-          switchChatRoom(rooms[0].id);
-        } else {
-          // ルームがない場合は空のチャット画面を表示
-          showChatInterface();
-          loadChatRooms();
-          chatMessages.innerHTML = '';
-        }
-      })
-      .catch(err => {
-        console.error('ルーム一覧取得失敗:', err);
-        showChatInterface();
-        loadChatRooms();
-        chatMessages.innerHTML = '';
-      });
-  });
+  if (accessChatBtn) {
+    accessChatBtn.addEventListener('click', () => {
+      fetch('/api/get_chat_rooms')
+        .then(res => res.json())
+        .then(data => {
+          const rooms = data.rooms || [];
+          if (rooms.length > 0) {
+            // 1件目が最も新しいルームなので切り替え
+            if (typeof switchChatRoom === 'function') switchChatRoom(rooms[0].id);
+          } else {
+            // ルームがない場合は空のチャット画面を表示
+            if (typeof showChatInterface === 'function') showChatInterface();
+            if (typeof loadChatRooms === 'function') loadChatRooms();
+            if (chatMessages) chatMessages.innerHTML = '';
+          }
+        })
+        .catch(err => {
+          console.error('ルーム一覧取得失敗:', err);
+          if (typeof showChatInterface === 'function') showChatInterface();
+          if (typeof loadChatRooms === 'function') loadChatRooms();
+          if (chatMessages) chatMessages.innerHTML = '';
+        });
+    });
+  }
 
   // 送信
-  sendBtn.addEventListener('click', sendMessage);
+  if (sendBtn) sendBtn.addEventListener('click', sendMessage);
 
   // Enter 送信 (Shift+Enter で改行)
-  userInput.addEventListener('keypress', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
+  if (userInput) {
+    userInput.addEventListener('keypress', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
 
-  // テキストエリア高さ自動調整
-  userInput.addEventListener('input', () => {
-    userInput.style.height = 'auto';
-    userInput.style.height = userInput.scrollHeight + 'px';
-  });
+    // テキストエリア高さ自動調整
+    userInput.addEventListener('input', () => {
+      userInput.style.height = 'auto';
+      userInput.style.height = userInput.scrollHeight + 'px';
+    });
+  }
 
   // 戻るボタン
-  backToSetupBtn.addEventListener('click', showSetupForm);
+  if (backToSetupBtn) backToSetupBtn.addEventListener('click', showSetupForm);
 
   // 画面クリックでサイドメニューの 3 点メニューを閉じる
   document.addEventListener('click', () => {
     document.querySelectorAll('.room-actions-menu')
             .forEach(menu => menu.style.display = 'none');
   });
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 
 /* ▼ユーザーメニュー（設定 / ログアウト） ---------------------------------------*/
 function toggleUserMenu() {

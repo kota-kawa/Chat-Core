@@ -94,7 +94,7 @@ const FALLBACK_TASKS = [
     prompt_template: "状況・作業環境の内容を踏まえて、デートの計画を立ててほしい。",
     input_examples: "花火大会に行く予定、夜メインで楽しみたいので、デート計画を立てて。",
     output_examples:
-      "夕方から浴衣で合流し、屋台で食べ歩きを楽しんだ後、花火をゆっくり観賞。その後は近くのバーで軽くドリンクを飲みながら余韻に浸るのはいかがでしょうか。",
+      "夕方から浴衣で合流し、屋台で食べ歩きを楽しんだ後、花火をゆっくり観賞. その後は近くのバーで軽くドリンクを飲みながら余韻に浸るのはいかがでしょうか。",
   },
 ];
 
@@ -110,32 +110,42 @@ function loadTaskCards() {
   const ioModalContent = document.getElementById("io-modal-content");
 
   // モーダルを閉じるヘルパ
-  function closeIOModal() { ioModal.style.display = "none"; }
+  function closeIOModal() { 
+    if (ioModal) ioModal.style.display = "none"; 
+  } 
 
   if (ioModal && ioModalContent && !ioModal.dataset.bound) {
     ioModal.dataset.bound = "true";
     // 画面クリックでモーダルを閉じる
     document.addEventListener("click", () => {
-      if (ioModal.style.display === "block") closeIOModal();
+      if (ioModal && ioModal.style.display === "block") closeIOModal();
     });
     // 内部クリックでは閉じない
-    ioModalContent.addEventListener("click", e => e.stopPropagation());
+    if (ioModalContent) {
+      ioModalContent.addEventListener("click", e => e.stopPropagation());
+    }
   }
 
   const renderTaskCards = tasks => {
     const container = document.getElementById("task-selection");
     if (!container) return;
+    
+    // コンテナをクリア
     container.innerHTML = "";
 
+    // タスクが空の場合はメッセージを表示
     if (!tasks || tasks.length === 0) {
       container.innerHTML = "<p>タスクが見つかりませんでした。</p>";
       return;
     }
 
     tasks.forEach(task => {
-      const taskName = (typeof task?.name === "string" && task.name.trim())
+      // task自体がnull/undefinedの場合はスキップ（念のため）
+      if (!task) return;
+
+      const taskName = (typeof task.name === "string" && task.name.trim())
         ? task.name.trim()
-        : (task?.name ? String(task.name) : "無題");
+        : (task.name ? String(task.name) : "無題");
 
       // ラッパー
       const wrapper     = document.createElement("div");
@@ -156,7 +166,7 @@ function loadTaskCards() {
 
       const header = document.createElement("div");
       header.className = "task-header";
-      header.innerText = taskName.length > 8 ? taskName.substring(0, 8) + "…" : taskName;
+      header.textContent = taskName.length > 8 ? taskName.substring(0, 8) + "…" : taskName;
 
       const toggleBtn = document.createElement("button");
       toggleBtn.type = "button";
@@ -193,14 +203,15 @@ function loadTaskCards() {
   };
 
   const applyTasks = tasks => {
-    if (!tasks || tasks.length === 0) {
+    // タスクが空、もしくは配列でない場合はフォールバックを表示
+    if (!Array.isArray(tasks) || tasks.length === 0) {
       renderTaskCards(getFallbackTasks());
       return;
     }
     renderTaskCards(tasks);
   };
 
-  // 未ログインでも必ずカードが表示されるよう先にフォールバックを描画
+  // 初期ロード時: まずはフォールバックを表示しておく
   renderTaskCards(getFallbackTasks());
 
   // /api/tasks から取得
@@ -221,17 +232,22 @@ function loadTaskCards() {
     })
     .catch(err => {
       console.error("タスク読み込みに失敗:", err);
+      // エラー時もフォールバックを表示
       applyTasks([]);
     });
 }
 
 // ▼ 2. セットアップ画面の表示 ------------------------------------------------------
 function showSetupForm() {
-  chatContainer.style.display  = 'none';
-  setupContainer.style.display = 'block';
-  setupInfoElement.value = '';
+  const chatContainer = document.getElementById("chat-container");
+  const setupContainer = document.getElementById("setup-container");
+  const setupInfoElement = document.getElementById("setup-info");
+
+  if (chatContainer) chatContainer.style.display  = 'none';
+  if (setupContainer) setupContainer.style.display = 'block';
+  if (setupInfoElement) setupInfoElement.value = '';
   
-  // サイドバーの状態をクリーンアップして薄暗い画面を防ぐ
+  // サイドバーの状態をクリーンアップ
   const sidebar = document.querySelector('.sidebar');
   if (sidebar) {
     sidebar.classList.remove('open');
@@ -255,39 +271,48 @@ function handleTaskCardClick(e) {
   const card = e.target.closest('.prompt-card');
   if (!card) return;
 
+  const setupInfoElement = document.getElementById("setup-info");
+  const aiModelSelect = document.getElementById("ai-model");
+  const chatMessages = document.getElementById("chat-messages");
+
   // 入力フォームの値（空欄可）
-  const setupInfo = setupInfoElement.value.trim();  // ← ここは空でも OK
-  const aiModel   = aiModelSelect.value;
+  const setupInfo = setupInfoElement ? setupInfoElement.value.trim() : "";
+  const aiModel   = aiModelSelect ? aiModelSelect.value : "gemini-2.5-flash";
 
   const prompt_template = card.dataset.prompt_template;
   const inputExamples   = card.dataset.input_examples;
   const outputExamples  = card.dataset.output_examples;
 
-  // 新チャットルーム ID とタイトル（空欄ならデフォルト名）
+  // 新チャットルーム ID とタイトル
   const newRoomId   = Date.now().toString();
   const roomTitle   = setupInfo || '新規チャット';
 
-  currentChatRoomId = newRoomId;
+  // currentChatRoomId はグローバルまたは他で定義されている前提
+  window.currentChatRoomId = newRoomId;
   localStorage.setItem('currentChatRoomId', newRoomId);
 
   // ① ルームをサーバーに作成
-  createNewChatRoom(newRoomId, roomTitle)
-    .then(() => {
-      showChatInterface();
-      // 新しいチャットではメッセージ表示をリセット
-      chatMessages.innerHTML = '';
-      loadChatRooms();
-      localStorage.removeItem(`chatHistory_${newRoomId}`);
+  if (typeof createNewChatRoom === 'function') {
+    createNewChatRoom(newRoomId, roomTitle)
+      .then(() => {
+        if (typeof showChatInterface === 'function') showChatInterface();
+        // 新しいチャットではメッセージ表示をリセット
+        if (chatMessages) chatMessages.innerHTML = '';
+        if (typeof loadChatRooms === 'function') loadChatRooms();
+        localStorage.removeItem(`chatHistory_${newRoomId}`);
 
-      // ② 最初のメッセージ（setupInfo が空ならラベルごと省略）
-      const firstMsg = setupInfo
-        ? `【状況・作業環境】${setupInfo}\n【リクエスト】${prompt_template}\n\n入力例:\n${inputExamples}\n\n出力例:\n${outputExamples}`
-        : `【リクエスト】${prompt_template}\n\n入力例:\n${inputExamples}\n\n出力例:\n${outputExamples}`;
+        // ② 最初のメッセージ
+        const firstMsg = setupInfo
+          ? `【状況・作業環境】${setupInfo}\n【リクエスト】${prompt_template}\n\n入力例:\n${inputExamples}\n\n出力例:\n${outputExamples}`
+          : `【リクエスト】${prompt_template}\n\n入力例:\n${inputExamples}\n\n出力例:\n${outputExamples}`;
 
-      // ③ Bot 応答生成
-      generateResponse(firstMsg, aiModel);
-    })
-    .catch(err => alert('チャットルーム作成に失敗: ' + err));
+        // ③ Bot 応答生成
+        if (typeof generateResponse === 'function') generateResponse(firstMsg, aiModel);
+      })
+      .catch(err => alert('チャットルーム作成に失敗: ' + err));
+  } else {
+    console.error("createNewChatRoom is not defined");
+  }
 }
 
 // ▼ 4. 「もっと見る」ボタン生成 ----------------------------------------------------
@@ -304,7 +329,7 @@ function initToggleTasks() {
 
     // ボタン生成
     const btn = document.createElement('button');
-    btn.type = 'button';                     // ← これで submit 動作を防ぐ
+    btn.type = 'button';                     
     btn.id   = 'toggle-tasks-btn';
     btn.className     = 'primary-button';
     btn.style.width   = '100%';
@@ -313,7 +338,7 @@ function initToggleTasks() {
 
     let expanded = false;
     btn.addEventListener('click', e => {
-      e.preventDefault();                   // ← 念のためデフォルト動作もキャンセル
+      e.preventDefault();                   
       expanded = !expanded;
       [...cards].slice(6).forEach(c =>
         c.style.display = expanded ? 'flex' : 'none'

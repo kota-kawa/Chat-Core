@@ -2,25 +2,12 @@ from __future__ import annotations
 
 import os
 from typing import Any, Dict, List, Tuple
+from urllib.parse import urlencode
 
 from fastapi import Request
-from fastapi.templating import Jinja2Templates
-from jinja2 import Environment, FileSystemLoader, select_autoescape
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, RedirectResponse
 
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-
-TEMPLATE_DIRS = [
-    os.path.join(BASE_DIR, "templates"),
-    os.path.join(BASE_DIR, "blueprints", "prompt_share", "templates"),
-    os.path.join(BASE_DIR, "blueprints", "memo", "templates"),
-]
-
-_env = Environment(
-    loader=FileSystemLoader(TEMPLATE_DIRS),
-    autoescape=select_autoescape(["html", "xml"]),
-)
-templates = Jinja2Templates(env=_env)
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
 
 async def get_json(request: Request) -> Dict[str, Any] | None:
@@ -83,13 +70,26 @@ def url_for(request: Request, endpoint: str, **values: Any) -> str:
     return url.path
 
 
-def render_template(request: Request, template_name: str, **context: Any):
-    context.setdefault("request", request)
-    context.setdefault(
-        "url_for", lambda endpoint, **values: url_for(request, endpoint, **values)
-    )
-    context.setdefault(
-        "get_flashed_messages",
-        lambda **kwargs: get_flashed_messages(request, **kwargs),
-    )
-    return templates.TemplateResponse(template_name, context)
+def frontend_url(path: str = "", *, query: str | None = None) -> str:
+    base = FRONTEND_URL.rstrip("/")
+    if path:
+        normalized = path if path.startswith("/") else f"/{path}"
+        url = f"{base}{normalized}"
+    else:
+        url = f"{base}/"
+    if query:
+        return f"{url}?{query}"
+    return url
+
+
+def redirect_to_frontend(
+    request: Request, path: str | None = None, *, status_code: int = 302
+) -> RedirectResponse:
+    target_path = path if path is not None else request.url.path
+    query = request.url.query or None
+    return RedirectResponse(frontend_url(target_path, query=query), status_code=status_code)
+
+
+def frontend_login_url(next_path: str | None = None) -> str:
+    query = urlencode({"next": next_path}) if next_path else None
+    return frontend_url("/login", query=query)

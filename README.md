@@ -37,7 +37,7 @@ cd Strike_Chat
 # ビルドして起動
 docker-compose up --build
 ```
-ブラウザで `http://localhost:5004` にアクセスするとアプリが利用できます。
+ブラウザで `http://localhost:3000`（Next.js）にアクセスし、API は `http://localhost:5004` を利用します。
 
 ### ローカル環境での実行
 Docker を使わない場合、Python 3.10 以上の環境で次を実行します。
@@ -46,6 +46,7 @@ pip install -r requirements.txt
 export GROQ_API_KEY=...
 export Gemini_API_KEY=...
 export FLASK_SECRET_KEY=...
+export FRONTEND_URL=http://localhost:3000
 uvicorn app:app --reload --host 0.0.0.0 --port 5004
 ```
 
@@ -54,7 +55,7 @@ uvicorn app:app --reload --host 0.0.0.0 --port 5004
 - `auth.py` / `verification.py` : ユーザー登録・ログイン関連
 - `chat/` : チャット機能のルートと処理（複数ファイルに分割）
 - `prompt_share/` : プロンプト共有モジュール
-- `templates/` : HTML テンプレート
+- `frontend/` : Next.js フロントエンド
 - `static/` : CSS・JavaScript・画像などの静的ファイル
 - `db/init.sql` : 初期データベーススキーマ
 
@@ -63,7 +64,7 @@ uvicorn app:app --reload --host 0.0.0.0 --port 5004
 - `static/css/components/` : サイドバーやモーダルなど再利用可能なコンポーネントスタイルをまとめます。
 - `static/css/pages/<page>/index.css` : 各ページのエントリーポイントとなるCSS。`base/base.css` や必要なコンポーネントを `@import` します。
 
-クラス名は BEM 風の `kebab-case` を推奨し、各CSSファイルの冒頭に目的と依存関係をコメントで記述します。HTML テンプレートでは各ページの `index.css` のみを読み込みます。
+クラス名は BEM 風の `kebab-case` を推奨し、各CSSファイルの冒頭に目的と依存関係をコメントで記述します。Next.js 側で各ページの `index.css` のみを読み込みます。
 
 ## 本番運用のポイント
 - `FLASK_ENV=production` にして SameSite/Secure を有効化し、`FLASK_SECRET_KEY` などの機密情報は環境変数から読み込むようにしてください。

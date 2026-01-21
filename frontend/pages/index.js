@@ -243,7 +243,7 @@ export default function HomePage() {
       </Head>
       <div dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
 
-      <Script src="https://unpkg.com/dompurify@2.4.0/dist/purify.min.js" strategy="beforeInteractive" />
+      <Script src="https://unpkg.com/dompurify@2.4.0/dist/purify.min.js" strategy="afterInteractive" />
       <Script
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
         strategy="afterInteractive"

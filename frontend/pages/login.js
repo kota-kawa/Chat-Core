@@ -1,5 +1,6 @@
 import Head from "next/head";
 import Script from "next/script";
+import { useEffect } from "react";
 
 const bodyMarkup = `
 <div class="chat-background"></div>
@@ -359,8 +360,10 @@ body {
       font-size: 0.9rem;
     }
 `;
-const inlineScript = `
-// Logged-in users should not stay on the auth page. Redirect them to the top page.
+
+export default function AuthPage() {
+  useEffect(() => {
+    // Logged-in users should not stay on the auth page. Redirect them to the top page.
     fetch('/api/current_user')
       .then(response => response.json())
       .then(data => {
@@ -390,13 +393,13 @@ const inlineScript = `
     // Switch to login mode
     function switchToLogin() {
       currentMode = 'login';
-      loginToggle.classList.add('active');
-      registerToggle.classList.remove('active');
-      authTitle.textContent = 'ログイン';
-      iconDisplay.textContent = '🌱';
-      sendCodeBtn.textContent = '認証コード送信';
-      verifyCodeBtn.textContent = 'ログイン';
-      googleBtnText.textContent = 'Googleでログイン';
+      if(loginToggle) loginToggle.classList.add('active');
+      if(registerToggle) registerToggle.classList.remove('active');
+      if(authTitle) authTitle.textContent = 'ログイン';
+      if(iconDisplay) iconDisplay.textContent = '🌱';
+      if(sendCodeBtn) sendCodeBtn.textContent = '認証コード送信';
+      if(verifyCodeBtn) verifyCodeBtn.textContent = 'ログイン';
+      if(googleBtnText) googleBtnText.textContent = 'Googleでログイン';
       
       // Reset form
       resetForm();
@@ -405,13 +408,13 @@ const inlineScript = `
     // Switch to register mode
     function switchToRegister() {
       currentMode = 'register';
-      registerToggle.classList.add('active');
-      loginToggle.classList.remove('active');
-      authTitle.textContent = '登録';
-      iconDisplay.textContent = '🐟';
-      sendCodeBtn.textContent = '確認メール送信';
-      verifyCodeBtn.textContent = '認証する';
-      googleBtnText.textContent = 'Googleで登録';
+      if(registerToggle) registerToggle.classList.add('active');
+      if(loginToggle) loginToggle.classList.remove('active');
+      if(authTitle) authTitle.textContent = '登録';
+      if(iconDisplay) iconDisplay.textContent = '🐟';
+      if(sendCodeBtn) sendCodeBtn.textContent = '確認メール送信';
+      if(verifyCodeBtn) verifyCodeBtn.textContent = '認証する';
+      if(googleBtnText) googleBtnText.textContent = 'Googleで登録';
       
       // Reset form
       resetForm();
@@ -419,140 +422,164 @@ const inlineScript = `
 
     // Reset form to initial state
     function resetForm() {
-      document.getElementById('email').value = '';
-      document.getElementById('authCode').value = '';
-      emailSection.classList.remove('hidden');
-      codeSection.classList.add('hidden');
-      errorMessage.textContent = '';
-      sendCodeBtn.disabled = false;
+      if(document.getElementById('email')) document.getElementById('email').value = '';
+      if(document.getElementById('authCode')) document.getElementById('authCode').value = '';
+      if(emailSection) emailSection.classList.remove('hidden');
+      if(codeSection) codeSection.classList.add('hidden');
+      if(errorMessage) errorMessage.textContent = '';
+      if(sendCodeBtn) sendCodeBtn.disabled = false;
     }
 
     // Modal functions
     function showModalMessage(msg) {
-      document.getElementById('modalMessage').textContent = msg;
+      if(document.getElementById('modalMessage')) document.getElementById('modalMessage').textContent = msg;
       const modal = document.getElementById('messageModal');
-      modal.style.display = 'block';
-      setTimeout(hideModal, 2000);
+      if(modal) {
+        modal.style.display = 'block';
+        setTimeout(hideModal, 2000);
+      }
     }
 
     function hideModal() {
       const modal = document.getElementById('messageModal');
+      if(!modal) return;
       modal.classList.add('hide-animation');
-      modal.querySelector('.modal-content').addEventListener('animationend', function handler() {
-        modal.style.display = 'none';
-        modal.classList.remove('hide-animation');
-        this.removeEventListener('animationend', handler);
-      });
+      const content = modal.querySelector('.modal-content');
+      if(content) {
+          const handler = function() {
+            modal.style.display = 'none';
+            modal.classList.remove('hide-animation');
+            content.removeEventListener('animationend', handler);
+          };
+          content.addEventListener('animationend', handler);
+      } else {
+         modal.style.display = 'none';
+         modal.classList.remove('hide-animation');
+      }
     }
+
+    // Expose functions to window
+    window.switchToLogin = switchToLogin;
+    window.switchToRegister = switchToRegister;
 
     // Modal event listeners
     const modal = document.getElementById("messageModal");
-    const closeBtn = modal.querySelector(".close");
-    closeBtn.addEventListener("click", hideModal);
-    window.addEventListener("click", function (event) {
-      if (event.target == modal) hideModal();
-    });
+    if(modal) {
+        const closeBtn = modal.querySelector(".close");
+        if(closeBtn) closeBtn.addEventListener("click", hideModal);
+        window.addEventListener("click", function (event) {
+          if (event.target == modal) hideModal();
+        });
+    }
 
     // Send code button handler
-    document.getElementById('sendCodeBtn').addEventListener('click', async function () {
-      const email = document.getElementById('email').value.trim();
-      errorMessage.textContent = "";
-
-      if (!email) {
-        errorMessage.textContent = "メールアドレスを入力してください。";
-        return;
-      }
-
-      // Show spinner and disable button
-      document.getElementById('spinner').show();
-      sendCodeBtn.disabled = true;
-
-      try {
-        let endpoint, successIcon, successMessage;
-        
-        if (currentMode === 'login') {
-          endpoint = '/api/send_login_code';
-          successIcon = '🌳';
-          successMessage = '認証コードが送信されました。';
-        } else {
-          endpoint = '/api/send_verification_email';
-          successIcon = '🐳';
-          successMessage = '確認メールを送信しました。\n\n認証コードを入力してください。';
-        }
-
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email })
+    if(sendCodeBtn) {
+        sendCodeBtn.addEventListener('click', async function () {
+          const email = document.getElementById('email').value.trim();
+          if(errorMessage) errorMessage.textContent = "";
+    
+          if (!email) {
+            if(errorMessage) errorMessage.textContent = "メールアドレスを入力してください。";
+            return;
+          }
+    
+          // Show spinner and disable button
+          const spinner = document.getElementById('spinner');
+          if(spinner && spinner.show) spinner.show();
+          sendCodeBtn.disabled = true;
+    
+          try {
+            let endpoint, successIcon, successMessage;
+            
+            if (currentMode === 'login') {
+              endpoint = '/api/send_login_code';
+              successIcon = '🌳';
+              successMessage = '認証コードが送信されました。';
+            } else {
+              endpoint = '/api/send_verification_email';
+              successIcon = '🐳';
+              successMessage = '確認メールを送信しました。\n\n認証コードを入力してください。';
+            }
+    
+            const response = await fetch(endpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: email })
+            });
+    
+            const data = await response.json();
+            
+            if (data.status === "success") {
+              // Switch to code input
+              if(emailSection) emailSection.classList.add('hidden');
+              if(codeSection) codeSection.classList.remove('hidden');
+              if(iconDisplay) iconDisplay.textContent = successIcon;
+              showModalMessage(successMessage);
+            } else {
+              if(errorMessage) errorMessage.textContent = data.error || "認証コード送信に失敗しました。";
+            }
+          } catch (error) {
+            console.error('Error:', error);
+            if(errorMessage) errorMessage.textContent = "サーバーエラーが発生しました。";
+          } finally {
+            if(spinner && spinner.hide) spinner.hide();
+            sendCodeBtn.disabled = false;
+          }
         });
-
-        const data = await response.json();
-        
-        if (data.status === "success") {
-          // Switch to code input
-          emailSection.classList.add('hidden');
-          codeSection.classList.remove('hidden');
-          iconDisplay.textContent = successIcon;
-          showModalMessage(successMessage);
-        } else {
-          errorMessage.textContent = data.error || "認証コード送信に失敗しました。";
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        errorMessage.textContent = "サーバーエラーが発生しました。";
-      } finally {
-        document.getElementById('spinner').hide();
-        sendCodeBtn.disabled = false;
-      }
-    });
+    }
 
     // Verify code button handler
-    document.getElementById('verifyCodeBtn').addEventListener('click', async function () {
-      const authCode = document.getElementById('authCode').value.trim();
-      errorMessage.textContent = "";
-      
-      if (!authCode) {
-        errorMessage.textContent = "認証コードを入力してください。";
-        return;
-      }
-
-      try {
-        let endpoint;
-        
-        if (currentMode === 'login') {
-          endpoint = '/api/verify_login_code';
-        } else {
-          endpoint = '/api/verify_registration_code';
-        }
-
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ authCode: authCode })
-        });
-
-        const data = await response.json();
-        
-        if (data.status === "success") {
-          if (currentMode === 'register') {
-            showModalMessage("認証が完了しました！\n数秒後にトップページへ移動します。");
+    if(verifyCodeBtn) {
+        verifyCodeBtn.addEventListener('click', async function () {
+          const authCode = document.getElementById('authCode').value.trim();
+          if(errorMessage) errorMessage.textContent = "";
+          
+          if (!authCode) {
+            if(errorMessage) errorMessage.textContent = "認証コードを入力してください。";
+            return;
           }
-          setTimeout(() => {
-            window.location.href = "/";
-          }, currentMode === 'register' ? 2000 : 0);
-        } else {
-          errorMessage.textContent = data.error || "認証に失敗しました。";
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        errorMessage.textContent = "サーバーエラーが発生しました。";
-      }
-    });
+    
+          try {
+            let endpoint;
+            
+            if (currentMode === 'login') {
+              endpoint = '/api/verify_login_code';
+            } else {
+              endpoint = '/api/verify_registration_code';
+            }
+    
+            const response = await fetch(endpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ authCode: authCode })
+            });
+    
+            const data = await response.json();
+            
+            if (data.status === "success") {
+              if (currentMode === 'register') {
+                showModalMessage("認証が完了しました！\n数秒後にトップページへ移動します。");
+              }
+              setTimeout(() => {
+                window.location.href = "/";
+              }, currentMode === 'register' ? 2000 : 0);
+            } else {
+              if(errorMessage) errorMessage.textContent = data.error || "認証に失敗しました。";
+            }
+          } catch (error) {
+            console.error('Error:', error);
+            if(errorMessage) errorMessage.textContent = "サーバーエラーが発生しました。";
+          }
+        });
+    }
 
     // Google authentication button handler
-    document.getElementById('googleAuthBtn').addEventListener('click', function () {
-      window.location.href = '/google-login';
-    });
+    const googleAuthBtn = document.getElementById('googleAuthBtn');
+    if(googleAuthBtn) {
+        googleAuthBtn.addEventListener('click', function () {
+            window.location.href = '/google-login';
+        });
+    }
 
     // Initialize with login mode
     const initialMode = window.location.pathname === '/register' ? 'register' : 'login';
@@ -561,9 +588,14 @@ const inlineScript = `
     } else {
       switchToLogin();
     }
-`;
 
-export default function AuthPage() {
+    // Cleanup
+    return () => {
+        delete window.switchToLogin;
+        delete window.switchToRegister;
+    };
+  }, []); // Run once on mount
+
   return (
     <>
       <Head>
@@ -581,7 +613,6 @@ export default function AuthPage() {
       </Head>
       <div dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
       <Script type="module" src="/static/js/components/spinner.js" strategy="afterInteractive" />
-      <Script id="auth-inline-script" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: inlineScript }} />
     </>
   );
 }

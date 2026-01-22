@@ -18,8 +18,9 @@ from services.web import (
 )
 
 from . import admin_bp
+import os
 
-ADMIN_PASSWORD = "[REMOVED_SECRET]"
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "[REMOVED_SECRET]")
 
 
 def _quote_identifier(name: str) -> str:

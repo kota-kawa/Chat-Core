@@ -1,9 +1,10 @@
+import os
 import smtplib
 from email.mime.text import MIMEText
 from email.utils import formatdate
 
-SEND_ADDRESS = 'youzitsurist@gmail.com'
-SEND_PASSWORD = '[REMOVED_SECRET]'  # 例: アプリパスワード
+SEND_ADDRESS = os.getenv('SEND_ADDRESS', 'youzitsurist@gmail.com')
+SEND_PASSWORD = os.getenv('EMAIL_SEND_PASSWORD', '[REMOVED_SECRET]')  # 例: アプリパスワード
 
 def send_email(to_address, subject, body_text):
     """指定アドレスにメール送信"""

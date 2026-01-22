@@ -13,9 +13,9 @@ services:
       - PORT=5004
       - FRONTEND_URL=http://localhost:3000
       - POSTGRES_HOST=db
-      - POSTGRES_USER=chatuser
-      - POSTGRES_PASSWORD=chatpass
-      - POSTGRES_DB=chat_db
+      - POSTGRES_USER=${POSTGRES_USER:-chatuser}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-chatpass}
+      - POSTGRES_DB=${POSTGRES_DB:-chat_db}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_DB=0
@@ -52,10 +52,10 @@ services:
     container_name: postgres_db
     environment:
       # 作成するデータベース
-      POSTGRES_DB: chat_db
+      POSTGRES_DB: ${POSTGRES_DB:-chat_db}
       # ここで作成するユーザ
-      POSTGRES_USER: chatuser
-      POSTGRES_PASSWORD: chatpass
+      POSTGRES_USER: ${POSTGRES_USER:-chatuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-chatpass}
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro

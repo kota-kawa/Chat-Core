@@ -1,11 +1,38 @@
 import Head from "next/head";
+import type { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useState, type FormEvent, type MouseEvent } from "react";
 
-export async function getServerSideProps(context) {
+type ColumnDetail = {
+  name: string;
+  type?: string | null;
+  nullable?: boolean;
+  key?: string | null;
+  default?: string | number | null;
+  extra?: string | null;
+};
+
+type FlashMessage = [string, string];
+
+type AdminDashboardProps = {
+  tables: string[];
+  selectedTable: string;
+  columnNames: string[];
+  columnDetails: ColumnDetail[];
+  rows: Array<Array<unknown>>;
+  error: string;
+  messages: FlashMessage[];
+};
+
+type LocalMessage = {
+  type: "success" | "error";
+  text: string;
+};
+
+export const getServerSideProps: GetServerSideProps<AdminDashboardProps> = async (context) => {
   const backendUrl = process.env.BACKEND_URL || "http://localhost:5004";
-  const cookie = context.req.headers.cookie || "";
-  const table = context.query.table;
+  const cookie = typeof context.req.headers.cookie === "string" ? context.req.headers.cookie : "";
+  const table = typeof context.query.table === "string" ? context.query.table : undefined;
   const query = table ? `?table=${encodeURIComponent(table)}` : "";
 
   try {
@@ -47,7 +74,7 @@ export async function getServerSideProps(context) {
       }
     };
   }
-}
+};
 
 export default function AdminDashboard({
   tables,
@@ -57,9 +84,9 @@ export default function AdminDashboard({
   rows,
   error,
   messages
-}) {
+}: AdminDashboardProps) {
   const router = useRouter();
-  const [localMessage, setLocalMessage] = useState(null);
+  const [localMessage, setLocalMessage] = useState<LocalMessage | null>(null);
   const deleteDisabled = columnDetails.length <= 1;
   const wideColumns = [
     "message",
@@ -75,7 +102,7 @@ export default function AdminDashboard({
     "w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-2.5 text-sm text-slate-700 shadow-sm transition focus:border-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-100";
   const buttonClass =
     "rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-200/60 transition hover:-translate-y-0.5 hover:shadow-indigo-300/70 disabled:cursor-not-allowed disabled:opacity-60";
-  const flashTone = (category) => {
+  const flashTone = (category: string) => {
     if (category === "success") {
       return "border-emerald-400/70 bg-emerald-50 text-emerald-700";
     }
@@ -84,10 +111,10 @@ export default function AdminDashboard({
     }
     return "border-slate-200 bg-slate-50 text-slate-600";
   };
-  const cellWidthClass = (columnName) =>
+  const cellWidthClass = (columnName: string) =>
     wideColumns.includes(columnName) ? "min-w-[240px] max-w-[420px]" : "min-w-[140px]";
 
-  const submitForm = async (event, endpoint) => {
+  const submitForm = async (event: FormEvent<HTMLFormElement>, endpoint: string) => {
     event.preventDefault();
     setLocalMessage(null);
     const formData = new FormData(event.currentTarget);
@@ -112,7 +139,7 @@ export default function AdminDashboard({
     }
   };
 
-  const handleLogout = async (event) => {
+  const handleLogout = async (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
     try {
       await fetch("/admin/api/logout", {

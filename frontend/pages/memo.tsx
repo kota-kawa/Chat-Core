@@ -1,12 +1,32 @@
 import Head from "next/head";
 import Script from "next/script";
+import type { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 
-export async function getServerSideProps(context) {
+type MemoRecord = {
+  id: number | string;
+  title?: string | null;
+  tags?: string | null;
+  ai_response?: string | null;
+  input_content?: string | null;
+  created_at?: string | null;
+};
+
+type MessageState = {
+  type: "success" | "error";
+  text: string;
+};
+
+type MemoPageProps = {
+  memos: MemoRecord[];
+  saved: boolean;
+};
+
+export const getServerSideProps: GetServerSideProps<MemoPageProps> = async (context) => {
   const backendUrl = process.env.BACKEND_URL || "http://localhost:5004";
-  const cookie = context.req.headers.cookie || "";
-  let memos = [];
+  const cookie = typeof context.req.headers.cookie === "string" ? context.req.headers.cookie : "";
+  let memos: MemoRecord[] = [];
 
   try {
     const res = await fetch(`${backendUrl}/memo/api/recent`, {
@@ -28,9 +48,9 @@ export async function getServerSideProps(context) {
       saved
     }
   };
-}
+};
 
-export default function MemoPage({ memos, saved }) {
+export default function MemoPage({ memos, saved }: MemoPageProps) {
   const router = useRouter();
   const [formState, setFormState] = useState({
     input_content: "",
@@ -38,7 +58,7 @@ export default function MemoPage({ memos, saved }) {
     title: "",
     tags: ""
   });
-  const [message, setMessage] = useState(
+  const [message, setMessage] = useState<MessageState | null>(
     saved ? { type: "success", text: "メモを保存しました。" } : null
   );
   const [submitting, setSubmitting] = useState(false);
@@ -47,12 +67,12 @@ export default function MemoPage({ memos, saved }) {
       ? "border-violet-400/70 bg-violet-50 text-violet-700"
       : "border-rose-400/70 bg-rose-50 text-rose-700";
 
-  const handleChange = (event) => {
+  const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = event.target;
     setFormState((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setMessage(null);
 

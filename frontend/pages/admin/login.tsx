@@ -1,18 +1,23 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
+
+type StatusMessage = {
+  type: "success" | "error";
+  text: string;
+};
 
 export default function AdminLogin() {
   const router = useRouter();
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState(null);
+  const [message, setMessage] = useState<StatusMessage | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const messageTone =
     message?.type === "success"
       ? "border-emerald-400/70 bg-emerald-50 text-emerald-700"
       : "border-rose-400/70 bg-rose-50 text-rose-700";
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setMessage(null);
     setSubmitting(true);

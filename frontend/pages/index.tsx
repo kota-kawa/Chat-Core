@@ -1,5 +1,6 @@
 import Head from "next/head";
 import Script from "next/script";
+import { useEffect, useState } from "react";
 
 const bodyMarkup = `
 <!-- 浮遊メニュー -->
@@ -216,6 +217,14 @@ const bodyMarkup = `
 `;
 
 export default function HomePage() {
+  const [domPurifyReady, setDomPurifyReady] = useState(false);
+
+  useEffect(() => {
+    if (domPurifyReady) {
+      import("../scripts/entries/chat");
+    }
+  }, [domPurifyReady]);
+
   return (
     <>
       <Head>
@@ -243,25 +252,15 @@ export default function HomePage() {
       </Head>
       <div dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
 
-      <Script src="https://unpkg.com/dompurify@2.4.0/dist/purify.min.js" strategy="afterInteractive" />
+      <Script
+        src="https://unpkg.com/dompurify@2.4.0/dist/purify.min.js"
+        strategy="afterInteractive"
+        onLoad={() => setDomPurifyReady(true)}
+      />
       <Script
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
         strategy="afterInteractive"
       />
-      <Script src="/static/js/core/dom.js" strategy="afterInteractive" />
-      <Script src="/static/js/chat/message_utils.js" strategy="afterInteractive" />
-      <Script src="/static/js/chat/chat_ui.js" strategy="afterInteractive" />
-      <Script src="/static/js/chat/chat_messages.js" strategy="afterInteractive" />
-      <Script src="/static/js/chat/chat_history.js" strategy="afterInteractive" />
-      <Script src="/static/js/chat/chat_rooms.js" strategy="afterInteractive" />
-      <Script src="/static/js/chat/chat_controller.js" strategy="afterInteractive" />
-      <Script src="/static/js/setup/setup.js" strategy="afterInteractive" />
-      <Script src="/static/js/core/main.js" strategy="afterInteractive" />
-      <Script src="/static/js/setup/task_manager.js" strategy="afterInteractive" />
-      <Script src="/static/js/setup/new_prompt_modal.js" strategy="afterInteractive" />
-      <Script src="/static/js/components/popup_menu.js" strategy="afterInteractive" />
-      <Script src="/static/js/components/chat/popup_menu.js" strategy="afterInteractive" />
-      <Script src="/static/js/components/user_icon.js" strategy="afterInteractive" />
     </>
   );
 }

@@ -3,6 +3,7 @@
 ## 全体ルール (General Rules)
 <!-- プロジェクト全体で遵守すべき原則 -->
 - [ ] フロントエンドは TypeScript を標準とし、**既存 JS を含め全面的に TS/TSX へ移行する**
+- [ ] `allowJs` は使用せず、JS ファイルを残さない
 - [ ] 型安全性を優先し、暗黙の any を避ける（型が不明な場合は `unknown` + 型ガードで明示）
 - [ ] 既存仕様・UI・API 挙動を変えない前提で**全面移行**する
 - [ ] 移行完了時点で JS 依存を残さない（例外は原則禁止）
@@ -29,7 +30,7 @@
 <!-- ファイルの配置ルール、モジュール分割の方針 -->
 - `frontend/` 配下で TypeScript を主軸にする
 - 型定義は `frontend/types/` または機能ディレクトリ直下に配置する
-- `public/static/js` など静的 JS も移行対象とし、可能な限り TypeScript 化・置換する
+- `frontend/public/static/js`（公開パスは `/static/js`）など静的 JS も移行対象とし、TypeScript 化・置換したうえで JS 資産を残さない
 - `frontend/next-env.d.ts` を保持し、Next.js 型定義の基盤とする
 
 ## エラーハンドリング方針 (Error Handling Policy)

@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Script from "next/script";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const bodyMarkup = `
 <div class="user-settings-layout">
@@ -215,6 +215,14 @@ const bodyMarkup = `
 `;
 
 export default function UserSettingsPage() {
+  const [bootstrapReady, setBootstrapReady] = useState(false);
+
+  useEffect(() => {
+    if (bootstrapReady) {
+      import("../scripts/entries/settings");
+    }
+  }, [bootstrapReady]);
+
   useEffect(() => {{
     document.body.classList.add("user-settings-body");
     return () => document.body.classList.remove("user-settings-body");
@@ -248,8 +256,8 @@ export default function UserSettingsPage() {
       <Script
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
         strategy="afterInteractive"
+        onLoad={() => setBootstrapReady(true)}
       />
-      <Script src="/static/js/user/settings.js" strategy="afterInteractive" />
     </>
   );
 }

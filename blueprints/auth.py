@@ -38,12 +38,12 @@ if os.getenv("FLASK_ENV") != "production":
 
 GOOGLE_CLIENT_CONFIG = {
     "web": {
-        "client_id": "1059688188980-g1v3g4gmrhnr19pcdh94su969811pk4v.apps.googleusercontent.com",
+        "client_id": os.getenv("GOOGLE_CLIENT_ID"),
         "project_id": "chatcore-ai-469306",
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token",
         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_secret": "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",
+        "client_secret": os.getenv("GOOGLE_CLIENT_SECRET"),
         "redirect_uris": [],
         "javascript_origins": ["https://chatcore-ai.com"],
     }

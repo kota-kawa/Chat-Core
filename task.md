@@ -10,6 +10,8 @@
 - [ ] TypeScript 依存関係を追加（`typescript`, `@types/react`, `@types/node`）
 - [ ] `frontend/next-env.d.ts` を追加して Next.js の型定義を有効化する
 - [ ] `pages/` 配下の全ページを `.tsx` に移行（必要最低限の型付けで可）
+- [ ] `frontend/` 配下の `.js`/`.jsx` をすべて `.ts`/`.tsx` に移行する（`pages/` 以外も含む）
+- [ ] `frontend/public/static/js`（公開パスは `/static/js`）のスクリプトを TypeScript 化または置換し、JS 資産を残さない
 - [ ] `next.config.js`/ビルド設定で TS を有効化（必要な場合のみ）
 - [ ] 型定義の配置方針を決め、`frontend/types/` を用意する
 - [ ] `package.json` に `typecheck` スクリプトを追加する
@@ -26,7 +28,7 @@
 - [ ] `frontend` の `dev`/`build` が TypeScript 設定で通る
 - [ ] `.tsx` に移行したページがレンダリング可能である
 - [ ] `tsc --noEmit` が致命的エラー無しで完了する（`any` の乱用は避ける）
-- [ ] JS/TS の混在が発生していない
+- [ ] `frontend/` と `frontend/public/static/js` に `.js`/`.jsx` が残っていない
 - [ ] `typecheck` スクリプトが実行可能である
 - [ ] **すべてのテストに合格していること**（移行完了条件）
 
@@ -44,6 +46,9 @@
   - `frontend/package-lock.json`
   - `frontend/tsconfig.json`
   - `frontend/next-env.d.ts`
+  - `frontend/**/*.js`
+  - `frontend/**/*.jsx`
+  - `frontend/public/static/js/**`
   - `frontend/pages/_app.tsx`
   - `frontend/pages/_document.tsx`
   - `frontend/pages/index.tsx`
@@ -58,4 +63,4 @@
 - **壊しちゃいけない挙動**:
   - 既存ページのレンダリングとルーティング
   - フォーム送信や認証まわりの挙動
-  - 既存の静的 JS 連携の挙動（`public/static/js` は移行対象だが挙動維持）
+  - 既存の静的 JS 連携の挙動（`frontend/public/static/js` は移行対象だが挙動維持）

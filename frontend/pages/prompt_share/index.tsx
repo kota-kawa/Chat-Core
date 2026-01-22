@@ -1,5 +1,5 @@
 import Head from "next/head";
-import Script from "next/script";
+import { useEffect } from "react";
 
 const bodyMarkup = `
 <!-- 浮遊メニュー -->
@@ -250,6 +250,10 @@ const bodyMarkup = `
 `;
 
 export default function PromptSharePage() {
+  useEffect(() => {
+    import("../../scripts/entries/prompt_share");
+  }, []);
+
   return (
     <>
       <Head>
@@ -273,10 +277,6 @@ export default function PromptSharePage() {
         <link rel="stylesheet" href="/prompt_share/static/css/bundle/prompt_share_bundle.css" />
       </Head>
       <div dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
-
-      <Script src="/prompt_share/static/js/prompt_share.js" strategy="afterInteractive" />
-      <Script src="/static/js/components/popup_menu.js" strategy="afterInteractive" />
-      <Script src="/static/js/components/user_icon.js" strategy="afterInteractive" />
     </>
   );
 }

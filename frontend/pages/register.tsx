@@ -1,5 +1,6 @@
 import Head from "next/head";
 import Script from "next/script";
+import { useEffect } from "react";
 
 const bodyMarkup = `
 <div class="chat-background"></div>
@@ -591,6 +592,10 @@ const inlineScript = `
 `;
 
 export default function AuthPage() {
+  useEffect(() => {
+    import("../scripts/entries/auth");
+  }, []);
+
   return (
     <>
       <Head>
@@ -613,7 +618,6 @@ export default function AuthPage() {
         <style dangerouslySetInnerHTML={{ __html: styleMarkup }} />
       </Head>
       <div dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
-      <Script type="module" src="/static/js/components/spinner.js" strategy="afterInteractive" />
       <Script id="auth-inline-script" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: inlineScript }} />
     </>
   );

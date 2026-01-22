@@ -1,5 +1,4 @@
 import Head from "next/head";
-import Script from "next/script";
 import { useEffect } from "react";
 
 const bodyMarkup = `
@@ -395,6 +394,8 @@ type SpinnerElement = HTMLElement & {
 
 export default function AuthPage() {
   useEffect(() => {
+    import("../scripts/entries/auth");
+
     // Logged-in users should not stay on the auth page. Redirect them to the top page.
     fetch('/api/current_user')
       .then(response => response.json())
@@ -655,7 +656,6 @@ export default function AuthPage() {
         <style dangerouslySetInnerHTML={{ __html: styleMarkup }} />
       </Head>
       <div dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
-      <Script type="module" src="/static/js/components/spinner.js" strategy="afterInteractive" />
     </>
   );
 }

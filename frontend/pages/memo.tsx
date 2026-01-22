@@ -1,8 +1,7 @@
 import Head from "next/head";
-import Script from "next/script";
 import type { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 
 type MemoRecord = {
   id: number | string;
@@ -51,6 +50,10 @@ export const getServerSideProps: GetServerSideProps<MemoPageProps> = async (cont
 };
 
 export default function MemoPage({ memos, saved }: MemoPageProps) {
+  useEffect(() => {
+    import("../scripts/entries/memo");
+  }, []);
+
   const router = useRouter();
   const [formState, setFormState] = useState({
     input_content: "",
@@ -395,9 +398,6 @@ export default function MemoPage({ memos, saved }: MemoPageProps) {
         </div>
       </div>
 
-      <Script src="/static/js/components/popup_menu.js" strategy="afterInteractive" />
-      <Script src="/static/js/components/user_icon.js" strategy="afterInteractive" />
-      <Script src="/memo/static/js/memo_modal.js" strategy="afterInteractive" />
     </>
   );
 }

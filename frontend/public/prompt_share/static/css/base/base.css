@@ -1,9 +1,9 @@
 /* Shared variables and resets for prompt share pages */
 :root {
-  --primary-color: #2ecc71;
-  --accent-color: #27ae60;
+  --primary-color: #f97316;
+  --accent-color: #ea580c;
   --text-color: #333;
-  --light-bg: #e8f5e9;
+  --light-bg: #fff7ed;
   --background-color: var(--light-bg);
   --card-bg: #ffffff;
   --border-color: #dddddd;

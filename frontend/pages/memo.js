@@ -44,7 +44,7 @@ export default function MemoPage({ memos, saved }) {
   const [submitting, setSubmitting] = useState(false);
   const messageTone =
     message?.type === "success"
-      ? "border-emerald-400/70 bg-emerald-50 text-emerald-700"
+      ? "border-violet-400/70 bg-violet-50 text-violet-700"
       : "border-rose-400/70 bg-rose-50 text-rose-700";
 
   const handleChange = (event) => {
@@ -103,20 +103,20 @@ export default function MemoPage({ memos, saved }) {
         <link rel="icon" type="image/png" href="/static/favicon.png" />
       </Head>
 
-      <div className="relative min-h-screen overflow-hidden bg-emerald-50">
+      <div className="relative min-h-screen overflow-hidden bg-violet-50">
         <action-menu></action-menu>
 
-        <div className="pointer-events-none absolute -top-24 right-[-10rem] h-80 w-80 rounded-full bg-emerald-200/50 blur-3xl"></div>
-        <div className="pointer-events-none absolute top-40 -left-24 h-96 w-96 rounded-full bg-lime-200/50 blur-3xl"></div>
+        <div className="pointer-events-none absolute -top-24 right-[-10rem] h-80 w-80 rounded-full bg-violet-200/50 blur-3xl"></div>
+        <div className="pointer-events-none absolute top-40 -left-24 h-96 w-96 rounded-full bg-fuchsia-200/50 blur-3xl"></div>
 
         <div id="auth-buttons" className="fixed right-6 top-6 z-50 hidden">
           <button
             id="login-btn"
-            className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 shadow-lg shadow-emerald-200/60 backdrop-blur transition hover:-translate-y-0.5 hover:shadow-emerald-300/70"
+            className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 shadow-lg shadow-violet-200/60 backdrop-blur transition hover:-translate-y-0.5 hover:shadow-violet-300/70"
           >
             <svg
               aria-hidden="true"
-              className="h-4 w-4 text-emerald-600"
+              className="h-4 w-4 text-violet-600"
               viewBox="0 0 24 24"
               fill="currentColor"
             >
@@ -129,13 +129,13 @@ export default function MemoPage({ memos, saved }) {
         <user-icon id="userIcon" className="hidden"></user-icon>
 
         <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-10 px-6 py-12 lg:py-16">
-          <header className="rounded-3xl border border-white/70 bg-white/80 p-8 shadow-2xl shadow-emerald-100/60 backdrop-blur">
+          <header className="rounded-3xl border border-white/70 bg-white/80 p-8 shadow-2xl shadow-violet-100/60 backdrop-blur">
             <div className="flex flex-wrap items-center gap-4">
-              <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-600 text-2xl text-white shadow-lg shadow-emerald-200">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-600 text-2xl text-white shadow-lg shadow-violet-200">
                 ✍️
               </span>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-500">
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-violet-500">
                   Memo Workspace
                 </p>
                 <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
@@ -160,7 +160,7 @@ export default function MemoPage({ memos, saved }) {
           </header>
 
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-            <section className="rounded-3xl border border-white/70 bg-white/80 p-8 shadow-2xl shadow-emerald-100/40 backdrop-blur">
+            <section className="rounded-3xl border border-white/70 bg-white/80 p-8 shadow-2xl shadow-violet-100/40 backdrop-blur">
               <div className="flex flex-col gap-2">
                 <h2 className="text-xl font-semibold text-slate-900">新しいメモを追加</h2>
                 <p className="text-sm text-slate-500">
@@ -186,7 +186,7 @@ export default function MemoPage({ memos, saved }) {
                     id="input_content"
                     name="input_content"
                     placeholder="AIに送ったプロンプトを入力 / 貼り付けしてください"
-                    className="min-h-[140px] w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm transition focus:border-emerald-400 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                    className="min-h-[140px] w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm transition focus:border-violet-400 focus:outline-none focus:ring-4 focus:ring-violet-100"
                     value={formState.input_content}
                     onChange={handleChange}
                   />
@@ -201,7 +201,7 @@ export default function MemoPage({ memos, saved }) {
                     name="ai_response"
                     placeholder="AIからの回答を入力 / 貼り付けしてください"
                     required
-                    className="min-h-[180px] w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm transition focus:border-emerald-400 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                    className="min-h-[180px] w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm transition focus:border-violet-400 focus:outline-none focus:ring-4 focus:ring-violet-100"
                     value={formState.ai_response}
                     onChange={handleChange}
                   />
@@ -217,7 +217,7 @@ export default function MemoPage({ memos, saved }) {
                       id="title"
                       name="title"
                       placeholder="空の場合は回答の1行目が使われます"
-                      className="w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm transition focus:border-emerald-400 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                      className="w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm transition focus:border-violet-400 focus:outline-none focus:ring-4 focus:ring-violet-100"
                       value={formState.title}
                       onChange={handleChange}
                       maxLength={255}
@@ -232,7 +232,7 @@ export default function MemoPage({ memos, saved }) {
                       id="tags"
                       name="tags"
                       placeholder="例: 仕事 議事録"
-                      className="w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm transition focus:border-emerald-400 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                      className="w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-sm transition focus:border-violet-400 focus:outline-none focus:ring-4 focus:ring-violet-100"
                       value={formState.tags}
                       onChange={handleChange}
                       maxLength={255}
@@ -244,7 +244,7 @@ export default function MemoPage({ memos, saved }) {
                   <p className="text-xs text-slate-400">必須項目はAIの回答のみです。</p>
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-600 to-green-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-200/60 transition hover:-translate-y-0.5 hover:shadow-emerald-300/70 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-200/60 transition hover:-translate-y-0.5 hover:shadow-violet-300/70 disabled:cursor-not-allowed disabled:opacity-60"
                     disabled={submitting}
                   >
                     <svg
@@ -261,7 +261,7 @@ export default function MemoPage({ memos, saved }) {
               </form>
             </section>
 
-            <section className="rounded-3xl border border-white/70 bg-white/70 p-8 shadow-2xl shadow-emerald-100/40 backdrop-blur">
+            <section className="rounded-3xl border border-white/70 bg-white/70 p-8 shadow-2xl shadow-violet-100/40 backdrop-blur">
               <div className="flex flex-col gap-2">
                 <h2 className="text-xl font-semibold text-slate-900">最近保存したメモ</h2>
                 <p className="text-sm text-slate-500">メモをクリックすると内容が表示されます。</p>
@@ -280,7 +280,7 @@ export default function MemoPage({ memos, saved }) {
                       <li key={memo.id}>
                         <button
                           type="button"
-                          className="memo-item group w-full rounded-2xl border border-slate-100 bg-white/80 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50/70 hover:shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-100"
+                          className="memo-item group w-full rounded-2xl border border-slate-100 bg-white/80 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-violet-200 hover:bg-violet-50/70 hover:shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-100"
                           data-memo-id={memo.id}
                           data-title={displayTitle}
                           data-date={memo.created_at || ""}
@@ -289,7 +289,7 @@ export default function MemoPage({ memos, saved }) {
                           data-response={JSON.stringify(memo.ai_response || "")}
                         >
                           <div className="flex items-center justify-between gap-4">
-                            <h3 className="text-base font-semibold text-slate-900 group-hover:text-emerald-700">
+                            <h3 className="text-base font-semibold text-slate-900 group-hover:text-violet-700">
                               {displayTitle}
                             </h3>
                             {memo.created_at ? (
@@ -300,7 +300,7 @@ export default function MemoPage({ memos, saved }) {
                             {tagList.length ? (
                               tagList.map((tag) => (
                                 <span
-                                  className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700"
+                                  className="rounded-full bg-violet-50 px-2.5 py-1 text-violet-700"
                                   key={tag}
                                 >
                                   {tag}

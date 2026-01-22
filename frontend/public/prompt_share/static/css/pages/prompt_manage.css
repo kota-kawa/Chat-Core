@@ -139,7 +139,7 @@ body {
   background: var(--primary-color);
 }
 .edit-btn:hover {
-  background: #28b463;
+  background: #c2410c;
 }
 .delete-btn {
   background: #e74c3c;

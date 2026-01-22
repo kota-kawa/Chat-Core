@@ -5,7 +5,6 @@
 *.sock
 *.exe
 *.dll
-*.json
 *.Identifier
 # ログファイルを無視
 
@@ -33,3 +32,9 @@ logs/error.log
 # ビルドディレクトリを無視
 /build/
 __pycache__/
+
+# Next.js / Node
+.next/
+node_modules/
+frontend/.next/
+frontend/node_modules/

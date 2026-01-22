@@ -15,7 +15,9 @@ load_dotenv()
 
 app = FastAPI()
 
-secret_key = os.getenv("FLASK_SECRET_KEY", "YOUR_SECRET_KEY")
+secret_key = os.environ.get("FLASK_SECRET_KEY")
+if not secret_key:
+    raise ValueError("No FLASK_SECRET_KEY set for Flask application")
 permanent_max_age = int(timedelta(days=30).total_seconds())
 
 if os.getenv("FLASK_ENV") == "production":

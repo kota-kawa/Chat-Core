@@ -50,11 +50,18 @@ def _get_db_hosts():
 
 
 def _get_db_config():
+    user = _get_env("POSTGRES_USER", "MYSQL_USER", None)
+    password = _get_env("POSTGRES_PASSWORD", "MYSQL_PASSWORD", None)
+    dbname = _get_env("POSTGRES_DB", "MYSQL_DATABASE", None)
+    
+    if not all([user, password, dbname]):
+         raise ValueError("Database configuration (USER, PASSWORD, DB) must be set in environment variables.")
+
     return {
         "host": _get_env("POSTGRES_HOST", "MYSQL_HOST", "db"),
-        "user": _get_env("POSTGRES_USER", "MYSQL_USER", "chatuser"),
-        "password": _get_env("POSTGRES_PASSWORD", "MYSQL_PASSWORD", "chatpass"),
-        "dbname": _get_env("POSTGRES_DB", "MYSQL_DATABASE", "chat_db"),
+        "user": user,
+        "password": password,
+        "dbname": dbname,
         "port": int(_get_env("POSTGRES_PORT", "MYSQL_PORT", "5432")),
     }
 

@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function () {
+function initNewPromptModal() {
   const openModalBtn = document.getElementById("openNewPromptModal");
   const plusIcon = openModalBtn?.querySelector(".bi-plus-lg");
   const newPromptModal = document.getElementById("newPromptModal");
@@ -137,6 +137,12 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
   }
-});
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initNewPromptModal);
+} else {
+  initNewPromptModal();
+}
 
 

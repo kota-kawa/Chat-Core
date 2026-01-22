@@ -33,7 +33,7 @@
 
 #openNewPromptModal {
   order: 3; /* ＋ボタンを右端に */
-  margin-left: 400px; /* 右寄せ */
+  margin-left: auto; /* 右寄せ */
 }
 
 /* 共通の円形ボタン */
@@ -49,13 +49,14 @@
   font-size: 1.2rem;
   border: none;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
   box-shadow: var(--shadow);
   flex-shrink: 0; /* 縮小防止 */
 }
 
 .circle-button:hover {
   background: var(--accent-color);
+  transform: translateY(-1px);
 }
 
 /* ＋アイコンの回転アニメーション */
@@ -85,12 +86,13 @@
   top: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.45);
   align-items: center;
   justify-content: center;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease;
+  backdrop-filter: blur(6px);
 }
 
 .new-prompt-modal.show {
@@ -102,13 +104,14 @@
 .new-prompt-modal-content {
   background: var(--card-bg);
   padding: 2rem;
-  border-radius: 10px;
-  max-width: 600px;
+  border-radius: 18px;
+  max-width: 640px;
   width: 90%;
   position: relative;
-  box-shadow: var(--shadow);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
   max-height: 90vh;
   overflow-y: auto;
+  border: 1px solid rgba(22, 141, 72, 0.2);
 }
 
 /* モーダル内のクローズボタン */
@@ -137,12 +140,22 @@
 .new-post-form .form-group textarea,
 .new-post-form .form-group select {
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid #dfe9e5;
+  border-radius: 12px;
   font-family: inherit;
   font-size: 0.95rem;
   color: var(--text-color);
+  background: #fff;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.new-post-form .form-group input[type="text"]:focus,
+.new-post-form .form-group textarea:focus,
+.new-post-form .form-group select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(22, 141, 72, 0.18);
+  outline: none;
 }
 
 /* 送信ボタン */
@@ -150,27 +163,29 @@
   background: var(--accent-color);
   color: #fff;
   border: none;
-  border-radius: 6px;
-  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  padding: 0.65rem 1.1rem;
   font-family: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
 }
 
 .new-post-form .submit-btn:hover {
-  background: #1e8449;
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.16);
 }
 
 /* ガードレール部分（入出力例）のスタイル */
 #new-guardrail-fields {
   display: none; /* チェックボックスON時に表示 */
-  background: #f5f5f5;
+  background: #f5f7f6;
   border-left: 4px solid var(--accent-color);
-  padding: 0.5rem;
+  padding: 0.75rem;
   margin-top: 1rem;
   font-size: 0.9rem;
   color: var(--text-color);

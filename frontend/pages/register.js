@@ -49,315 +49,342 @@ const bodyMarkup = `
   </div>
 `;
 const styleMarkup = `
+:root {
+  --accent: #00ff88;
+  --accent-soft: #ccff99;
+  --bg-1: #0e401e;
+  --bg-2: #164f2f;
+  --glass: rgba(12, 28, 20, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --text: #eafff3;
+  --muted: rgba(255, 255, 255, 0.72);
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(135deg, #0e401e, #164f2f);
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-    }
+  margin: 0;
+  padding: 0;
+  font-family: 'Outfit', 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--text);
+  overflow: hidden;
+  position: relative;
+}
 
-    .auth-container {
-      position: relative;
-      z-index: 1;
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(8px);
-      padding: 40px;
-      border-radius: 20px;
-      text-align: center;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-      animation: float 5s ease-in-out infinite;
-      width: 90%;
-      max-width: 400px;
-      margin: 0 auto;
-      box-sizing: border-box;
-    }
+.auth-container {
+  position: relative;
+  z-index: 1;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px);
+  padding: 36px 32px 32px;
+  border-radius: 24px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  width: min(92vw, 440px);
+  margin: 0 auto;
+  animation: cardIn 0.8s ease;
+}
 
-    @media (max-width: 600px) {
-      .auth-container {
-        width: calc(100% - 32px);
-        margin: 0 16px;
-      }
-    }
+@media (max-width: 600px) {
+  .auth-container {
+    padding: 28px 22px 26px;
+  }
+}
 
-    @keyframes float {
-      0%, 100% {
-        transform: translateY(0);
-      }
-      50% {
-        transform: translateY(-10px);
-      }
-    }
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
 
-    .title {
-      font-size: 2rem;
-      color: #00ff88;
-      margin-bottom: 20px;
-      text-shadow: 2px 2px 5px #008844;
-      animation: pulse 1.5s ease-in-out infinite;
-    }
+.title {
+  font-size: 2.1rem;
+  color: var(--accent);
+  margin: 10px 0 18px;
+  letter-spacing: 0.06em;
+  text-shadow: 0 8px 24px rgba(0, 255, 136, 0.25);
+}
 
-    @keyframes pulse {
-      0% {
-        text-shadow: 2px 2px 5px #008844;
-      }
-      100% {
-        text-shadow: 4px 4px 20px #00ff88;
-      }
-    }
+.auth-toggle {
+  display: flex;
+  margin-bottom: 22px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 4px;
+  gap: 4px;
+}
 
-    .auth-toggle {
-      display: flex;
-      margin-bottom: 25px;
-      border-radius: 25px;
-      background: rgba(0, 0, 0, 0.3);
-      overflow: hidden;
-    }
+.toggle-btn {
+  flex: 1;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 0.98rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 999px;
+  transition: all 0.25s ease;
+}
 
-    .toggle-btn {
-      flex: 1;
-      padding: 12px 20px;
-      background: transparent;
-      border: none;
-      color: #ffffff;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
+.toggle-btn.active {
+  background: var(--accent);
+  color: #072b1a;
+  box-shadow: 0 8px 20px rgba(0, 255, 136, 0.35);
+}
 
-    .toggle-btn.active {
-      background: #00ff88;
-      color: #000000;
-      font-weight: bold;
-    }
+.toggle-btn:hover:not(.active) {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
 
-    .toggle-btn:hover:not(.active) {
-      background: rgba(255, 255, 255, 0.1);
-    }
+.email-label {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin: 12px 0 8px;
+  text-align: left;
+}
 
-    .email-label {
-      display: block;
-      font-size: 1.2rem;
-      color: #00ff88;
-      margin-bottom: 10px;
-    }
+.email-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(10, 20, 15, 0.55);
+  color: #ffffff;
+  outline: none;
+  transition: border 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  margin-bottom: 16px;
+}
 
-    .email-input {
-      width: 100%;
-      padding: 10px;
-      font-size: 1rem;
-      border: none;
-      border-radius: 25px;
-      background: rgba(0, 0, 0, 0.2);
-      color: #ffffff;
-      outline: none;
-      transition: all 0.3s ease;
-      margin-bottom: 20px;
-      box-sizing: border-box;
-    }
+.email-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
 
-    .email-input:focus {
-      background: rgba(0, 0, 0, 0.3);
-      box-shadow: 0 0 10px #00ff88;
-    }
+.email-input:focus {
+  background: rgba(10, 20, 15, 0.7);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.2);
+}
 
-    .submit-btn {
-      background-color: #00ff88;
-      color: #ffffff;
-      border: none;
-      padding: 10px 25px;
-      font-size: 1.2rem;
-      border-radius: 25px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      width: 80%;
-      margin: 20px auto 0;
-      display: block;
-      text-align: center;
-    }
+.submit-btn {
+  background: linear-gradient(135deg, #00ff88, #00d77a);
+  color: #072b1a;
+  border: none;
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  width: 100%;
+  margin: 6px auto 0;
+  display: block;
+  text-align: center;
+}
 
-    .submit-btn:hover {
-      background-color: #008844;
-      box-shadow: 0 0 15px #00ff88;
-    }
+.submit-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(0, 255, 136, 0.35);
+}
 
-    .submit-btn:disabled {
-      background-color: #666;
-      cursor: not-allowed;
-    }
+.submit-btn:disabled {
+  background: #666;
+  color: #e0e0e0;
+  cursor: not-allowed;
+  box-shadow: none;
+}
 
-    .google-btn {
-      background-color: #4285F4;
-      color: #ffffff;
-      border: none;
-      padding: 10px 25px;
-      font-size: 1.2rem;
-      border-radius: 25px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-      width: 80%;
-      margin: 20px auto 0;
-    }
+.google-btn {
+  background-color: #4285F4;
+  color: #ffffff;
+  border: none;
+  padding: 12px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  margin: 18px auto 0;
+}
 
-    .google-btn:hover {
-      background-color: #357AE8;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-    }
+.google-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.25);
+}
 
-    .google-container {
-      margin-top: 20px;
-    }
+.google-container {
+  margin-top: 8px;
+}
 
-    /* スマホ表示時にボタンのフォントサイズを調整 */
-    @media (max-width: 600px) {
-      .submit-btn, .google-btn {
-        font-size: 1rem;
-      }
-    }
+@media (max-width: 600px) {
+  .submit-btn, .google-btn {
+    font-size: 0.95rem;
+  }
+}
 
-    .bot-icon {
-      font-size: 4rem;
-      color: #00ff88;
-      margin-bottom: 20px;
-      animation: botBlink 3s ease-in-out infinite;
-    }
+.bot-icon {
+  font-size: 3.6rem;
+  color: var(--accent);
+  margin-bottom: 12px;
+  animation: botBlink 3s ease-in-out infinite;
+}
 
-    @keyframes botBlink {
-      0%, 100% {
-        opacity: 1;
-      }
-      50% {
-        opacity: 0.5;
-      }
-    }
+@keyframes botBlink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
 
-    .chat-background {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: url("/static/img.jpg") no-repeat center center/cover;
-      opacity: 0.2;
-      z-index: 0;
-    }
+.chat-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url("/static/img.jpg") no-repeat center center / cover;
+  opacity: 0.22;
+  z-index: 0;
+}
 
-    /* Code section styling for register mode */
-    #codeSection .email-input {
-      background: rgba(0, 0, 0, 0.3);
-      border: 2px solid #ccff99;
-      color: #ccff99;
-    }
+.chat-background::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(14, 64, 30, 0.75), rgba(22, 79, 47, 0.6));
+}
 
-    #codeSection .email-input:focus {
-      background: rgba(0, 0, 0, 0.4);
-      box-shadow: 0 0 10px #ccff99;
-    }
+#code-section .email-input {
+  border-color: rgba(204, 255, 153, 0.6);
+  color: #ccff99;
+}
 
-    #codeSection .submit-btn {
-      background-color: #ccff99;
-      color: #000000;
-    }
+#code-section .email-input:focus {
+  border-color: #ccff99;
+  box-shadow: 0 0 0 3px rgba(204, 255, 153, 0.25);
+}
 
-    #codeSection .submit-btn:hover {
-      background-color: #b3e68d;
-      box-shadow: 0 0 15px #ccff99;
-    }
+#code-section .submit-btn {
+  background: linear-gradient(135deg, #ccff99, #b3e68d);
+  color: #14361f;
+}
 
-    /* --- モーダルのスタイル --- */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0, 0, 0, 0.5);
-    }
+#code-section .submit-btn:hover {
+  box-shadow: 0 12px 24px rgba(204, 255, 153, 0.35);
+}
 
-    .modal-content {
-      position: relative;
-      background-color: #0e401e;
-      margin: 15% auto;
-      padding: 20px;
-      border: 1px solid #888;
-      width: 80%;
-      max-width: 400px;
-      border-radius: 10px;
-      text-align: center;
-      color: #fff;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-      animation: modalFadeIn 0.5s;
-    }
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+}
 
-    #modalMessage {
-      white-space: pre-line;
-    }
+.modal-content {
+  position: relative;
+  background-color: #0e401e;
+  margin: 15% auto;
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  width: min(88vw, 420px);
+  border-radius: 16px;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.3);
+  animation: modalFadeIn 0.4s ease;
+}
 
-    @keyframes modalFadeIn {
-      from {
-        opacity: 0;
-        transform: scale(0.9);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
+#modalMessage {
+  white-space: pre-line;
+}
 
-    /* 下から上に消えるスライドアップアニメーション */
-    @keyframes slideUp {
-      from {
-        transform: translateY(0);
-        opacity: 1;
-      }
-      to {
-        transform: translateY(-100%);
-        opacity: 0;
-      }
-    }
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
 
-    .modal.hide-animation .modal-content {
-      animation: slideUp 0.5s forwards;
-    }
+@keyframes slideUp {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
 
-    .close {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      color: #aaa;
-      font-size: 28px;
-      font-weight: bold;
-      cursor: pointer;
-    }
+.modal.hide-animation .modal-content {
+  animation: slideUp 0.5s forwards;
+}
 
-    .close:hover,
-    .close:focus {
-      color: #fff;
-      text-decoration: none;
-    }
+.close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+}
 
-    /* Hidden sections */
-    .hidden {
-      display: none !important;
-    }
+.close:hover,
+.close:focus {
+  color: #fff;
+  text-decoration: none;
+}
 
-    .error-message {
-      color: #ff6b6b;
-      margin-bottom: 10px;
-      font-size: 0.9rem;
-    }
+.hidden {
+  display: none !important;
+}
+
+.error-message {
+  color: #ff6b6b;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid rgba(0, 255, 136, 0.35);
+  outline-offset: 2px;
+}
 `;
 const inlineScript = `
 // Logged-in users should not stay on the auth page. Redirect them to the top page.
@@ -570,6 +597,12 @@ export default function AuthPage() {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>AIチャット 認証</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap"
+        />
         <link rel="icon" type="image/webp" href="/static/favicon.webp" />
         <link rel="icon" type="image/png" href="/static/favicon.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png" />

@@ -1,4 +1,15 @@
-document.addEventListener("DOMContentLoaded", function () {
+function initPromptSharePage(attempt = 0) {
+  const promptContainer = document.querySelector(".prompt-cards");
+  if (!promptContainer) {
+    if (attempt < 10) {
+      requestAnimationFrame(() => initPromptSharePage(attempt + 1));
+    }
+    return;
+  }
+  if (promptContainer.dataset.psInitialized === "true") {
+    return;
+  }
+  promptContainer.dataset.psInitialized = "true";
 
   // ログイン状態の確認とUI切り替え
   const userIcon = document.getElementById('userIcon');
@@ -44,7 +55,10 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  document.addEventListener('click', () => closeAllDropdowns());
+  if (document.body && document.body.dataset.psDropdownListener !== "true") {
+    document.body.dataset.psDropdownListener = "true";
+    document.addEventListener('click', () => closeAllDropdowns());
+  }
 
 
   const TITLE_CHAR_LIMIT = 17;
@@ -175,6 +189,7 @@ document.addEventListener("DOMContentLoaded", function () {
     card.dataset.fullTitle = prompt.title || '';
     card.dataset.fullContent = prompt.content || '';
     card.dataset.savedToList = isSavedToList ? 'true' : 'false';
+    card.dataset.psBound = 'true';
 
     const bookmarkBtn = card.querySelector(".bookmark-btn");
     if (bookmarkBtn) {
@@ -305,9 +320,16 @@ document.addEventListener("DOMContentLoaded", function () {
   // ------------------------------
   function loadPrompts() {
     return fetch('/prompt_share/api/prompts')
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
       .then(data => {
-        const promptContainer = document.querySelector(".prompt-cards");
+        if (!promptContainer) {
+          return;
+        }
         promptContainer.innerHTML = ""; // 既存のカードをクリア
 
         if (data.prompts) {
@@ -327,9 +349,16 @@ document.addEventListener("DOMContentLoaded", function () {
             const card = createPromptCardElement(prompt);
             promptContainer.appendChild(card);
           });
+        } else {
+          promptContainer.innerHTML = "<p>プロンプトが見つかりませんでした。</p>";
         }
       })
-      .catch(err => console.error("プロンプト取得エラー:", err));
+      .catch(err => {
+        console.error("プロンプト取得エラー:", err);
+        if (promptContainer) {
+          promptContainer.innerHTML = `<p>エラーが発生しました: ${err.message}</p>`;
+        }
+      });
   }
 
 
@@ -343,6 +372,9 @@ document.addEventListener("DOMContentLoaded", function () {
   function setupStaticCardEvents() {
     const staticCards = document.querySelectorAll('.prompt-card');
     staticCards.forEach(card => {
+      if (card.dataset.psBound === 'true') {
+        return;
+      }
       const titleElem = card.querySelector('h3');
       if (titleElem) {
         const fullTitle = titleElem.textContent;
@@ -455,6 +487,7 @@ document.addEventListener("DOMContentLoaded", function () {
         closeAllDropdowns();
         showPromptDetailModal(mockPrompt);
       });
+      card.dataset.psBound = 'true';
     });
   }
 
@@ -466,10 +499,13 @@ document.addEventListener("DOMContentLoaded", function () {
   // ------------------------------
   const searchInput = document.getElementById("searchInput");
   const searchButton = document.getElementById("searchButton");
-  const promptCardsSection = document.querySelector(".prompt-cards");
+  const promptCardsSection = promptContainer;
   const selectedCategoryTitle = document.getElementById("selected-category-title");
 
   function searchPromptsServer() {
+    if (!searchInput || !promptCardsSection || !selectedCategoryTitle) {
+      return;
+    }
     const query = searchInput.value.trim();
 
     // クエリが空の場合は、全プロンプトを再表示
@@ -506,31 +542,35 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   }
 
-  searchButton.addEventListener("click", searchPromptsServer);
-  searchInput.addEventListener("keydown", function (event) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      searchPromptsServer();
-    }
-  });
+  if (searchButton && searchInput) {
+    searchButton.addEventListener("click", searchPromptsServer);
+    searchInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        searchPromptsServer();
+      }
+    });
+  }
 
   // ------------------------------
   // カテゴリ選択と表示
   // ------------------------------
   const categoryCards = document.querySelectorAll(".category-card");
-  categoryCards.forEach((card) => {
-    card.addEventListener("click", () => {
-      // 検索結果状態の場合は、検索入力をクリアし最新の全プロンプトを再取得
-      if (searchInput.value.trim() !== "") {
-        searchInput.value = "";
-        loadPrompts().then(() => {
+  if (categoryCards.length > 0 && selectedCategoryTitle) {
+    categoryCards.forEach((card) => {
+      card.addEventListener("click", () => {
+        // 検索結果状態の場合は、検索入力をクリアし最新の全プロンプトを再取得
+        if (searchInput && searchInput.value.trim() !== "") {
+          searchInput.value = "";
+          loadPrompts().then(() => {
+            applyCategoryFilter(card);
+          });
+        } else {
           applyCategoryFilter(card);
-        });
-      } else {
-        applyCategoryFilter(card);
-      }
+        }
+      });
     });
-  });
+  }
 
   // カテゴリフィルタを適用する関数
   function applyCategoryFilter(card) {
@@ -559,64 +599,83 @@ document.addEventListener("DOMContentLoaded", function () {
   // 投稿フォームの送信処理
   // ------------------------------
   const postForm = document.getElementById("postForm");
-  postForm.addEventListener("submit", function (e) {
-    e.preventDefault();
+  if (postForm) {
+    postForm.addEventListener("submit", function (e) {
+      e.preventDefault();
 
-    const title = document.getElementById("prompt-title").value;
-    const category = document.getElementById("prompt-category").value;
-    const content = document.getElementById("prompt-content").value;
-    const author = document.getElementById("prompt-author").value;
+      const titleInput = document.getElementById("prompt-title");
+      const categoryInput = document.getElementById("prompt-category");
+      const contentInput = document.getElementById("prompt-content");
+      const authorInput = document.getElementById("prompt-author");
+      if (!titleInput || !categoryInput || !contentInput || !authorInput) {
+        alert("フォーム要素が見つかりませんでした。ページを再読み込みしてください。");
+        return;
+      }
 
-    // ガードレール使用のチェックと値取得
-    const useGuardrail = document.getElementById("guardrail-checkbox").checked;
-    let input_examples = "";
-    let output_examples = "";
-    if (useGuardrail) {
-      input_examples = document.getElementById("prompt-input-example").value;
-      output_examples = document.getElementById("prompt-output-example").value;
-    }
+      const title = titleInput.value;
+      const category = categoryInput.value;
+      const content = contentInput.value;
+      const author = authorInput.value;
 
+      // ガードレール使用のチェックと値取得
+      const guardrailCheckbox = document.getElementById("guardrail-checkbox");
+      const useGuardrail = guardrailCheckbox ? guardrailCheckbox.checked : false;
+      let input_examples = "";
+      let output_examples = "";
+      if (useGuardrail) {
+        const inputExample = document.getElementById("prompt-input-example");
+        const outputExample = document.getElementById("prompt-output-example");
+        input_examples = inputExample ? inputExample.value : "";
+        output_examples = outputExample ? outputExample.value : "";
+      }
 
-    // すべての投稿を公開するため、常に true に設定
-    const isPublic = true;
+      // すべての投稿を公開するため、常に true に設定
+      const isPublic = true;
 
-    const postData = {
-      title: title,
-      category: category,
-      content: content,
-      author: author,
-      input_examples: input_examples,
-      output_examples: output_examples,
-      is_public: isPublic
-    };
+      const postData = {
+        title: title,
+        category: category,
+        content: content,
+        author: author,
+        input_examples: input_examples,
+        output_examples: output_examples,
+        is_public: isPublic
+      };
 
-    fetch('/prompt_share/api/prompts', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(postData)
-    })
-      .then(response => response.json())
-      .then(result => {
-        if (result.error) {
-          alert("エラー: " + result.error);
-        } else {
-          alert("プロンプトが投稿されました！");
-          // フォームリセット＆モーダルを閉じる
-          postForm.reset();
-          document.getElementById("guardrail-fields").style.display = "none";
-          document.getElementById("postModal").classList.remove("show");
-          triggerNewPromptIconRotation();
-          // 最新のプロンプト一覧を再読み込み
-          loadPrompts();
-        }
+      fetch('/prompt_share/api/prompts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(postData)
       })
-      .catch(err => {
-        console.error("投稿エラー:", err);
-        alert("プロンプト投稿中にエラーが発生しました。");
-      });
-  });
+        .then(response => response.json())
+        .then(result => {
+          if (result.error) {
+            alert("エラー: " + result.error);
+          } else {
+            alert("プロンプトが投稿されました！");
+            // フォームリセット＆モーダルを閉じる
+            postForm.reset();
+            const guardrailFields = document.getElementById("guardrail-fields");
+            if (guardrailFields) {
+              guardrailFields.style.display = "none";
+            }
+            const postModal = document.getElementById("postModal");
+            if (postModal) {
+              postModal.classList.remove("show");
+            }
+            triggerNewPromptIconRotation();
+            // 最新のプロンプト一覧を再読み込み
+            loadPrompts();
+          }
+        })
+        .catch(err => {
+          console.error("投稿エラー:", err);
+          alert("プロンプト投稿中にエラーが発生しました。");
+        });
+    });
+  }
 
   // ------------------------------
   // 投稿モーダルの表示・非表示
@@ -641,28 +700,35 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  openModalBtn.addEventListener("click", function () {
-    if (!isLoggedIn) {
-      alert("プロンプトを投稿するにはログインが必要です。");
-      return;
-    }
+  if (openModalBtn && postModal) {
+    openModalBtn.addEventListener("click", function () {
+      if (!isLoggedIn) {
+        alert("プロンプトを投稿するにはログインが必要です。");
+        return;
+      }
 
-    triggerNewPromptIconRotation();
+      triggerNewPromptIconRotation();
 
-    postModal.classList.add("show");
-  });
+      postModal.classList.add("show");
+    });
+  }
 
-  closeModalBtn.addEventListener("click", function () {
-    postModal.classList.remove("show");
-    triggerNewPromptIconRotation();
-  });
-
-  window.addEventListener("click", function (event) {
-    if (event.target === postModal) {
+  if (closeModalBtn && postModal) {
+    closeModalBtn.addEventListener("click", function () {
       postModal.classList.remove("show");
       triggerNewPromptIconRotation();
-    }
-  });
+    });
+  }
+
+  if (postModal && postModal.dataset.psWindowListener !== "true") {
+    postModal.dataset.psWindowListener = "true";
+    window.addEventListener("click", function (event) {
+      if (event.target === postModal) {
+        postModal.classList.remove("show");
+        triggerNewPromptIconRotation();
+      }
+    });
+  }
 
   // ------------------------------
   // ブックマーク機能（すでに存在するカードに対しても登録）
@@ -719,9 +785,11 @@ document.addEventListener("DOMContentLoaded", function () {
   const guardrailCheckbox = document.getElementById("guardrail-checkbox");
   const guardrailFields = document.getElementById("guardrail-fields");
 
-  guardrailCheckbox.addEventListener("change", function () {
-    guardrailFields.style.display = guardrailCheckbox.checked ? "block" : "none";
-  });
+  if (guardrailCheckbox && guardrailFields) {
+    guardrailCheckbox.addEventListener("change", function () {
+      guardrailFields.style.display = guardrailCheckbox.checked ? "block" : "none";
+    });
+  }
 
 
   // ------------------------------
@@ -768,14 +836,24 @@ document.addEventListener("DOMContentLoaded", function () {
   const closePromptDetailModalBtn = document.getElementById("closePromptDetailModal");
 
   // 閉じるボタンでモーダルを閉じる
-  closePromptDetailModalBtn.addEventListener("click", function () {
-    promptDetailModal.classList.remove("show");
-  });
+  if (closePromptDetailModalBtn && promptDetailModal) {
+    closePromptDetailModalBtn.addEventListener("click", function () {
+      promptDetailModal.classList.remove("show");
+    });
+  }
 
   // モーダル背景クリックで閉じる
-  promptDetailModal.addEventListener("click", function (e) {
-    if (e.target === promptDetailModal) {
-      promptDetailModal.classList.remove("show");
-    }
-  });
-});
+  if (promptDetailModal) {
+    promptDetailModal.addEventListener("click", function (e) {
+      if (e.target === promptDetailModal) {
+        promptDetailModal.classList.remove("show");
+      }
+    });
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initPromptSharePage);
+} else {
+  initPromptSharePage();
+}

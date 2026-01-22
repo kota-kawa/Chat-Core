@@ -14,7 +14,8 @@ async def get_prompts(request: Request):
     """
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    user_id = request.session.get('user_id')
+    session = getattr(request, "session", {}) or {}
+    user_id = session.get('user_id')
     try:
         cursor.execute("""
             SELECT id, title, category, content, author, input_examples, output_examples, created_at
@@ -22,7 +23,7 @@ async def get_prompts(request: Request):
             WHERE is_public = TRUE
             ORDER BY created_at DESC
         """)
-        prompts = cursor.fetchall()
+        prompts = [dict(row) for row in cursor.fetchall()]
 
         bookmark_titles = set()
         saved_prompt_ids = set()
@@ -52,6 +53,9 @@ async def get_prompts(request: Request):
 
         # 各プロンプトにブックマーク・保存状態のフラグを付与
         for prompt in prompts:
+            created_at = prompt.get("created_at")
+            if created_at is not None and hasattr(created_at, "isoformat"):
+                prompt["created_at"] = created_at.isoformat()
             prompt['bookmarked'] = prompt['title'] in bookmark_titles
             prompt['saved_to_list'] = (
                 prompt['id'] in saved_prompt_ids or prompt['title'] in saved_prompt_titles

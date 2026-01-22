@@ -275,7 +275,6 @@ export default function PromptSharePage() {
       <div dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
 
       <Script src="/prompt_share/static/js/prompt_share.js" strategy="afterInteractive" />
-      <Script src="/prompt_share/static/js/prompt_search.js" strategy="afterInteractive" />
       <Script src="/static/js/components/popup_menu.js" strategy="afterInteractive" />
       <Script src="/static/js/components/user_icon.js" strategy="afterInteractive" />
     </>

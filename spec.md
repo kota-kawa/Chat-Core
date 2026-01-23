@@ -42,6 +42,6 @@
 ## テスト方針 (Testing Policy)
 <!-- テストの種類、カバレッジ目標、使用ツール -->
 - **Unit Tests**: 既存の `unittest` を継続（フロントは必要に応じて追加）
-- **E2E Tests**: 追加は将来検討（今回の移行では必須にしない）
+- **E2E Tests**: 必要であれば、作成実行をする
 - **Type Check**: CI またはローカルで `tsc --noEmit` を実行可能にする
 - **Type Check Script**: `frontend/package.json` に `typecheck` を用意する

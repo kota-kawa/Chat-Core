@@ -1,75 +1,161 @@
 # Strike_Chat
 
-## 概要
-Strike_Chat は FastAPI で実装されたシンプルな AI チャットアプリケーションです。メールアドレスによる認証機構を備え、Groq や Google Gemini API と連携してチャットを行います。PostgreSQL をバックエンドに使用し、プロンプト共有機能も提供しています。
+## Overview
+Strike_Chat is a FastAPI-based AI chat application with email-based authentication, persistent + ephemeral conversations, and prompt sharing. It integrates with Groq and Google Gemini APIs, uses PostgreSQL for storage, and ships with a Next.js frontend.
 
-## 主な機能
-- **メールアドレス認証**: 6 桁のコードをメール送信し、本人確認を行います。
-- **チャット機能**: 永続化チャットと一定時間で消えるエフェメラルチャットを利用できます。
-- **プロンプト共有**: 作成したプロンプトを公開・検索し、他ユーザーと共有できます。
-- **Groq / Gemini 連携**: LLM を用いた回答生成をサポートします。
+## Key Features
+- **Email-based authentication** with 6‑digit verification codes
+- **Persistent + ephemeral chat** modes
+- **Prompt sharing** with search and public visibility controls
+- **Groq / Gemini integrations** for LLM responses
 
-## セットアップ
-### 依存パッケージ
-`requirements.txt` に記載された Python パッケージを利用します。Docker で起動する場合は自動的にインストールされます。
+## Tech Stack
+- **Backend**: FastAPI (Python)
+- **Frontend**: Next.js
+- **Database**: PostgreSQL
+- **Optional**: Redis (for auth/session enhancements)
 
-### 必要な環境変数
-アプリ起動前に以下の環境変数を設定してください。
-- `GROQ_API_KEY` : Groq API のキー
-- `Gemini_API_KEY` : Google Generative AI の API キー
-- `FLASK_SECRET_KEY` : セッションで使用する秘密鍵
-- `SEND_ADDRESS` / `SEND_PASSWORD` : 認証メール送信用の Gmail アカウント
-- `POSTGRES_HOST` / `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` : PostgreSQL 接続情報
-- `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` / `REDIS_PASSWORD` (任意): Redis 接続情報
-- `FLASK_ENV` : `production` の場合は SameSite/secure 設定を強化します
+## Quick Start (Docker Compose)
+> This project standardizes local execution on Docker Compose.
 
-Docker Compose を利用する場合は `.env` ファイルに記述するか、`docker-compose.yml` の `environment` セクションを編集します。
-
-### Docker での起動手順
 ```sh
-# リポジトリを取得
+# 1) Clone the repository
 git clone <repository url>
 cd Strike_Chat
 
-# 必要な環境変数を .env に記述
-# GROQ_API_KEY=xxxxx など
+# 2) Create a .env file with required environment variables
+# Example:
+# GROQ_API_KEY=xxxxx
+# Gemini_API_KEY=xxxxx
+# FLASK_SECRET_KEY=xxxxx
+# SEND_ADDRESS=example@gmail.com
+# SEND_PASSWORD=app_password
+# POSTGRES_HOST=db
+# POSTGRES_USER=postgres
+# POSTGRES_PASSWORD=postgres
+# POSTGRES_DB=strike_chat
+# FRONTEND_URL=http://localhost:3000
 
-# ビルドして起動
+# 3) Build and run
 docker-compose up --build
 ```
-ブラウザで `http://localhost:3000`（Next.js）にアクセスし、API は `http://localhost:5004` を利用します。
 
-### ローカル環境での実行
-Docker を使わない場合、Python 3.10 以上の環境で次を実行します。
+- Frontend: `http://localhost:3000`
+- API: `http://localhost:5004`
+
+## Required Environment Variables
+Set these in `.env` or in `docker-compose.yml`:
+- `GROQ_API_KEY`: Groq API key
+- `Gemini_API_KEY`: Google Generative AI API key
+- `FLASK_SECRET_KEY`: session secret
+- `SEND_ADDRESS` / `SEND_PASSWORD`: Gmail account for verification emails
+- `POSTGRES_HOST` / `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB`: PostgreSQL settings
+- `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` / `REDIS_PASSWORD` (optional): Redis settings
+- `FLASK_ENV`: set to `production` to enable stricter SameSite/Secure settings
+
+## Project Structure
+- `app.py`: FastAPI entry point
+- `blueprints/`: feature modules (auth, chat, memo, prompt_share, admin)
+- `services/`: shared integrations (DB, LLM, email, user helpers)
+- `templates/` and `static/`: global HTML/CSS/JS assets
+- `db/init.sql`: initial PostgreSQL schema
+- `frontend/`: Next.js frontend
+
+## Engineering Highlights (for reviewers)
+- **Modular design**: feature-specific blueprints keep routing and templates scoped and maintainable.
+- **Clear separation of concerns**: integrations live in `services/`, keeping HTTP handlers thin and testable.
+- **Security-aware defaults**: environment-based session configuration and secret management via `.env`.
+- **Composable UI assets**: shared global assets with page-specific entrypoints for predictable styling.
+
+## CSS Guidelines
+- `static/css/base/`: reset, variables, common layout primitives
+- `static/css/components/`: reusable UI components (e.g., sidebar, modal)
+- `static/css/pages/<page>/index.css`: page entrypoints (import base + components)
+
+Use BEM-style `kebab-case` class names and document purpose/dependencies at the top of each file.
+
+## Production Notes
+- Set `FLASK_ENV=production` to enable secure cookie settings.
+- Keep secrets out of version control; use `.env` or a secrets manager.
+- Pin dependencies and update regularly.
+
+## License
+No license file is currently included. Add a `LICENSE` file before public distribution.
+
+---
+
+<details>
+<summary>日本語版 (クリックして展開)</summary>
+
+## 概要
+Strike_Chat は FastAPI で構築した AI チャットアプリです。メール認証・永続／エフェメラルチャット・プロンプト共有を備え、Groq と Google Gemini API に対応しています。PostgreSQL を採用し、Next.js フロントエンドと連携します。
+
+## 主な機能
+- **メール認証**（6 桁コード）
+- **永続／エフェメラル**のチャット
+- **プロンプト共有**（公開・検索）
+- **Groq / Gemini 連携**
+
+## 技術スタック
+- **Backend**: FastAPI (Python)
+- **Frontend**: Next.js
+- **Database**: PostgreSQL
+- **Optional**: Redis
+
+## 実行方法（Docker Compose）
+> 実行方法は Docker Compose に統一しています。
+
 ```sh
-pip install -r requirements.txt
-export GROQ_API_KEY=...
-export Gemini_API_KEY=...
-export FLASK_SECRET_KEY=...
-export FRONTEND_URL=http://localhost:3000
-uvicorn app:app --reload --host 0.0.0.0 --port 5004
+# 1) リポジトリを取得
+git clone <repository url>
+cd Strike_Chat
+
+# 2) .env に必要な環境変数を設定
+# GROQ_API_KEY=xxxxx など
+
+# 3) ビルド＆起動
+docker-compose up --build
 ```
 
+- フロントエンド: `http://localhost:3000`
+- API: `http://localhost:5004`
+
+## 必要な環境変数
+- `GROQ_API_KEY`: Groq API キー
+- `Gemini_API_KEY`: Google Generative AI API キー
+- `FLASK_SECRET_KEY`: セッション用シークレット
+- `SEND_ADDRESS` / `SEND_PASSWORD`: 認証メール送信用 Gmail
+- `POSTGRES_HOST` / `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB`: PostgreSQL 設定
+- `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` / `REDIS_PASSWORD`（任意）: Redis 設定
+- `FLASK_ENV`: `production` で SameSite/Secure 設定を強化
+
 ## ディレクトリ構成
-- `app.py` : FastAPI アプリケーションのエントリーポイント
-- `auth.py` / `verification.py` : ユーザー登録・ログイン関連
-- `chat/` : チャット機能のルートと処理（複数ファイルに分割）
-- `prompt_share/` : プロンプト共有モジュール
-- `frontend/` : Next.js フロントエンド
-- `static/` : CSS・JavaScript・画像などの静的ファイル
-- `db/init.sql` : 初期データベーススキーマ
+- `app.py`: FastAPI エントリーポイント
+- `blueprints/`: 機能別モジュール（auth, chat, memo, prompt_share, admin）
+- `services/`: DB/LLM/メールなど共通処理
+- `templates/`・`static/`: 共有 HTML/CSS/JS
+- `db/init.sql`: 初期スキーマ
+- `frontend/`: Next.js フロントエンド
 
-## CSSガイドライン
-- `static/css/base/` : 変数、リセット、ボタン、レスポンシブ設定などの基盤スタイルを配置します。
-- `static/css/components/` : サイドバーやモーダルなど再利用可能なコンポーネントスタイルをまとめます。
-- `static/css/pages/<page>/index.css` : 各ページのエントリーポイントとなるCSS。`base/base.css` や必要なコンポーネントを `@import` します。
+## レビュー観点の強み
+- **機能単位の分割設計**で保守性を高めた構成
+- **責務分離**によるテスト容易性の向上
+- **セキュリティ前提の設定**（環境変数による秘密管理）
+- **CSS の再利用性**を意識した構造化
 
-クラス名は BEM 風の `kebab-case` を推奨し、各CSSファイルの冒頭に目的と依存関係をコメントで記述します。Next.js 側で各ページの `index.css` のみを読み込みます。
+## CSS ガイドライン
+- `static/css/base/`: リセット／変数／共通レイアウト
+- `static/css/components/`: 再利用可能な UI
+- `static/css/pages/<page>/index.css`: ページ単位のエントリーポイント
+
+BEM 風の `kebab-case` を推奨し、ファイル冒頭に目的・依存関係を記載します。
 
 ## 本番運用のポイント
-- `FLASK_ENV=production` にして SameSite/Secure を有効化し、`FLASK_SECRET_KEY` などの機密情報は環境変数から読み込むようにしてください。
-- 依存パッケージのバージョンを固定し、定期的にアップデートを行うと安全です。
-- 認証用メールアカウントの情報はリポジトリに含めず、秘密管理サービスの利用を検討してください。
+- `FLASK_ENV=production` で Secure 設定を有効化
+- 秘密情報は `.env` or シークレット管理へ
+- 依存関係の定期更新を推奨
 
 ## ライセンス
-本リポジトリにはライセンスファイルが未配置です。公開する際は適切なライセンスを選択し `LICENSE` ファイルを追加してください。
+ライセンスファイルは未配置です。公開時は `LICENSE` を追加してください。
+
+</details>

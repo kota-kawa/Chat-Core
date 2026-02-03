@@ -80,7 +80,9 @@ Use BEM-style `kebab-case` class names and document purpose/dependencies at the 
 - Pin dependencies and update regularly.
 
 ## License
-No license file is currently included. Add a `LICENSE` file before public distribution.
+Copyright (c) 2026 Kota Kawagoe
+
+Licensed under the Apache License, Version 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ---
 
@@ -156,6 +158,8 @@ BEM 風の `kebab-case` を推奨し、ファイル冒頭に目的・依存関�
 - 依存関係の定期更新を推奨
 
 ## ライセンス
-ライセンスファイルは未配置です。公開時は `LICENSE` を追加してください。
+Copyright (c) 2026 Kota Kawagoe
+
+Apache License, Version 2.0 の下でライセンスされています。詳細は [LICENSE](LICENSE) を参照してください。
 
 </details>

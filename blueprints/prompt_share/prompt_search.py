@@ -5,6 +5,7 @@ from fastapi import APIRouter, Request
 
 from services.async_utils import run_blocking
 from services.db import get_db_connection  # 既存の DB 接続関数を利用
+# Reuse the shared DB connection helper.
 from services.web import jsonify, log_and_internal_server_error
 
 search_bp = APIRouter(prefix="/search")
@@ -12,6 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 def _search_public_prompts(query):
+    # 公開プロンプトを title/content/category/author で部分一致検索する
+    # Search public prompts with partial matching across multiple columns.
     conn = None
     cursor = None
     try:
@@ -53,6 +56,7 @@ def _search_public_prompts(query):
 async def search_prompts(request: Request):
     """
     クエリパラメータ q に基づいてプロンプトを検索するエンドポイント
+    Search public prompts by query parameter `q`.
     """
     query = request.query_params.get('q', '').strip()
     try:

@@ -25,6 +25,8 @@ logger = logging.getLogger(__name__)
 
 
 def _fetch_tasks_from_db(user_id: int | None) -> list[dict[str, Any]]:
+    # ログイン時はユーザー個別タスク、未ログイン時は共通タスクを取得する
+    # Fetch user-specific tasks when logged in, otherwise shared default tasks.
     conn = None
     cursor = None
     try:
@@ -69,6 +71,8 @@ def _fetch_tasks_from_db(user_id: int | None) -> list[dict[str, Any]]:
 
 
 def _update_tasks_order_for_user(user_id: int, new_order: list[str]) -> None:
+    # 受け取った順序配列で display_order を更新する
+    # Update display_order according to the provided order list.
     conn = None
     cursor = None
     try:
@@ -92,6 +96,8 @@ def _update_tasks_order_for_user(user_id: int, new_order: list[str]) -> None:
 
 
 def _delete_task_for_user(user_id: int, task_name: str) -> None:
+    # ユーザー所有タスクを1件削除する
+    # Delete a single user-owned task.
     conn = None
     cursor = None
     try:
@@ -115,6 +121,8 @@ def _edit_task_for_user(
     input_examples: str | None,
     output_examples: str | None,
 ) -> bool:
+    # 対象タスク存在確認後に内容を更新し、更新可否を返す
+    # Update task after existence check and return whether update succeeded.
     conn = None
     sel_cursor = None
     upd_cursor = None
@@ -172,6 +180,8 @@ def _add_task_for_user(
     input_examples: str,
     output_examples: str,
 ) -> None:
+    # ユーザー専用タスクを新規追加する
+    # Insert a new user-owned task.
     conn = None
     cursor = None
     try:
@@ -204,6 +214,7 @@ async def get_tasks(request: Request):
     try:
         session = request.session
         # user_id が None や空文字の場合は未ログインとして扱う
+        # Treat None/empty user_id as guest state.
         user_id = session.get("user_id")
         if not user_id:
             user_id = None
@@ -215,14 +226,20 @@ async def get_tasks(request: Request):
         except Exception:
             logger.exception("Database error while loading tasks.")
             # ログインユーザーの場合、DBエラーはそのままエラーとして扱う（または空リスト？）
+            # For logged-in users, surface DB failures as server errors.
             # ここでは安全のためエラーをログに出しつつ、
+            # We log the exception and keep fallback path for guests only.
             # もし未ログインならデフォルトタスクを返すようにフローを継続する
+            # Continue to guest fallback flow when not authenticated.
             if user_id:
                 # ユーザーがいるのにDBエラーなら500にする（frontendでハンドリングされる）
+                # Raise for authenticated users so frontend receives 500.
                 raise
             # 未ログインならDBエラーでも続行（tasks=[] のまま）
+            # For guests, continue and allow default-task fallback.
 
         # 未ログイン かつ タスクが取得できていない場合はデフォルトタスクを使用
+        # Use bundled default tasks when guest tasks could not be loaded.
         if not user_id and not tasks:
             tasks = default_task_payloads()
 
@@ -236,6 +253,7 @@ async def get_tasks(request: Request):
 
 
 # タスクカード並び替え
+# Reorder task cards for authenticated users.
 @chat_bp.post("/api/update_tasks_order", name="chat.update_tasks_order")
 async def update_tasks_order(request: Request):
     data, error_response = await require_json_dict(request)

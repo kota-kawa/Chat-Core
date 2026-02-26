@@ -13,10 +13,14 @@ _DEFAULT_SALT_BYTES = 16
 
 
 def generate_verification_code() -> str:
+    # 6桁の数値コードを生成する
+    # Generate a six-digit numeric verification code.
     return str(secrets.randbelow(_CODE_RANGE) + _CODE_LOWER_BOUND)
 
 
 def constant_time_compare(left: str, right: str) -> bool:
+    # 入力長差による比較時間の偏りを減らすため、先に同一長のダイジェストへ変換して比較する
+    # Hash both inputs first to reduce timing leakage from raw string length differences.
     left_digest = hashlib.sha256(str(left).encode("utf-8")).digest()
     right_digest = hashlib.sha256(str(right).encode("utf-8")).digest()
     return hmac.compare_digest(left_digest, right_digest)
@@ -28,6 +32,8 @@ def hash_password(
     iterations: int = _DEFAULT_PBKDF2_ITERATIONS,
     salt: Optional[bytes] = None,
 ) -> str:
+    # PBKDF2 でハッシュ化し、scheme$iterations$salt$digest 形式で保存する
+    # Hash with PBKDF2 and encode as scheme$iterations$salt$digest.
     if not isinstance(password, str) or password == "":
         raise ValueError("password must be a non-empty string")
     if iterations <= 0:
@@ -44,6 +50,8 @@ def hash_password(
 
 
 def verify_password(password: str, password_hash: str) -> bool:
+    # 保存形式を厳密に検証したうえで同条件で再計算し、定数時間比較する
+    # Validate stored hash format, recompute with same params, then compare in constant time.
     if not isinstance(password, str) or not isinstance(password_hash, str):
         return False
 

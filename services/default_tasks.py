@@ -11,6 +11,8 @@ DEFAULT_TASKS_JSON = (
 
 @lru_cache(maxsize=1)
 def load_default_tasks() -> list[dict]:
+    # JSON からデフォルトタスクを読み込み、型とキーを正規化する
+    # Load default tasks from JSON and normalize schema/types.
     with DEFAULT_TASKS_JSON.open(encoding="utf-8") as fp:
         tasks = json.load(fp)
 
@@ -35,6 +37,8 @@ def load_default_tasks() -> list[dict]:
 
 
 def default_task_payloads() -> list[dict]:
+    # APIレスポンス向けに is_default を付与した形へ変換する
+    # Build API payload objects with is_default metadata.
     payloads = []
     for task in load_default_tasks():
         payloads.append(
@@ -50,6 +54,8 @@ def default_task_payloads() -> list[dict]:
 
 
 def default_task_rows() -> list[tuple]:
+    # DB INSERT 用のタプル配列へ変換する
+    # Convert normalized tasks into DB insert row tuples.
     rows = []
     for task in load_default_tasks():
         rows.append(
@@ -65,6 +71,8 @@ def default_task_rows() -> list[tuple]:
 
 
 def _extract_name(row):
+    # dict/tuple どちらの fetch 結果でも name を取り出せるようにする
+    # Extract "name" from either dict-based or tuple-based DB rows.
     if row is None:
         return None
     if isinstance(row, dict):
@@ -73,6 +81,8 @@ def _extract_name(row):
 
 
 def ensure_default_tasks_seeded() -> int:
+    # 共通タスク（user_id IS NULL）に不足分のみ追加し、追加件数を返す
+    # Seed only missing shared tasks (user_id IS NULL) and return inserted count.
     conn = get_db_connection()
     cursor = conn.cursor()
     try:

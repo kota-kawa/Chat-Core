@@ -32,6 +32,10 @@ async def api_send_verification_email(request: Request):
     - 6桁のコードを生成し、Gmailにて送信
     - コードは session["verification_code"] に一時的に保存 (本番ではDBでもOK)
     - session["temp_user_id"] に仮保存
+    Called by "Send verification email" on register page.
+    - Ensure user exists with is_verified=False
+    - Generate six-digit code and send via Gmail
+    - Temporarily store code and user id in session
     """
     data, error_response = await require_json_dict(request, status="fail")
     if error_response is not None:
@@ -62,6 +66,7 @@ async def api_send_verification_email(request: Request):
         )
 
     # すでにユーザーがあれば再利用、なければ作成
+    # Reuse existing user or create a new unverified user.
     user = await run_blocking(get_user_by_email, email)
     if not user:
         user_id = await run_blocking(create_user, email)
@@ -69,9 +74,11 @@ async def api_send_verification_email(request: Request):
         user_id = user["id"]
 
     # 6桁コード生成→セッションへ
+    # Generate a six-digit code and keep it in session temporarily.
     code = generate_verification_code()
     request.session["verification_code"] = code
     request.session["temp_user_id"] = user_id  # どのユーザーか紐付け
+    # Link verification flow to this user id.
 
     subject = "AIチャットサービス: 認証コード"
     body_text = f"以下の認証コードを登録画面に入力してください。\n\n認証コード: {code}"
@@ -92,6 +99,10 @@ async def api_verify_registration_code(request: Request):
     ・セッション保存の認証コードと照合
     ・一致すればユーザーを is_verified=True にしログイン状態へ
     ・このタイミングで初期タスクをユーザー専用に複製
+    Called by "Verify" action on register page.
+    - Compare submitted code with session code
+    - Mark user as verified and log them in
+    - Copy default tasks for the verified user
     """
     data, error_response = await require_json_dict(request, status="fail")
     if error_response is not None:
@@ -118,15 +129,20 @@ async def api_verify_registration_code(request: Request):
         return jsonify({"status": "fail", "error": "認証コードが違います。"}, status_code=400)
 
     # ここから成功処理 ----------------------------------------------------
+    # Success path starts here.
     await run_blocking(set_user_verified, user_id)                 # ユーザーを認証済みに
+    # Mark user as verified.
     await run_blocking(copy_default_tasks_for_user, user_id)       # ★ 共通タスクを複製 ★
+    # Copy shared default tasks to this user.
 
     # ログイン状態にセット
+    # Set authenticated session fields.
     request.session["user_id"]    = user_id
     user                  = await run_blocking(get_user_by_id, user_id)
     request.session["user_email"] = user["email"] if user else ""
 
     # 一時セッション情報のクリア
+    # Clear temporary verification session data.
     request.session.pop("verification_code", None)
     request.session.pop("temp_user_id", None)
 

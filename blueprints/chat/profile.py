@@ -16,12 +16,16 @@ logger = logging.getLogger(__name__)
 
 
 def _save_avatar_file(upload_dir, filepath, avatar_file_obj):
+    # アップロード先ディレクトリを保証してからファイルを保存する
+    # Ensure upload directory exists, then persist uploaded avatar file.
     os.makedirs(upload_dir, exist_ok=True)
     with open(filepath, "wb") as out_f:
         shutil.copyfileobj(avatar_file_obj, out_f)
 
 
 def _update_user_profile(user_id, username, email, bio, avatar_url):
+    # 入力されたプロフィール項目のみを users テーブルへ更新する
+    # Update users table with submitted profile fields.
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -44,6 +48,7 @@ def _update_user_profile(user_id, username, email, bio, avatar_url):
 
 
 # --- プロフィール取得 ---
+# User profile read/update endpoint.
 @chat_bp.api_route('/api/user/profile', methods=['GET', 'POST'], name="chat.user_profile")
 async def user_profile(request: Request):
     """
@@ -55,6 +60,7 @@ async def user_profile(request: Request):
     user_id = request.session['user_id']
 
     # ---------- GET ----------
+    # Return current profile data as JSON.
     if request.method == 'GET':
         user = await run_blocking(get_user_by_id, user_id)
         if not user:
@@ -72,11 +78,13 @@ async def user_profile(request: Request):
     email = (form.get('email') or '').strip()
     bio = (form.get('bio') or '').strip()
     avatar_f = form.get('avatar')      # 画像ファイル (任意)
+    # Optional avatar file from multipart form.
 
     if not username or not email:
         return jsonify({'error': 'ユーザー名とメールアドレスは必須です'}, status_code=400)
 
     # 画像アップロード (あれば)
+    # Upload avatar file if one is provided.
     avatar_url = None
     if avatar_f and avatar_f.filename:
         fname = secure_filename(avatar_f.filename)
@@ -86,11 +94,13 @@ async def user_profile(request: Request):
         avatar_url = f'/static/uploads/{fname}'
 
     # DB 更新
+    # Persist profile updates to database.
     try:
         await run_blocking(_update_user_profile, user_id, username, email, bio, avatar_url)
         return jsonify({
             'message': 'プロフィールを更新しました',
             'avatar_url': avatar_url         # 新しい画像 URL（ない場合は null）
+            # Newly uploaded avatar URL (null when unchanged).
         })
     except Exception:
         return log_and_internal_server_error(

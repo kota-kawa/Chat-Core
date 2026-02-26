@@ -9,6 +9,8 @@ LEGACY_SEND_PASSWORD_ENV = "EMAIL_SEND_PASSWORD"
 
 
 def _load_email_credentials() -> tuple[str, str]:
+    # 新旧の環境変数を読み、未設定なら起動時ではなく送信時に明示的に失敗させる
+    # Read current/legacy env vars and fail explicitly at send time if missing.
     send_address = (os.getenv(SEND_ADDRESS_ENV) or "").strip()
     send_password = (
         os.getenv(SEND_PASSWORD_ENV)
@@ -22,7 +24,10 @@ def _load_email_credentials() -> tuple[str, str]:
         )
     return send_address, send_password
 
+
 def send_email(to_address, subject, body_text):
+    # Gmail SMTP を使ってテキストメールを送信する
+    # Send a plain-text email through Gmail SMTP.
     """指定アドレスにメール送信"""
     send_address, send_password = _load_email_credentials()
     smtpobj = smtplib.SMTP("smtp.gmail.com", 587)

@@ -38,9 +38,12 @@ from services.llm_daily_limit import consume_auth_email_daily_quota
 from services.runtime_config import is_production_env
 from services.security import constant_time_compare, generate_verification_code
 
+# 認証関連の環境変数を初期化する
+# Load environment variables needed by auth flows.
 load_dotenv()
 
-# Allow OAuth over HTTP in non-production environments
+# 開発環境では OAuth の http コールバックを許可する
+# Allow OAuth over HTTP in non-production environments.
 if not is_production_env():
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
@@ -68,6 +71,8 @@ logger = logging.getLogger(__name__)
 
 
 def _fetch_google_user_info(access_token: str) -> dict[str, Any]:
+    # Google API からログインユーザーのプロフィール情報を取得する
+    # Fetch authenticated user info from Google UserInfo API.
     response = requests.get(
         "https://www.googleapis.com/oauth2/v2/userinfo",
         headers={"Authorization": f"Bearer {access_token}"},
@@ -78,7 +83,10 @@ def _fetch_google_user_info(access_token: str) -> dict[str, Any]:
 
 @auth_bp.get("/register", name="auth.register_page")
 async def register_page(request: Request):
-    """登録ページ(統合認証ページを返す)"""
+    """
+    登録ページ(統合認証ページを返す)
+    Return the registration entry page (served by frontend).
+    """
     return redirect_to_frontend(request)
 
 @auth_bp.get("/api/current_user", name="auth.api_current_user")
@@ -89,6 +97,7 @@ async def api_current_user(request: Request):
         if user:
             return jsonify({"logged_in": True, "user": {"id": user["id"], "email": user["email"]}})
         # user_id in session but user no longer exists; clear the stale session
+        # セッション内 user_id が無効なため、古いログイン情報を破棄する
         session.pop("user_id", None)
         session.pop("user_email", None)
         session.pop("login_verification_code", None)
@@ -103,7 +112,10 @@ async def api_current_user(request: Request):
 
 @auth_bp.get("/login", name="auth.login")
 async def login(request: Request):
-    """ログインページ（統合認証ページを返す）"""
+    """
+    ログインページ（統合認証ページを返す）
+    Return the login entry page (served by frontend).
+    """
     return redirect_to_frontend(request)
 
 @auth_bp.get("/logout", name="auth.logout")
@@ -126,6 +138,8 @@ async def google_login(request: Request):
         scopes=GOOGLE_SCOPES,
         redirect_uri=redirect_uri,
     )
+    # OAuth state をセッション保存し、コールバックで照合する
+    # Persist OAuth state in session and verify it in callback.
     authorization_url, state = flow.authorization_url(prompt="consent")
     request.session["google_oauth_state"] = state
     request.session["google_redirect_uri"] = redirect_uri
@@ -153,6 +167,8 @@ async def google_callback(request: Request):
         state=state,
         redirect_uri=redirect_uri,
     )
+    # コールバックURLから認可コードを交換し、アクセストークンを取得する
+    # Exchange callback authorization response for access token.
     await run_blocking(flow.fetch_token, authorization_response=str(request.url))
     session.pop("google_oauth_state", None)
     session.pop("google_redirect_uri", None)
@@ -164,6 +180,8 @@ async def google_callback(request: Request):
         return RedirectResponse(frontend_login_url(), status_code=302)
     user = await run_blocking(get_user_by_email, email)
     if not user:
+        # Google 初回ログイン時はユーザーを自動作成して認証済みにする
+        # Auto-create and verify user on first Google login.
         user_id = await run_blocking(create_user, email)
         await run_blocking(set_user_verified, user_id)
     else:
@@ -182,6 +200,10 @@ async def api_send_login_code(request: Request):
     - POST JSON: { "email": "ユーザーのメールアドレス" }
     - 対象ユーザーが存在し、かつ is_verified=True であれば認証コードを生成し、メール送信する
     - 認証コードとユーザーIDはセッション変数 (login_verification_code, login_temp_user_id) に一時保存
+    Login verification code API.
+    - POST JSON: { "email": "..."}
+    - Send code only for existing verified users
+    - Store code and temporary user id in session
     """
     data, error_response = await require_json_dict(request, status="fail")
     if error_response is not None:
@@ -215,6 +237,8 @@ async def api_send_login_code(request: Request):
             },
             status_code=429,
         )
+    # 認証コードを発行し、検証用にセッションへ保持する
+    # Generate and store login verification code in session.
     code = generate_verification_code()
     request.session["login_verification_code"] = code
     request.session["login_temp_user_id"] = user["id"]
@@ -236,6 +260,9 @@ async def api_verify_login_code(request: Request):
     ログイン用の認証コード確認 API
     - POST JSON: { "authCode": "ユーザーが入力した認証コード" }
     - セッションに保存した認証コードと照合し、一致すればログイン（session["user_id"] にユーザーIDを保存）する
+    Login code verification API.
+    - POST JSON: { "authCode": "..."}
+    - Compare submitted code with session-stored code and complete login on match
     """
     data, error_response = await require_json_dict(request, status="fail")
     if error_response is not None:

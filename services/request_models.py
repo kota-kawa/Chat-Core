@@ -8,18 +8,26 @@ NonEmptyStr = Annotated[str, Field(min_length=1)]
 
 
 class RequestPayloadModel(BaseModel):
+    # 余分なキーを無視しつつ文字列の前後空白を自動で除去する共通ベース
+    # Common base model that strips string whitespace and ignores extra fields.
     model_config = ConfigDict(extra="ignore", str_strip_whitespace=True)
 
 
 class EmailRequest(RequestPayloadModel):
+    # メールアドレス入力用ペイロード
+    # Payload for email address input.
     email: NonEmptyStr
 
 
 class AuthCodeRequest(RequestPayloadModel):
+    # 認証コード送信用ペイロード
+    # Payload for verification/login code input.
     authCode: str | None = None
 
 
 class NewChatRoomRequest(RequestPayloadModel):
+    # チャットルーム新規作成APIの入力
+    # Input payload for chat room creation.
     id: str
     title: str = "新規チャット"
 
@@ -100,6 +108,8 @@ class PromptUpdateRequest(RequestPayloadModel):
 
 
 class MemoCreateRequest(RequestPayloadModel):
+    # メモ保存APIの入力
+    # Input payload for memo creation API.
     input_content: str = ""
     ai_response: NonEmptyStr
     title: str = ""

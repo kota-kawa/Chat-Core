@@ -17,6 +17,8 @@ ModelT = TypeVar("ModelT", bound=BaseModel)
 
 
 async def get_json(request: Request) -> Any | None:
+    # JSONパース失敗時は例外を外へ出さず None を返す
+    # Return None instead of raising when JSON parsing fails.
     try:
         return await request.json()
     except Exception:
@@ -24,6 +26,8 @@ async def get_json(request: Request) -> Any | None:
 
 
 def jsonify(payload: Any, status_code: int = 200) -> JSONResponse:
+    # FastAPI 互換のJSONエンコードを通してレスポンスを返す
+    # Build a JSON response via FastAPI-compatible jsonable encoding.
     return JSONResponse(content=jsonable_encoder(payload), status_code=status_code)
 
 
@@ -35,6 +39,8 @@ def log_and_internal_server_error(
     message: str = DEFAULT_INTERNAL_ERROR_MESSAGE,
     error_key: str = "error",
 ) -> JSONResponse:
+    # ログ出力と500レスポンス生成を共通化する
+    # Centralize exception logging and HTTP 500 response creation.
     logger.exception(context)
     payload: Dict[str, Any] = {error_key: message}
     if status is not None:
@@ -48,6 +54,8 @@ async def require_json_dict(
     error_message: str = "JSON形式が不正です。",
     status: str | None = None,
 ) -> tuple[Dict[str, Any] | None, JSONResponse | None]:
+    # リクエストボディがdictであることを保証し、違う場合は400を返す
+    # Ensure request body is a dict; otherwise return HTTP 400 response.
     data = await get_json(request)
     if isinstance(data, dict):
         return data, None
@@ -66,6 +74,8 @@ def validate_payload_model(
     status: str | None = None,
     error_key: str = "error",
 ) -> tuple[ModelT | None, JSONResponse | None]:
+    # Pydantic v2/v1 両対応でバリデーションし、失敗時は統一エラーを返す
+    # Validate payload with Pydantic v2/v1 compatibility and return unified errors.
     try:
         validate = getattr(model_class, "model_validate", None)
         if callable(validate):
@@ -79,6 +89,8 @@ def validate_payload_model(
 
 
 def set_session_permanent(session: dict, value: bool) -> None:
+    # セッション永続化フラグを明示的に付与/削除する
+    # Explicitly set or clear the session permanence flag.
     if value:
         session["_permanent"] = True
     else:
@@ -86,6 +98,8 @@ def set_session_permanent(session: dict, value: bool) -> None:
 
 
 def flash(request: Request, message: str, category: str = "message") -> None:
+    # セッションに一時メッセージを積む
+    # Push a flash message into session storage.
     flashes: List[Tuple[str, str]] = request.session.setdefault("_flashes", [])
     flashes.append((category, message))
 
@@ -93,6 +107,8 @@ def flash(request: Request, message: str, category: str = "message") -> None:
 def get_flashed_messages(
     request: Request, *, with_categories: bool = False
 ) -> List[str] | List[Tuple[str, str]]:
+    # 1回読み取りで消費されるフラッシュメッセージを取得する
+    # Pop one-time flash messages from session.
     flashes = request.session.pop("_flashes", [])
     if with_categories:
         return flashes
@@ -100,6 +116,8 @@ def get_flashed_messages(
 
 
 def url_for(request: Request, endpoint: str, **values: Any) -> str:
+    # FastAPI の URL 生成に query/path パラメータ分離を加え、Flask互換呼び出しを吸収する
+    # Extend FastAPI URL building with path/query split for Flask-style compatibility.
     external = values.pop("_external", False)
     if "filename" in values and "path" not in values:
         values["path"] = values.pop("filename")
@@ -128,6 +146,8 @@ def url_for(request: Request, endpoint: str, **values: Any) -> str:
 
 
 def frontend_url(path: str = "", *, query: str | None = None) -> str:
+    # フロントエンドURLを安全に連結して返す
+    # Build an absolute frontend URL with normalized path/query.
     base = FRONTEND_URL.rstrip("/")
     if path:
         normalized = path if path.startswith("/") else f"/{path}"
@@ -142,11 +162,15 @@ def frontend_url(path: str = "", *, query: str | None = None) -> str:
 def redirect_to_frontend(
     request: Request, path: str | None = None, *, status_code: int = 302
 ) -> RedirectResponse:
+    # 現在パス（または指定パス）をFRONTEND_URLへリダイレクトする
+    # Redirect current (or provided) path to FRONTEND_URL.
     target_path = path if path is not None else request.url.path
     query = request.url.query or None
     return RedirectResponse(frontend_url(target_path, query=query), status_code=status_code)
 
 
 def frontend_login_url(next_path: str | None = None) -> str:
+    # ログイン後遷移先を next クエリに埋め込んだログインURLを組み立てる
+    # Build login URL with optional post-login `next` query parameter.
     query = urlencode({"next": next_path}) if next_path else None
     return frontend_url("/login", query=query)

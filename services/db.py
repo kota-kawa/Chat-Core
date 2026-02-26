@@ -2,6 +2,8 @@ import atexit
 import os
 import threading
 
+# テスト環境では psycopg2 が未導入の場合があるため遅延フォールバックする
+# Allow graceful fallback when psycopg2 is unavailable in test environments.
 try:
     import psycopg2
     from psycopg2 import Error, extras
@@ -19,6 +21,8 @@ _connection_pool_key = None
 
 
 class _ConnectionProxy:
+    # プールへ返却済み接続の再利用を防ぐ薄いラッパー
+    # Lightweight wrapper that prevents reuse after returning to the pool.
     """Pooled connection wrapper with dictionary=True cursor support."""
 
     def __init__(self, connection, connection_pool):
@@ -34,6 +38,8 @@ class _ConnectionProxy:
         self._ensure_open()
         dictionary = kwargs.pop("dictionary", False)
         if dictionary:
+            # mysqlclient 互換の dictionary=True を psycopg2 の RealDictCursor に変換する
+            # Translate mysqlclient-style dictionary=True into psycopg2 RealDictCursor.
             if extras is None:
                 raise RuntimeError("psycopg2 extras are required for dictionary cursors.")
             kwargs["cursor_factory"] = extras.RealDictCursor
@@ -49,6 +55,8 @@ class _ConnectionProxy:
         self._connection_pool = None
         self._returned = True
 
+        # 返却前にロールバックし、汚れたトランザクション状態を持ち越さない
+        # Roll back before returning so dirty transactions are not leaked.
         close_physical = bool(getattr(connection, "closed", 0))
         if not close_physical:
             try:
@@ -84,6 +92,8 @@ class _ConnectionProxy:
 
 
 def _get_env(name, fallback_name, default):
+    # 新旧環境変数を順番に見て互換性を維持する
+    # Resolve value from primary and legacy env vars for backward compatibility.
     value = os.environ.get(name)
     if value:
         return value
@@ -149,6 +159,8 @@ def _build_connection_pool(config, hosts, min_conn, max_conn):
         raise RuntimeError("psycopg2 ThreadedConnectionPool is required to connect to the database.")
 
     first_exc = None
+    # 複数ホストを順に試し、最初に接続成功したプールを採用する
+    # Try hosts in order and keep the first successfully validated pool.
     for host in hosts:
         candidate_config = dict(config)
         candidate_config["host"] = host
@@ -187,6 +199,8 @@ def _get_connection_pool():
         if _connection_pool is not None and _connection_pool_key == pool_key:
             return _connection_pool
 
+        # 設定が変わった場合は新プールへ差し替え、旧プールはロック外で閉じる
+        # Replace pool on config change and close previous pool outside the lock.
         old_pool = _connection_pool
         new_pool = _build_connection_pool(config, hosts, min_conn, max_conn)
         _connection_pool = new_pool
@@ -202,6 +216,8 @@ def _get_connection_pool():
 
 
 def close_db_pool():
+    # プロセス終了時やシャットダウン時に全コネクションを確実に解放する
+    # Ensure all pooled connections are released on shutdown/exit.
     """Close all pooled DB connections."""
     global _connection_pool, _connection_pool_key
 
@@ -223,6 +239,8 @@ atexit.register(close_db_pool)
 
 
 def get_db_connection():
+    # プールから 1 接続を貸し出し、close() 時に自動返却されるプロキシを返す
+    # Borrow a pooled connection and return a proxy that puts it back on close().
     """PostgreSQL への接続を返す (connection pool backed)."""
     if psycopg2 is None:
         raise RuntimeError("psycopg2 is required to connect to the database.")

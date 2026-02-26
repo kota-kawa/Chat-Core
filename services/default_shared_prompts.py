@@ -67,6 +67,8 @@ DEFAULT_SHARED_PROMPTS = [
 
 
 def _extract_id(row, key_name="id"):
+    # DB結果が dict/tuple どちらでもIDを取り出せるようにする
+    # Extract ID from DB rows regardless of dict or tuple shape.
     if row is None:
         return None
     if isinstance(row, dict):
@@ -75,6 +77,8 @@ def _extract_id(row, key_name="id"):
 
 
 def _ensure_sample_owner(cursor):
+    # サンプル投稿者ユーザーを再利用し、未作成なら作成してIDを返す
+    # Reuse sample owner user or create it when missing, then return its ID.
     cursor.execute(
         "SELECT id FROM users WHERE email = %s",
         (SAMPLE_PROMPT_OWNER_EMAIL,),
@@ -100,6 +104,8 @@ def _ensure_sample_owner(cursor):
 
 
 def ensure_default_shared_prompts():
+    # サンプル投稿者配下に標準公開プロンプトを不足分だけ投入する
+    # Seed missing public sample prompts under the sample owner account.
     conn = get_db_connection()
     cursor = conn.cursor()
     try:

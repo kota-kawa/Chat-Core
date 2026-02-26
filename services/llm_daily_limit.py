@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
 
 
 def _get_daily_limit(env_name, default_limit):
+    # 環境変数値を整数化し、異常値はデフォルトへフォールバックする
+    # Parse daily limit from env and fallback to default on invalid values.
     raw_limit = os.environ.get(env_name, str(default_limit))
     try:
         limit = int(raw_limit)
@@ -35,6 +37,8 @@ def _get_daily_limit(env_name, default_limit):
 
 
 def _seconds_until_tomorrow():
+    # 日次クォータのキー期限を「次の0時」までに合わせる
+    # Compute TTL that expires at the next midnight.
     now = datetime.now()
     tomorrow = datetime.combine(now.date() + timedelta(days=1), datetime.min.time())
     seconds = int((tomorrow - now).total_seconds())
@@ -42,6 +46,8 @@ def _seconds_until_tomorrow():
 
 
 def _consume_with_redis(redis_client, redis_key, daily_limit):
+    # Redis Lua で INCR+EXPIRE を原子的に実行し、競合時の取りこぼしを防ぐ
+    # Use Redis Lua for atomic INCR+EXPIRE to avoid race conditions.
     lua_script = """
 local key = KEYS[1]
 local limit = tonumber(ARGV[1])
@@ -73,6 +79,8 @@ return {1, current}
 
 
 def _consume_with_in_memory(daily_key, current_date, daily_limit):
+    # Redis 不可時のフォールバック。日付が変わったキーを都度掃除する
+    # Fallback path when Redis is unavailable; prune stale day keys on each call.
     with _in_memory_lock:
         date_suffix = f":{current_date}"
         stale_keys = [key for key in _in_memory_daily_counts if not key.endswith(date_suffix)]
@@ -90,6 +98,8 @@ def _consume_with_in_memory(daily_key, current_date, daily_limit):
 
 
 def _consume_daily_quota(*, key_prefix, env_name, default_limit, current_date=None):
+    # 1日単位キーを作って Redis 優先で消費し、失敗時のみメモリ実装へ切り替える
+    # Consume quota using a day-scoped key, preferring Redis and falling back to memory.
     daily_limit = _get_daily_limit(env_name, default_limit)
     if daily_limit <= 0:
         return False, 0, daily_limit
@@ -119,6 +129,8 @@ def get_auth_email_daily_send_limit():
 
 
 def consume_llm_daily_quota(current_date=None):
+    # チャット応答 API 用の日次上限を 1 回分消費する
+    # Consume one unit from the daily quota for chat API usage.
     allowed, remaining, daily_limit = _consume_daily_quota(
         key_prefix=_LLM_DAILY_COUNT_KEY_PREFIX,
         env_name=LLM_DAILY_API_LIMIT_ENV,
@@ -129,6 +141,8 @@ def consume_llm_daily_quota(current_date=None):
 
 
 def consume_auth_email_daily_quota(current_date=None):
+    # 認証メール送信用の日次上限を 1 回分消費する
+    # Consume one unit from the daily quota for auth email sending.
     allowed, remaining, daily_limit = _consume_daily_quota(
         key_prefix=_AUTH_EMAIL_DAILY_COUNT_KEY_PREFIX,
         env_name=AUTH_EMAIL_DAILY_SEND_LIMIT_ENV,

@@ -34,6 +34,8 @@ logger = logging.getLogger(__name__)
 
 
 def get_groq_response(conversation_messages, model_name):
+    # Groq 向けクライアントを使ってチャット補完を実行する
+    # Run chat completion through the Groq client.
     """Groq API呼び出し (via OpenAI client)"""
     if groq_client is None:
         return "エラー: GROQ_API_KEY が未設定です。"
@@ -51,6 +53,8 @@ def get_groq_response(conversation_messages, model_name):
 
 
 def get_gemini_response(conversation_messages, model_name):
+    # Gemini 向けクライアントを使ってチャット補完を実行する
+    # Run chat completion through the Gemini client.
     """Google Gemini API呼び出し (via OpenAI client)"""
     if gemini_client is None:
         return "エラー: Gemini_API_KEY が未設定です。"
@@ -68,6 +72,8 @@ def get_gemini_response(conversation_messages, model_name):
 
 
 def get_llm_response(conversation_messages, model_name):
+    # 指定モデル名でプロバイダを振り分け、不正モデルは明示的にエラー文字列を返す
+    # Route to provider by model name and return explicit error text for invalid models.
     if model_name in VALID_GEMINI_MODELS:
         return get_gemini_response(conversation_messages, model_name)
     if model_name in VALID_GROQ_MODELS:

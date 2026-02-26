@@ -36,6 +36,8 @@ logger = logging.getLogger(__name__)
 def _validate_room_owner(
     room_id: str, user_id: int, forbidden_message: str
 ) -> tuple[dict[str, str] | None, int | None]:
+    # 指定ルームの所有者チェックを行い、失敗時はAPI返却形式で返す
+    # Validate room ownership and return API-shaped error on failure.
     conn = None
     cursor = None
     try:
@@ -57,6 +59,8 @@ def _validate_room_owner(
 
 
 def _fetch_prompt_data(task: str) -> dict[str, Any] | None:
+    # タスク名に対応するプロンプトテンプレートとfew-shot例を取得する
+    # Fetch prompt template and few-shot examples for a given task name.
     conn = None
     cursor = None
     try:
@@ -76,6 +80,8 @@ def _fetch_prompt_data(task: str) -> dict[str, Any] | None:
 
 
 def _fetch_chat_history(chat_room_id: str) -> list[dict[str, str]]:
+    # API返却向けにチャット履歴を時系列で整形する
+    # Fetch and format chat history in chronological order for API response.
     conn = None
     cursor = None
     try:
@@ -126,6 +132,7 @@ async def chat(request: Request):
     model = payload.model or GEMINI_DEFAULT_MODEL
 
     # 非ログインユーザーの場合、新規チャット・続けてのチャットの回数としてカウント
+    # Count each guest request toward daily free chat quota.
     session = request.session
     if "user_id" not in session:
         today = date.today().isoformat()
@@ -180,12 +187,15 @@ async def chat(request: Request):
         all_messages = await run_blocking(ephemeral_store.get_messages, sid, chat_room_id)
 
     extra_prompt = None
-    prompt_data = None  # prompt_data を初期化
+    # 後段で条件付き few-shot を組み立てるための初期化
+    # Initialize holder for optional few-shot prompt data.
+    prompt_data = None
 
     if match and len(all_messages) == 1:
         task = match.group(2).strip()
 
         # DBから指定タスクのプロンプトテンプレートと few-shot 例を取得する
+        # Load task-specific prompt template and few-shot examples from DB.
         prompt_data = await run_blocking(_fetch_prompt_data, task)
 
     conversation_messages = []

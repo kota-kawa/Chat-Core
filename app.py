@@ -16,9 +16,12 @@ from services.runtime_config import get_session_secret_key, is_production_env
 from services.session_middleware import PermanentSessionMiddleware
 from services.web import DEFAULT_INTERNAL_ERROR_MESSAGE, jsonify
 
-# Load environment variables
+# 初回起動時に環境変数を読み込む
+# Load environment variables at startup.
 load_dotenv()
 
+# ログレベルを環境変数から解決し、アプリ全体のログ設定を初期化する
+# Resolve log level from environment and initialize global logging.
 log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 resolved_log_level = getattr(logging, log_level, logging.INFO)
 logging.basicConfig(
@@ -27,6 +30,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# セッション署名キーは起動時に必須チェックし、不足時は即時停止する
+# Validate session secret at boot and fail fast when it is missing.
 secret_key = get_session_secret_key()
 if not secret_key:
     raise ValueError(
@@ -35,6 +40,8 @@ if not secret_key:
     )
 permanent_max_age = int(timedelta(days=30).total_seconds())
 
+# 本番/開発で Cookie 属性を切り替える
+# Switch cookie security attributes by environment.
 if is_production_env():
     same_site = "none"
     https_only = True
@@ -49,12 +56,15 @@ def periodic_cleanup(stop_event: threading.Event) -> None:
             cleanup_ephemeral_chats()
         except Exception:
             logger.exception("Failed to clean up ephemeral chats.")
-        # 1分ごとにエフェメラルチャットのクリーンアップ処理を実行
+        # 停止シグナルまで定期的にエフェメラルチャットをクリーンアップする
+        # Keep cleaning ephemeral chats periodically until stop is requested.
         stop_event.wait(timeout=6000)
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    # 起動時にデフォルトタスクを投入する（未投入分のみ）
+    # Seed default tasks on startup (insert only missing rows).
     try:
         inserted = ensure_default_tasks_seeded()
         if inserted > 0:
@@ -62,6 +72,8 @@ async def lifespan(_: FastAPI):
     except Exception:
         logger.exception("Failed to seed default tasks.")
 
+    # 起動時に共有サンプルプロンプトを投入する（未投入分のみ）
+    # Seed sample shared prompts on startup (insert only missing rows).
     try:
         inserted = ensure_default_shared_prompts()
         if inserted > 0:
@@ -101,7 +113,8 @@ app.state.session_secret = secret_key
 app.state.session_cookie = "session"
 
 
-# 各Routerをimportする
+# 各 Router を読み込んでエンドポイント定義を登録可能にする
+# Import routers so endpoint definitions are attached.
 from blueprints.auth import auth_bp
 from blueprints.verification import verification_bp
 from blueprints.chat import chat_bp
@@ -112,7 +125,8 @@ from blueprints.prompt_share.prompt_manage_api import prompt_manage_api_bp
 from blueprints.admin import admin_bp
 from blueprints.memo import memo_bp
 
-# Routerを登録
+# ルーティングテーブルに各 Router を登録する
+# Register all routers into the app routing table.
 app.include_router(auth_bp)
 app.include_router(verification_bp)
 app.include_router(chat_bp)

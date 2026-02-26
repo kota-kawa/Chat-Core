@@ -8,6 +8,8 @@ from .cache import get_redis_client
 
 
 class EphemeralChatStore:
+    # 未ログインユーザーの一時チャットを Redis またはメモリで保持するストア
+    # Store guest ephemeral chats in Redis when available, otherwise in-memory.
     def __init__(self, expiration_seconds: int):
         self.expiration_seconds = expiration_seconds
         self._memory = {}
@@ -48,6 +50,8 @@ class EphemeralChatStore:
         return (datetime.now() - created_at).total_seconds() > self.expiration_seconds
 
     def cleanup(self) -> None:
+        # Redis利用時はTTL管理に任せ、メモリ利用時のみ期限切れルームを掃除する
+        # Let Redis TTL handle expiry; prune expired rooms only for in-memory mode.
         if self._redis is not None:
             return
         now = datetime.now()
@@ -66,6 +70,8 @@ class EphemeralChatStore:
             del self._memory[sid]
 
     def create_room(self, sid: str, room_id: str, title: str) -> None:
+        # 新規ルームを作成し、作成時刻を保持して有効期限計算に使う
+        # Create a room and keep creation time for TTL calculations.
         room = {
             "title": title,
             "messages": [],
@@ -83,6 +89,8 @@ class EphemeralChatStore:
         }
 
     def get_room(self, sid: str, room_id: str) -> Optional[dict]:
+        # 取得時にも期限切れを判定し、期限超過ルームは削除して None を返す
+        # Validate expiry on read and delete expired rooms before returning None.
         if self._redis is not None:
             key = self._key(sid, room_id)
             payload = self._redis.get(key)
@@ -100,6 +108,8 @@ class EphemeralChatStore:
         return self.get_room(sid, room_id) is not None
 
     def _save_room(self, sid: str, room_id: str, room: dict) -> bool:
+        # Redis では残TTLを再計算して保存し、期限切れなら保存せず削除する
+        # Recalculate remaining TTL for Redis; delete instead of saving when expired.
         if self._redis is not None:
             key = self._key(sid, room_id)
             ttl = self._remaining_ttl(room)
@@ -132,6 +142,8 @@ class EphemeralChatStore:
         return self._save_room(sid, room_id, room)
 
     def append_message(self, sid: str, room_id: str, role: str, content: str) -> bool:
+        # 指定ルームへメッセージを追記して永続化する
+        # Append a message to the room and persist updated state.
         room = self.get_room(sid, room_id)
         if not room:
             return False

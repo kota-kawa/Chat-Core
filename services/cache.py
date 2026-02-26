@@ -10,6 +10,8 @@ _redis_client = None
 
 
 def get_redis_client():
+    # Redis 依存がない環境では None を返し、呼び出し側がメモリ実装へフォールバックする
+    # Return None when Redis dependency is unavailable so callers can fallback to memory.
     if redis is None:
         return None
 
@@ -17,6 +19,8 @@ def get_redis_client():
     if _redis_client is not None:
         return _redis_client
 
+    # URL 指定を最優先し、未指定時は host/port/db 設定で接続する
+    # Prefer REDIS_URL, otherwise build client from host/port/db settings.
     url = os.environ.get("REDIS_URL")
     if url:
         _redis_client = redis.Redis.from_url(url, decode_responses=True)

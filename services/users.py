@@ -3,6 +3,8 @@ from .default_tasks import default_task_rows
 
 
 def copy_default_tasks_for_user(user_id):
+    # 共有タスクをユーザー専用タスクとして重複なく複製する
+    # Copy shared default tasks into user-owned rows without duplicates.
     """user_id IS NULL の共通タスクを指定ユーザーに複製"""
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -45,6 +47,8 @@ def copy_default_tasks_for_user(user_id):
 
 
 def get_user_by_email(email):
+    # メールアドレス一致のユーザー1件を返す
+    # Fetch a single user by email.
     """メールアドレスでユーザーを取得"""
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -57,6 +61,8 @@ def get_user_by_email(email):
 
 
 def get_user_by_id(user_id):
+    # プロフィール表示に必要なユーザー情報を取得する
+    # Fetch user fields needed by profile and session endpoints.
     """ユーザーIDでユーザーを取得"""
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -77,6 +83,8 @@ def get_user_by_id(user_id):
 
 
 def create_user(email):
+    # 未認証ユーザーを作成し、採番された user_id を返す
+    # Create an unverified user and return the generated user_id.
     """未認証ユーザーを新規作成"""
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -98,6 +106,8 @@ def create_user(email):
 
 
 def set_user_verified(user_id):
+    # 認証完了後に is_verified フラグを更新する
+    # Mark user as verified after successful verification.
     """ユーザーを認証済みに更新"""
     conn = get_db_connection()
     cursor = conn.cursor()

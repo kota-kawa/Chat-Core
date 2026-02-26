@@ -29,6 +29,8 @@ logger = logging.getLogger(__name__)
 
 
 def _fetch_user_rooms(user_id: int) -> list[dict[str, Any]]:
+    # 認証ユーザーのチャットルーム一覧を新しい順で取得する
+    # Fetch authenticated user's chat rooms ordered by newest first.
     conn = None
     cursor = None
     try:
@@ -62,6 +64,8 @@ def _fetch_user_rooms(user_id: int) -> list[dict[str, Any]]:
 def _validate_room_owner(
     room_id: str, user_id: int
 ) -> tuple[bool, dict[str, str] | None, int | None]:
+    # ルームの所有者検証を行い、失敗時は API 返却用エラー情報を返す
+    # Verify room ownership and return API-ready error payload on failure.
     conn = None
     cursor = None
     try:
@@ -83,6 +87,8 @@ def _validate_room_owner(
 
 
 def _delete_room_for_user(room_id: str, user_id: int) -> tuple[dict[str, str], int]:
+    # 所有者確認後に履歴→ルームの順で削除し、整合性を保つ
+    # Validate owner, then delete history and room to keep data consistent.
     conn = None
     cursor = None
     try:
@@ -130,6 +136,7 @@ async def new_chat_room(request: Request):
     session = request.session
     if "user_id" in session:
         # ログインユーザーの場合はDBに保存（利用回数制限なし）
+        # Persist for authenticated users in DB without daily free limit.
         user_id = session["user_id"]
         try:
             await run_blocking(create_chat_room_in_db, room_id, user_id, title)
@@ -148,6 +155,7 @@ async def new_chat_room(request: Request):
             )
     else:
         # 非ログインユーザーの場合は、1日10回まで利用可能
+        # Guests can create chats up to 10 times per day.
         today = date.today().isoformat()
         if session.get("free_chats_date") != today:
             session["free_chats_date"] = today
@@ -175,6 +183,7 @@ async def get_chat_rooms(request: Request):
     session = request.session
     if "user_id" in session:
         # ログインユーザー：DBから取得
+        # Authenticated users read room list from DB.
         user_id = session["user_id"]
         try:
             rooms = await run_blocking(_fetch_user_rooms, user_id)
@@ -186,6 +195,7 @@ async def get_chat_rooms(request: Request):
             )
     else:
         # 非ログインユーザーにはサイドバー上でチャットルーム一覧は表示しない
+        # Do not show sidebar room list for guests.
         return jsonify({"rooms": []})
 
 

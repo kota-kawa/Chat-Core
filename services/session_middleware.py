@@ -14,6 +14,8 @@ from services.cache import get_redis_client
 
 
 class PermanentSessionMiddleware:
+    # Redis が使える場合は Redis セッション、未設定時は標準 SessionMiddleware に委譲する
+    # Delegate to Redis-backed middleware when available, otherwise use SessionMiddleware.
     def __init__(
         self,
         app,
@@ -58,6 +60,8 @@ class PermanentSessionMiddleware:
                     session = scope.get("session") or {}
                     is_permanent = session.get("_permanent") is True
                     if session and not is_permanent:
+                        # 永続化フラグがないセッションはブラウザセッション化するため期限属性を除去する
+                        # Strip expiry attributes so non-permanent sessions become browser-session cookies.
                         message["headers"] = _strip_cookie_headers(
                             message["headers"], self.session_cookie
                         )
@@ -69,6 +73,8 @@ class PermanentSessionMiddleware:
 
 
 class RedisSessionMiddleware:
+    # セッション実体は Redis に保持し、Cookie には署名付き session_id のみ保存する
+    # Store session payload in Redis and keep only signed session_id in the cookie.
     def __init__(
         self,
         app,
@@ -93,6 +99,8 @@ class RedisSessionMiddleware:
         if scope["type"] != "http":
             return await self.app(scope, receive, send)
 
+        # リクエスト受信時に Cookie から session_id を復元し、Redis からセッションを読み込む
+        # Restore session_id from cookie and hydrate session data from Redis on request start.
         session_id = self._load_session_id(scope)
         session_data = (
             await run_in_threadpool(self._load_session, session_id)
@@ -105,6 +113,8 @@ class RedisSessionMiddleware:
         async def send_wrapper(message):
             if message["type"] == "http.response.start":
                 headers = MutableHeaders(scope=message)
+                # レスポンス直前に session の保存・削除と Cookie 更新を反映する
+                # Persist/delete session and update cookie right before sending response headers.
                 await run_in_threadpool(self._commit_session, scope, headers)
             await send(message)
 
@@ -142,6 +152,8 @@ class RedisSessionMiddleware:
 
         if not session:
             if session_id:
+                # セッションが空になったら Redis と Cookie の両方を削除する
+                # Remove both Redis state and cookie when session becomes empty.
                 self._delete_session(session_id)
                 self._set_cookie(headers, "", max_age=0)
             return
@@ -190,6 +202,8 @@ class RedisSessionMiddleware:
 
 
 def _strip_cookie_headers(headers, cookie_name: str):
+    # 既存 Set-Cookie を走査し、対象 Cookie の期限属性だけを除去したヘッダを再構築する
+    # Rebuild Set-Cookie headers while stripping only expiry attributes for the target cookie.
     new_headers: List[Tuple[bytes, bytes]] = []
     set_cookie_headers: List[str] = []
 
@@ -211,6 +225,8 @@ def _strip_cookie_headers(headers, cookie_name: str):
 
 
 def _strip_cookie_attributes(cookie: str) -> str:
+    # Max-Age / Expires を除外し、他属性（Path, HttpOnly, SameSite など）は維持する
+    # Drop Max-Age/Expires while keeping other attributes such as Path/HttpOnly/SameSite.
     parts = cookie.split(";")
     if len(parts) <= 1:
         return cookie

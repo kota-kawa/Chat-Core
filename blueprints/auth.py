@@ -21,6 +21,7 @@ from services.web import (
     set_session_permanent,
     url_for,
 )
+from services.async_utils import run_blocking
 from services.users import (
     get_user_by_email,
     get_user_by_id,
@@ -58,6 +59,16 @@ GOOGLE_SCOPES = [
 
 auth_bp = APIRouter()
 
+
+def _fetch_google_user_info(access_token: str):
+    response = requests.get(
+        "https://www.googleapis.com/oauth2/v2/userinfo",
+        headers={"Authorization": f"Bearer {access_token}"},
+        timeout=10,
+    )
+    return response.json()
+
+
 @auth_bp.get("/register", name="auth.register_page")
 async def register_page(request: Request):
     """登録ページ(統合認証ページを返す)"""
@@ -67,7 +78,7 @@ async def register_page(request: Request):
 async def api_current_user(request: Request):
     session = request.session
     if "user_id" in session:
-        user = get_user_by_id(session["user_id"])
+        user = await run_blocking(get_user_by_id, session["user_id"])
         if user:
             return jsonify({"logged_in": True, "user": {"id": user["id"], "email": user["email"]}})
         # user_id in session but user no longer exists; clear the stale session
@@ -135,26 +146,23 @@ async def google_callback(request: Request):
         state=state,
         redirect_uri=redirect_uri,
     )
-    flow.fetch_token(authorization_response=str(request.url))
+    await run_blocking(flow.fetch_token, authorization_response=str(request.url))
     session.pop("google_oauth_state", None)
     session.pop("google_redirect_uri", None)
 
     credentials = flow.credentials
-    user_info = requests.get(
-        "https://www.googleapis.com/oauth2/v2/userinfo",
-        headers={"Authorization": f"Bearer {credentials.token}"},
-    ).json()
+    user_info = await run_blocking(_fetch_google_user_info, credentials.token)
     email = user_info.get("email")
     if not email:
         return RedirectResponse(frontend_login_url(), status_code=302)
-    user = get_user_by_email(email)
+    user = await run_blocking(get_user_by_email, email)
     if not user:
-        user_id = create_user(email)
-        set_user_verified(user_id)
+        user_id = await run_blocking(create_user, email)
+        await run_blocking(set_user_verified, user_id)
     else:
         user_id = user["id"]
 
-    copy_default_tasks_for_user(user_id)
+    await run_blocking(copy_default_tasks_for_user, user_id)
     session["user_id"] = user_id
     session["user_email"] = email
     set_session_permanent(session, True)
@@ -172,13 +180,13 @@ async def api_send_login_code(request: Request):
     email = data.get("email")
     if not email:
         return jsonify({"status": "fail", "error": "メールアドレスが指定されていません"}, status_code=400)
-    user = get_user_by_email(email)
+    user = await run_blocking(get_user_by_email, email)
     if not user or not user["is_verified"]:
         return jsonify(
             {"status": "fail", "error": "ユーザーが存在しないか、認証されていません"},
             status_code=400,
         )
-    can_send_email, _, daily_limit = consume_auth_email_daily_quota()
+    can_send_email, _, daily_limit = await run_blocking(consume_auth_email_daily_quota)
     if not can_send_email:
         return jsonify(
             {
@@ -196,7 +204,7 @@ async def api_send_login_code(request: Request):
     subject = "AIチャットサービス: ログイン認証コード"
     body_text = f"以下の認証コードをログイン画面に入力してください。\n\n認証コード: {code}"
     try:
-        send_email(to_address=email, subject=subject, body_text=body_text)
+        await run_blocking(send_email, to_address=email, subject=subject, body_text=body_text)
         return jsonify({"status": "success", "message": "認証コードを送信しました"})
     except Exception as e:
         return jsonify({"status": "fail", "error": str(e)}, status_code=500)
@@ -220,12 +228,12 @@ async def api_verify_login_code(request: Request):
         )
     if auth_code == session_code:
         session["user_id"] = user_id
-        user = get_user_by_id(user_id)
+        user = await run_blocking(get_user_by_id, user_id)
         session["user_email"] = user["email"] if user else ""
         set_session_permanent(session, True)
         session.pop("login_verification_code", None)
         session.pop("login_temp_user_id", None)
-        copy_default_tasks_for_user(user_id)
+        await run_blocking(copy_default_tasks_for_user, user_id)
         return jsonify({"status": "success", "message": "ログインに成功しました"})
     else:
         return jsonify({"status": "fail", "error": "認証コードが違います"}, status_code=400)

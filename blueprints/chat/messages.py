@@ -5,6 +5,7 @@ from datetime import date
 
 from fastapi import Request
 
+from services.async_utils import run_blocking
 from services.db import get_db_connection
 from services.chat_service import (
     save_message_to_db,
@@ -22,9 +23,85 @@ from . import (
 )
 
 
+def _validate_room_owner(room_id, user_id, forbidden_message):
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        check_q = "SELECT user_id FROM chat_rooms WHERE id = %s"
+        cursor.execute(check_q, (room_id,))
+        result = cursor.fetchone()
+        if not result:
+            return {"error": "該当ルームが存在しません"}, 404
+        if result[0] != user_id:
+            return {"error": forbidden_message}, 403
+        return None, None
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if conn is not None:
+            conn.close()
+
+
+def _fetch_prompt_data(task):
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        query = (
+            "SELECT prompt_template, input_examples, output_examples "
+            "FROM task_with_examples WHERE name = %s"
+        )
+        cursor.execute(query, (task,))
+        return cursor.fetchone()
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if conn is not None:
+            conn.close()
+
+
+def _write_prompt_debug_file(conversation_messages):
+    with open("extra_prompt.txt", "w", encoding="utf-8") as file_obj:
+        file_obj.write(json.dumps(conversation_messages, ensure_ascii=False, indent=2))
+
+
+def _fetch_chat_history(chat_room_id):
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+            SELECT message, sender, timestamp
+            FROM chat_history
+            WHERE chat_room_id = %s
+            ORDER BY id ASC
+        """
+        cursor.execute(query, (chat_room_id,))
+        rows = cursor.fetchall()
+        messages = []
+        for (msg, sender, ts) in rows:
+            messages.append(
+                {
+                    "message": msg,
+                    "sender": sender,
+                    "timestamp": ts.strftime("%Y-%m-%d %H:%M:%S"),
+                }
+            )
+        return messages
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if conn is not None:
+            conn.close()
+
+
 @chat_bp.post("/api/chat", name="chat.chat")
 async def chat(request: Request):
-    cleanup_ephemeral_chats()
+    await run_blocking(cleanup_ephemeral_chats)
     data = await get_json(request)
     if not data or "message" not in data:
         return jsonify({"error": "'message' が必要です。"}, status_code=400)
@@ -56,49 +133,42 @@ async def chat(request: Request):
 
     if "user_id" in session:
         try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            check_q = "SELECT user_id FROM chat_rooms WHERE id = %s"
-            cursor.execute(check_q, (chat_room_id,))
-            result = cursor.fetchone()
-            if not result:
-                return jsonify({"error": "該当ルームが存在しません"}, status_code=404)
-            if result[0] != session["user_id"]:
-                return jsonify({"error": "他ユーザーのチャットルームには投稿できません"}, status_code=403)
-        finally:
-            cursor.close()
-            conn.close()
+            payload, status_code = await run_blocking(
+                _validate_room_owner,
+                chat_room_id,
+                session["user_id"],
+                "他ユーザーのチャットルームには投稿できません",
+            )
+            if payload is not None:
+                return jsonify(payload, status_code=status_code)
+        except Exception as e:
+            return jsonify({"error": str(e)}, status_code=500)
 
         escaped = html.escape(user_message)
         formatted_user_message = escaped.replace("\n", "<br>")
 
-        save_message_to_db(chat_room_id, formatted_user_message, "user")
-        all_messages = get_chat_room_messages(chat_room_id)
+        await run_blocking(save_message_to_db, chat_room_id, formatted_user_message, "user")
+        all_messages = await run_blocking(get_chat_room_messages, chat_room_id)
     else:
         sid = get_session_id(session)
-        if not ephemeral_store.room_exists(sid, chat_room_id):
+        if not await run_blocking(ephemeral_store.room_exists, sid, chat_room_id):
             return jsonify({"error": "該当ルームが存在しません"}), 404
 
         escaped = html.escape(user_message)
         formatted_user_message = escaped.replace("\n", "<br>")
-        ephemeral_store.append_message(sid, chat_room_id, "user", formatted_user_message)
-        all_messages = ephemeral_store.get_messages(sid, chat_room_id)
+        await run_blocking(
+            ephemeral_store.append_message, sid, chat_room_id, "user", formatted_user_message
+        )
+        all_messages = await run_blocking(ephemeral_store.get_messages, sid, chat_room_id)
 
     extra_prompt = None
     prompt_data = None  # prompt_data を初期化
 
     if match and len(all_messages) == 1:
-        environment = match.group(1).strip()
         task = match.group(2).strip()
 
         # DBから指定タスクのプロンプトテンプレートと few-shot 例を取得する
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        query = "SELECT prompt_template, input_examples, output_examples FROM task_with_examples WHERE name = %s"
-        cursor.execute(query, (task,))
-        prompt_data = cursor.fetchone()
-        cursor.close()
-        conn.close()
+        prompt_data = await run_blocking(_fetch_prompt_data, task)
 
     conversation_messages = []
 
@@ -145,7 +215,7 @@ async def chat(request: Request):
 
     conversation_messages += all_messages
 
-    can_access_llm, _, daily_limit = consume_llm_daily_quota()
+    can_access_llm, _, daily_limit = await run_blocking(consume_llm_daily_quota)
     if not can_access_llm:
         return jsonify(
             {
@@ -158,25 +228,24 @@ async def chat(request: Request):
         )
 
     try:
-        with open('extra_prompt.txt', 'w', encoding='utf-8') as f:
-            f.write(json.dumps(conversation_messages, ensure_ascii=False, indent=2))
+        await run_blocking(_write_prompt_debug_file, conversation_messages)
     except Exception as e:
         print("Failed to write conversation_messages to extra_prompt.txt:", e)
 
-    bot_reply = get_llm_response(conversation_messages, model)
+    bot_reply = await run_blocking(get_llm_response, conversation_messages, model)
 
     if "user_id" in session:
-        save_message_to_db(chat_room_id, bot_reply, "assistant")
+        await run_blocking(save_message_to_db, chat_room_id, bot_reply, "assistant")
     else:
         sid = get_session_id(session)
-        ephemeral_store.append_message(sid, chat_room_id, "assistant", bot_reply)
+        await run_blocking(ephemeral_store.append_message, sid, chat_room_id, "assistant", bot_reply)
 
     return jsonify({"response": bot_reply})
 
 
 @chat_bp.get("/api/get_chat_history", name="chat.get_chat_history")
 async def get_chat_history(request: Request):
-    cleanup_ephemeral_chats()
+    await run_blocking(cleanup_ephemeral_chats)
     chat_room_id = request.query_params.get('room_id')
     if not chat_room_id:
         return jsonify({"error": "room_id is required"}, status_code=400)
@@ -184,48 +253,26 @@ async def get_chat_history(request: Request):
     session = request.session
     if "user_id" in session:
         try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            check_q = "SELECT user_id FROM chat_rooms WHERE id = %s"
-            cursor.execute(check_q, (chat_room_id,))
-            result = cursor.fetchone()
-            if not result:
-                return jsonify({"error": "該当ルームが存在しません"}, status_code=404)
-            if result[0] != session["user_id"]:
-                return jsonify({"error": "他ユーザーのチャット履歴は見れません"}, status_code=403)
-            cursor.close()
-            conn.close()
+            payload, status_code = await run_blocking(
+                _validate_room_owner,
+                chat_room_id,
+                session["user_id"],
+                "他ユーザーのチャット履歴は見れません",
+            )
+            if payload is not None:
+                return jsonify(payload, status_code=status_code)
         except Exception as e:
             return jsonify({"error": str(e)}, status_code=500)
 
         try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            query = """
-                SELECT message, sender, timestamp
-                FROM chat_history
-                WHERE chat_room_id = %s
-                ORDER BY id ASC
-            """
-            cursor.execute(query, (chat_room_id,))
-            rows = cursor.fetchall()
-            messages = []
-            for (msg, sender, ts) in rows:
-                messages.append({
-                    "message": msg,
-                    "sender": sender,
-                    "timestamp": ts.strftime("%Y-%m-%d %H:%M:%S"),
-                })
+            messages = await run_blocking(_fetch_chat_history, chat_room_id)
             return jsonify({"messages": messages})
         except Exception as e:
             return jsonify({"error": str(e)}, status_code=500)
-        finally:
-            cursor.close()
-            conn.close()
     else:
         sid = get_session_id(session)
-        if not ephemeral_store.room_exists(sid, chat_room_id):
+        if not await run_blocking(ephemeral_store.room_exists, sid, chat_room_id):
             return jsonify({"error": "該当ルームが存在しません"}, status_code=404)
 
-        messages = ephemeral_store.get_messages(sid, chat_room_id)
+        messages = await run_blocking(ephemeral_store.get_messages, sid, chat_room_id)
         return jsonify({"messages": messages})

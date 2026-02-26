@@ -6,6 +6,7 @@ import inspect
 from fastapi import Request
 from starlette.responses import RedirectResponse
 
+from services.async_utils import run_blocking
 from services.db import Error, get_db_connection
 from services.web import (
     flash,
@@ -259,6 +260,133 @@ def _build_drop_column_sql(table_name: str, column_name: str):
     )
 
 
+def _load_dashboard_data(selected_table: Optional[str]) -> dict:
+    connection = None
+    cursor = None
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        tables = _fetch_tables(cursor)
+        column_names: list[str] = []
+        column_details: list[dict[str, object]] = []
+        existing_columns: list[str] = []
+        rows: list[tuple] = []
+        missing_selected_table = False
+
+        if selected_table:
+            if selected_table in tables:
+                column_names, rows = _fetch_table_preview(cursor, selected_table)
+                column_details = _fetch_table_columns(cursor, selected_table)
+                existing_columns = [column["name"] for column in column_details]
+            else:
+                missing_selected_table = True
+                selected_table = None
+
+        return {
+            "tables": tables,
+            "selected_table": selected_table,
+            "column_names": column_names,
+            "column_details": column_details,
+            "existing_columns": existing_columns,
+            "rows": rows,
+            "missing_selected_table": missing_selected_table,
+        }
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None:
+            connection.close()
+
+
+def _create_table_in_db(table_name: str, column_definitions: str, table_options: str) -> None:
+    connection = None
+    cursor = None
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute(_build_create_table_sql(table_name, column_definitions, table_options))
+        connection.commit()
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None:
+            connection.close()
+
+
+def _drop_table_if_exists(table_name: str) -> bool:
+    connection = None
+    cursor = None
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        existing_tables = _fetch_tables(cursor)
+        if table_name not in existing_tables:
+            return False
+        cursor.execute(_build_drop_table_sql(table_name))
+        connection.commit()
+        return True
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None:
+            connection.close()
+
+
+def _add_column_if_valid(table_name: str, column_name: str, column_type: str) -> str:
+    connection = None
+    cursor = None
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        tables = _fetch_tables(cursor)
+        if table_name not in tables:
+            return "missing_table"
+
+        existing_columns = [column["name"] for column in _fetch_table_columns(cursor, table_name)]
+        normalized_existing_columns = {name.lower() for name in existing_columns}
+        if column_name.lower() in normalized_existing_columns:
+            return "duplicate_column"
+
+        cursor.execute(_build_add_column_sql(table_name, column_name, column_type))
+        connection.commit()
+        return "ok"
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None:
+            connection.close()
+
+
+def _drop_column_if_valid(table_name: str, column_name: str) -> tuple[str, Optional[str]]:
+    connection = None
+    cursor = None
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        tables = _fetch_tables(cursor)
+        if table_name not in tables:
+            return "missing_table", None
+
+        columns = _fetch_table_columns(cursor, table_name)
+        existing_columns = [column["name"] for column in columns]
+        column_lookup = {name.lower(): name for name in existing_columns}
+        target_column = column_lookup.get(column_name.lower())
+        if target_column is None:
+            return "missing_column", None
+
+        if len(existing_columns) <= 1:
+            return "last_column", None
+
+        cursor.execute(_build_drop_column_sql(table_name, target_column))
+        connection.commit()
+        return "ok", target_column
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None:
+            connection.close()
+
+
 @admin_bp.get("/", name="admin.dashboard")
 @admin_required
 async def dashboard(request: Request):
@@ -278,29 +406,19 @@ async def api_dashboard(request: Request):
     existing_columns: list[str] = []
     rows: list[tuple] = []
     error: Optional[str] = None
-    connection = None
-    cursor = None
 
     try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        tables = _fetch_tables(cursor)
-
-        if selected_table:
-            if selected_table in tables:
-                column_names, rows = _fetch_table_preview(cursor, selected_table)
-                column_details = _fetch_table_columns(cursor, selected_table)
-                existing_columns = [column["name"] for column in column_details]
-            else:
-                flash(request, "The selected table does not exist.", "error")
-                selected_table = None
+        dashboard_data = await run_blocking(_load_dashboard_data, selected_table)
+        tables = dashboard_data["tables"]
+        selected_table = dashboard_data["selected_table"]
+        column_names = dashboard_data["column_names"]
+        column_details = dashboard_data["column_details"]
+        existing_columns = dashboard_data["existing_columns"]
+        rows = dashboard_data["rows"]
+        if dashboard_data["missing_selected_table"]:
+            flash(request, "The selected table does not exist.", "error")
     except Error as exc:  # pragma: no cover - defensive logging
         error = str(exc)
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if connection is not None:
-            connection.close()
 
     messages = get_flashed_messages(request, with_categories=True)
 
@@ -341,23 +459,13 @@ async def create_table(request: Request):
             return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
         table_options = normalized_options
 
-    connection = None
-    cursor = None
     try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        cursor.execute(
-            _build_create_table_sql(table_name, column_definitions, table_options)
+        await run_blocking(
+            _create_table_in_db, table_name, column_definitions, table_options
         )
-        connection.commit()
         flash(request, f"Table '{table_name}' created successfully.", "success")
     except Error as exc:
         flash(request, f"Failed to create table: {exc}", "error")
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if connection is not None:
-            connection.close()
 
     return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
 
@@ -395,25 +503,15 @@ async def api_create_table(request: Request):
             )
         table_options = normalized_options
 
-    connection = None
-    cursor = None
     try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        cursor.execute(
-            _build_create_table_sql(table_name, column_definitions, table_options)
+        await run_blocking(
+            _create_table_in_db, table_name, column_definitions, table_options
         )
-        connection.commit()
         flash(request, f"Table '{table_name}' created successfully.", "success")
         return jsonify({"status": "success", "redirect": frontend_admin_dashboard_url(request)})
     except Error as exc:
         flash(request, f"Failed to create table: {exc}", "error")
         return jsonify({"status": "fail", "error": str(exc)}, status_code=500)
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if connection is not None:
-            connection.close()
 
 
 @admin_bp.post("/delete-table", name="admin.delete_table")
@@ -426,25 +524,14 @@ async def delete_table(request: Request):
         flash(request, "Table name is required for deletion.", "error")
         return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
 
-    connection = None
-    cursor = None
     try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        existing_tables = _fetch_tables(cursor)
-        if table_name not in existing_tables:
+        deleted = await run_blocking(_drop_table_if_exists, table_name)
+        if not deleted:
             flash(request, f"Table '{table_name}' does not exist.", "error")
             return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
-        cursor.execute(_build_drop_table_sql(table_name))
-        connection.commit()
         flash(request, f"Table '{table_name}' deleted successfully.", "success")
     except Error as exc:
         flash(request, f"Failed to delete table: {exc}", "error")
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if connection is not None:
-            connection.close()
 
     return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
 
@@ -464,29 +551,18 @@ async def api_delete_table(request: Request):
             {"status": "fail", "error": "Table name is required."}, status_code=400
         )
 
-    connection = None
-    cursor = None
     try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        existing_tables = _fetch_tables(cursor)
-        if table_name not in existing_tables:
+        deleted = await run_blocking(_drop_table_if_exists, table_name)
+        if not deleted:
             flash(request, f"Table '{table_name}' does not exist.", "error")
             return jsonify(
                 {"status": "fail", "error": "Table does not exist."}, status_code=404
             )
-        cursor.execute(_build_drop_table_sql(table_name))
-        connection.commit()
         flash(request, f"Table '{table_name}' deleted successfully.", "success")
         return jsonify({"status": "success", "redirect": frontend_admin_dashboard_url(request)})
     except Error as exc:
         flash(request, f"Failed to delete table: {exc}", "error")
         return jsonify({"status": "fail", "error": str(exc)}, status_code=500)
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if connection is not None:
-            connection.close()
 
 
 @admin_bp.post("/add-column", name="admin.add_column")
@@ -509,34 +585,19 @@ async def add_column(request: Request):
             frontend_admin_dashboard_url(request, table=table_name), status_code=302
         )
 
-    connection = None
-    cursor = None
     try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        tables = _fetch_tables(cursor)
-        if table_name not in tables:
+        status = await run_blocking(_add_column_if_valid, table_name, column_name, column_type)
+        if status == "missing_table":
             flash(request, f"テーブル '{table_name}' は存在しません。", "error")
             return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
-
-        existing_columns = [column["name"] for column in _fetch_table_columns(cursor, table_name)]
-        normalized_existing_columns = {name.lower() for name in existing_columns}
-        if column_name.lower() in normalized_existing_columns:
+        if status == "duplicate_column":
             flash(request, f"カラム '{column_name}' は既に存在します。", "error")
             return RedirectResponse(
                 frontend_admin_dashboard_url(request, table=table_name), status_code=302
             )
-
-        cursor.execute(_build_add_column_sql(table_name, column_name, column_type))
-        connection.commit()
         flash(request, f"カラム '{column_name}' をテーブル '{table_name}' に追加しました。", "success")
     except Error as exc:
         flash(request, f"カラムの追加に失敗しました: {exc}", "error")
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if connection is not None:
-            connection.close()
 
     return RedirectResponse(
         frontend_admin_dashboard_url(request, table=table_name), status_code=302
@@ -566,28 +627,18 @@ async def api_add_column(request: Request):
             {"status": "fail", "error": "Invalid column definition."}, status_code=400
         )
 
-    connection = None
-    cursor = None
     try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        tables = _fetch_tables(cursor)
-        if table_name not in tables:
+        status = await run_blocking(_add_column_if_valid, table_name, column_name, column_type)
+        if status == "missing_table":
             flash(request, f"テーブル '{table_name}' は存在しません。", "error")
             return jsonify(
                 {"status": "fail", "error": "Table does not exist."}, status_code=404
             )
-
-        existing_columns = [column["name"] for column in _fetch_table_columns(cursor, table_name)]
-        normalized_existing_columns = {name.lower() for name in existing_columns}
-        if column_name.lower() in normalized_existing_columns:
+        if status == "duplicate_column":
             flash(request, f"カラム '{column_name}' は既に存在します。", "error")
             return jsonify(
                 {"status": "fail", "error": "Column already exists."}, status_code=400
             )
-
-        cursor.execute(_build_add_column_sql(table_name, column_name, column_type))
-        connection.commit()
         flash(request, f"カラム '{column_name}' をテーブル '{table_name}' に追加しました。", "success")
         return jsonify(
             {
@@ -598,11 +649,6 @@ async def api_add_column(request: Request):
     except Error as exc:
         flash(request, f"カラムの追加に失敗しました: {exc}", "error")
         return jsonify({"status": "fail", "error": str(exc)}, status_code=500)
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if connection is not None:
-            connection.close()
 
 
 @admin_bp.post("/delete-column", name="admin.delete_column")
@@ -618,42 +664,31 @@ async def delete_column(request: Request):
             frontend_admin_dashboard_url(request, table=table_name), status_code=302
         )
 
-    connection = None
-    cursor = None
     try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        tables = _fetch_tables(cursor)
-        if table_name not in tables:
+        status, target_column = await run_blocking(
+            _drop_column_if_valid, table_name, column_name
+        )
+        if status == "missing_table":
             flash(request, f"テーブル '{table_name}' は存在しません。", "error")
             return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
-
-        columns = _fetch_table_columns(cursor, table_name)
-        existing_columns = [column["name"] for column in columns]
-        column_lookup = {name.lower(): name for name in existing_columns}
-        target_column = column_lookup.get(column_name.lower())
-        if target_column is None:
+        if status == "missing_column":
             flash(request, f"カラム '{column_name}' は存在しません。", "error")
             return RedirectResponse(
                 frontend_admin_dashboard_url(request, table=table_name), status_code=302
             )
-
-        if len(existing_columns) <= 1:
+        if status == "last_column":
             flash(request, "テーブルには少なくとも1つのカラムが必要です。", "error")
             return RedirectResponse(
                 frontend_admin_dashboard_url(request, table=table_name), status_code=302
             )
-
-        cursor.execute(_build_drop_column_sql(table_name, target_column))
-        connection.commit()
+        if status != "ok" or target_column is None:
+            flash(request, "カラムの削除に失敗しました。", "error")
+            return RedirectResponse(
+                frontend_admin_dashboard_url(request, table=table_name), status_code=302
+            )
         flash(request, f"カラム '{target_column}' をテーブル '{table_name}' から削除しました。", "success")
     except Error as exc:
         flash(request, f"カラムの削除に失敗しました: {exc}", "error")
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if connection is not None:
-            connection.close()
 
     return RedirectResponse(
         frontend_admin_dashboard_url(request, table=table_name), status_code=302
@@ -676,36 +711,28 @@ async def api_delete_column(request: Request):
             {"status": "fail", "error": "Required fields are missing."}, status_code=400
         )
 
-    connection = None
-    cursor = None
     try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        tables = _fetch_tables(cursor)
-        if table_name not in tables:
+        status, target_column = await run_blocking(
+            _drop_column_if_valid, table_name, column_name
+        )
+        if status == "missing_table":
             flash(request, f"テーブル '{table_name}' は存在しません。", "error")
             return jsonify(
                 {"status": "fail", "error": "Table does not exist."}, status_code=404
             )
-
-        columns = _fetch_table_columns(cursor, table_name)
-        existing_columns = [column["name"] for column in columns]
-        column_lookup = {name.lower(): name for name in existing_columns}
-        target_column = column_lookup.get(column_name.lower())
-        if target_column is None:
+        if status == "missing_column":
             flash(request, f"カラム '{column_name}' は存在しません。", "error")
             return jsonify(
                 {"status": "fail", "error": "Column does not exist."}, status_code=404
             )
-
-        if len(existing_columns) <= 1:
+        if status == "last_column":
             flash(request, "テーブルには少なくとも1つのカラムが必要です。", "error")
             return jsonify(
                 {"status": "fail", "error": "Cannot delete the last column."}, status_code=400
             )
-
-        cursor.execute(_build_drop_column_sql(table_name, target_column))
-        connection.commit()
+        if status != "ok" or target_column is None:
+            flash(request, "カラムの削除に失敗しました。", "error")
+            return jsonify({"status": "fail", "error": "Column deletion failed."}, status_code=500)
         flash(
             request,
             f"カラム '{target_column}' をテーブル '{table_name}' から削除しました。",
@@ -720,8 +747,3 @@ async def api_delete_column(request: Request):
     except Error as exc:
         flash(request, f"カラムの削除に失敗しました: {exc}", "error")
         return jsonify({"status": "fail", "error": str(exc)}, status_code=500)
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if connection is not None:
-            connection.close()

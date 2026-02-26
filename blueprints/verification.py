@@ -2,6 +2,7 @@ import random
 
 from fastapi import APIRouter, Request
 
+from services.async_utils import run_blocking
 from services.email_service import send_email
 from services.llm_daily_limit import consume_auth_email_daily_quota
 from services.users import (
@@ -29,7 +30,7 @@ async def api_send_verification_email(request: Request):
     if not email:
         return jsonify({"status": "fail", "error": "メールアドレスが指定されていません"}, status_code=400)
 
-    can_send_email, _, daily_limit = consume_auth_email_daily_quota()
+    can_send_email, _, daily_limit = await run_blocking(consume_auth_email_daily_quota)
     if not can_send_email:
         return jsonify(
             {
@@ -43,9 +44,9 @@ async def api_send_verification_email(request: Request):
         )
 
     # すでにユーザーがあれば再利用、なければ作成
-    user = get_user_by_email(email)
+    user = await run_blocking(get_user_by_email, email)
     if not user:
-        user_id = create_user(email)
+        user_id = await run_blocking(create_user, email)
     else:
         user_id = user["id"]
 
@@ -57,7 +58,7 @@ async def api_send_verification_email(request: Request):
     subject = "AIチャットサービス: 認証コード"
     body_text = f"以下の認証コードを登録画面に入力してください。\n\n認証コード: {code}"
     try:
-        send_email(to_address=email, subject=subject, body_text=body_text)
+        await run_blocking(send_email, to_address=email, subject=subject, body_text=body_text)
         return jsonify({"status": "success"})
     except Exception as e:
         return jsonify({"status": "fail", "error": str(e)}, status_code=500)
@@ -82,12 +83,12 @@ async def api_verify_registration_code(request: Request):
         return jsonify({"status": "fail", "error": "認証コードが違います。"}, status_code=400)
 
     # ここから成功処理 ----------------------------------------------------
-    set_user_verified(user_id)                 # ユーザーを認証済みに
-    copy_default_tasks_for_user(user_id)       # ★ 共通タスクを複製 ★
+    await run_blocking(set_user_verified, user_id)                 # ユーザーを認証済みに
+    await run_blocking(copy_default_tasks_for_user, user_id)       # ★ 共通タスクを複製 ★
 
     # ログイン状態にセット
     request.session["user_id"]    = user_id
-    user                  = get_user_by_id(user_id)
+    user                  = await run_blocking(get_user_by_id, user_id)
     request.session["user_email"] = user["email"] if user else ""
 
     # 一時セッション情報のクリア

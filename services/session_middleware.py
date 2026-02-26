@@ -6,6 +6,7 @@ from http.cookies import SimpleCookie
 from typing import List, Tuple
 
 from itsdangerous import BadSignature, URLSafeSerializer
+from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import Headers, MutableHeaders
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -93,14 +94,18 @@ class RedisSessionMiddleware:
             return await self.app(scope, receive, send)
 
         session_id = self._load_session_id(scope)
-        session_data = self._load_session(session_id) if session_id else {}
+        session_data = (
+            await run_in_threadpool(self._load_session, session_id)
+            if session_id
+            else {}
+        )
         scope["session"] = session_data
         scope["session_id"] = session_id
 
         async def send_wrapper(message):
             if message["type"] == "http.response.start":
                 headers = MutableHeaders(scope=message)
-                self._commit_session(scope, headers)
+                await run_in_threadpool(self._commit_session, scope, headers)
             await send(message)
 
         return await self.app(scope, receive, send_wrapper)

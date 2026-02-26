@@ -4,6 +4,7 @@ from typing import List
 
 from fastapi import APIRouter, Request
 
+from services.async_utils import run_blocking
 from services.db import Error, get_db_connection
 from services.web import flash, get_json, jsonify, redirect_to_frontend
 
@@ -68,10 +69,35 @@ def _serialize_memo(memo: dict) -> dict:
     }
 
 
+def _insert_memo(input_content: str, ai_response: str, resolved_title: str, tags: str):
+    connection = None
+    cursor = None
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute(
+            """
+            INSERT INTO memo_entries (input_content, ai_response, title, tags)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id
+            """,
+            (input_content, ai_response, resolved_title, tags or None),
+        )
+        connection.commit()
+        row = cursor.fetchone()
+        return row[0] if row else None
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None:
+            connection.close()
+
+
 @memo_bp.get("/api/recent", name="memo.api_recent")
 async def api_recent_memos(request: Request, limit: int = 10):
     safe_limit = max(1, min(limit, 100))
-    memos = [_serialize_memo(memo) for memo in _fetch_recent_memos(safe_limit)]
+    recent_memos = await run_blocking(_fetch_recent_memos, safe_limit)
+    memos = [_serialize_memo(memo) for memo in recent_memos]
     return jsonify({"memos": memos})
 
 
@@ -93,31 +119,14 @@ async def api_create_memo(request: Request):
         )
 
     resolved_title = _ensure_title(ai_response, title)
-    connection = None
-    cursor = None
     try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        cursor.execute(
-            """
-            INSERT INTO memo_entries (input_content, ai_response, title, tags)
-            VALUES (%s, %s, %s, %s)
-            RETURNING id
-            """,
-            (input_content, ai_response, resolved_title, tags or None),
+        memo_id = await run_blocking(
+            _insert_memo, input_content, ai_response, resolved_title, tags
         )
-        connection.commit()
-        row = cursor.fetchone()
-        memo_id = row[0] if row else None
         flash(request, "メモを保存しました。", "success")
         return jsonify({"status": "success", "memo_id": memo_id})
     except Error as exc:
         return jsonify({"status": "fail", "error": str(exc)}, status_code=500)
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if connection is not None:
-            connection.close()
 
 
 @memo_bp.api_route("", methods=["GET", "POST"], name="memo.create_memo")

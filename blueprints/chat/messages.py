@@ -63,11 +63,6 @@ def _fetch_prompt_data(task):
             conn.close()
 
 
-def _write_prompt_debug_file(conversation_messages):
-    with open("extra_prompt.txt", "w", encoding="utf-8") as file_obj:
-        file_obj.write(json.dumps(conversation_messages, ensure_ascii=False, indent=2))
-
-
 def _fetch_chat_history(chat_room_id):
     conn = None
     cursor = None
@@ -226,11 +221,6 @@ async def chat(request: Request):
             },
             status_code=429,
         )
-
-    try:
-        await run_blocking(_write_prompt_debug_file, conversation_messages)
-    except Exception as e:
-        print("Failed to write conversation_messages to extra_prompt.txt:", e)
 
     bot_reply = await run_blocking(get_llm_response, conversation_messages, model)
 

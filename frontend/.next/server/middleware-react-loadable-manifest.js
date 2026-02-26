@@ -1,1 +1,0 @@
-self.__REACT_LOADABLE_MANIFEST="{\"pages/index.tsx -> ../scripts/entries/chat\":{\"id\":\"pages/index.tsx -> ../scripts/entries/chat\",\"files\":[\"static/chunks/scripts_entries_chat_ts.js\"]}}"

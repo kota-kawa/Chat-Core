@@ -14,8 +14,8 @@ RUN apt-get update \
     && pip install --no-cache-dir --upgrade pip setuptools wheel \
     && pip install --no-cache-dir -r requirements.txt
 
-# wait-for-it.sh を取得してアプリの起動を待機
-ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh /wait-for-it.sh
+# ローカル同梱の wait-for-it.sh を配置してアプリの起動を待機
+COPY wait-for-it.sh /wait-for-it.sh
 RUN chmod +x /wait-for-it.sh
 
 # ----

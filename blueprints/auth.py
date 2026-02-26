@@ -1,6 +1,5 @@
 import copy
 import os
-import random
 
 import requests
 from dotenv import load_dotenv
@@ -31,6 +30,7 @@ from services.users import (
 )
 from services.email_service import send_email
 from services.llm_daily_limit import consume_auth_email_daily_quota
+from services.security import constant_time_compare, generate_verification_code
 
 load_dotenv()
 
@@ -198,7 +198,7 @@ async def api_send_login_code(request: Request):
             },
             status_code=429,
         )
-    code = str(random.randint(100000, 999999))
+    code = generate_verification_code()
     request.session["login_verification_code"] = code
     request.session["login_temp_user_id"] = user["id"]
     subject = "AIチャットサービス: ログイン認証コード"
@@ -226,7 +226,8 @@ async def api_verify_login_code(request: Request):
             {"status": "fail", "error": "セッション情報がありません。最初からやり直してください"},
             status_code=400,
         )
-    if auth_code == session_code:
+    submitted_code = str(auth_code or "")
+    if constant_time_compare(submitted_code, str(session_code)):
         session["user_id"] = user_id
         user = await run_blocking(get_user_by_id, user_id)
         session["user_email"] = user["email"] if user else ""

@@ -30,6 +30,7 @@ cd Strike_Chat
 # FLASK_SECRET_KEY=xxxxx
 # SEND_ADDRESS=example@gmail.com
 # SEND_PASSWORD=app_password
+# ADMIN_PASSWORD_HASH=pbkdf2_sha256$...
 # POSTGRES_HOST=db
 # POSTGRES_USER=postgres
 # POSTGRES_PASSWORD=postgres
@@ -67,10 +68,17 @@ Set these in `.env` or in `docker-compose.yml`:
 - `LLM_DAILY_API_LIMIT`: daily cap for total `/api/chat` LLM calls across all users (default: `300`)
 - `AUTH_EMAIL_DAILY_SEND_LIMIT`: daily cap for login/verification email sends across all users (default: `50`)
 - `FLASK_SECRET_KEY`: session secret
+- `ADMIN_PASSWORD_HASH`: hashed admin password in format `pbkdf2_sha256$iterations$salt$hash`
 - `SEND_ADDRESS` / `SEND_PASSWORD`: Gmail account for verification emails
 - `POSTGRES_HOST` / `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB`: PostgreSQL settings
 - `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` / `REDIS_PASSWORD` (optional): Redis settings
 - `FLASK_ENV`: set to `production` to enable stricter SameSite/Secure settings
+
+Generate `ADMIN_PASSWORD_HASH` with:
+
+```sh
+python3 -c "from services.security import hash_password; print(hash_password('your_admin_password_here'))"
+```
 
 ## Project Structure
 - `app.py`: FastAPI entry point
@@ -164,10 +172,17 @@ alembic upgrade head
 - `LLM_DAILY_API_LIMIT`: 全ユーザー合計の`/api/chat`経由LLM呼び出し日次上限（デフォルト: `300`）
 - `AUTH_EMAIL_DAILY_SEND_LIMIT`: 全ユーザー合計のログイン/認証メール送信日次上限（デフォルト: `50`）
 - `FLASK_SECRET_KEY`: セッション用シークレット
+- `ADMIN_PASSWORD_HASH`: 管理者パスワードのハッシュ（形式: `pbkdf2_sha256$iterations$salt$hash`）
 - `SEND_ADDRESS` / `SEND_PASSWORD`: 認証メール送信用 Gmail
 - `POSTGRES_HOST` / `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB`: PostgreSQL 設定
 - `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` / `REDIS_PASSWORD`（任意）: Redis 設定
 - `FLASK_ENV`: `production` で SameSite/Secure 設定を強化
+
+`ADMIN_PASSWORD_HASH` の生成例:
+
+```sh
+python3 -c "from services.security import hash_password; print(hash_password('your_admin_password_here'))"
+```
 
 ## ディレクトリ構成
 - `app.py`: FastAPI エントリーポイント

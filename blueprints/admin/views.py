@@ -1,13 +1,15 @@
+import inspect
+import os
 from functools import wraps
 from typing import Optional
 from urllib.parse import urlencode
-import inspect
 
 from fastapi import Request
 from starlette.responses import RedirectResponse
 
 from services.async_utils import run_blocking
 from services.db import Error, get_db_connection
+from services.security import verify_password
 from services.web import (
     flash,
     frontend_url,
@@ -19,14 +21,19 @@ from services.web import (
 )
 
 from . import admin_bp
-import os
 
 try:
     from psycopg2 import sql as pg_sql
 except ModuleNotFoundError:  # pragma: no cover - optional for test envs
     pg_sql = None
 
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "[REMOVED_SECRET]")
+ADMIN_PASSWORD_HASH = (os.getenv("ADMIN_PASSWORD_HASH") or "").strip()
+
+
+def _verify_admin_password(password: str) -> bool:
+    if not ADMIN_PASSWORD_HASH:
+        return False
+    return verify_password(password, ADMIN_PASSWORD_HASH)
 
 
 def _require_pg_sql():
@@ -102,10 +109,10 @@ async def login(request: Request):
 @admin_bp.post("/api/login", name="admin.api_login")
 async def api_login(request: Request):
     payload = await _get_payload(request)
-    password = (payload.get("password") or "").strip()
+    password = payload.get("password") or ""
     next_url = payload.get("next") or "/admin"
 
-    if password == ADMIN_PASSWORD:
+    if _verify_admin_password(password):
         request.session["is_admin"] = True
         flash(request, "Logged in as administrator.", "success")
         redirect_url = (

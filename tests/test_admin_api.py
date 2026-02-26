@@ -5,7 +5,8 @@ from unittest.mock import patch
 
 from starlette.requests import Request
 
-from blueprints.admin.views import api_dashboard, api_login, ADMIN_PASSWORD
+from blueprints.admin import views as admin_views
+from services.security import hash_password
 
 
 def make_request(method="GET", path="/admin/api/dashboard", json_body=None, session=None, query_string=b""):
@@ -39,21 +40,36 @@ def make_request(method="GET", path="/admin/api/dashboard", json_body=None, sess
 class AdminApiTestCase(unittest.TestCase):
     def test_dashboard_requires_admin(self):
         request = make_request(session={})
-        response = asyncio.run(api_dashboard(request))
+        response = asyncio.run(admin_views.api_dashboard(request))
         self.assertEqual(response.status_code, 401)
         payload = json.loads(response.body.decode())
         self.assertEqual(payload["status"], "fail")
 
     def test_login_success(self):
+        password = "admin-test-password"
         request = make_request(
             method="POST",
             path="/admin/api/login",
-            json_body={"password": ADMIN_PASSWORD, "next": "/admin"},
+            json_body={"password": password, "next": "/admin"},
         )
-        response = asyncio.run(api_login(request))
+        with patch.object(admin_views, "ADMIN_PASSWORD_HASH", hash_password(password)):
+            response = asyncio.run(admin_views.api_login(request))
         self.assertEqual(response.status_code, 200)
         payload = json.loads(response.body.decode())
         self.assertEqual(payload["status"], "success")
+
+    def test_login_fails_with_wrong_password(self):
+        request = make_request(
+            method="POST",
+            path="/admin/api/login",
+            json_body={"password": "wrong-password", "next": "/admin"},
+        )
+        with patch.object(admin_views, "ADMIN_PASSWORD_HASH", hash_password("correct-password")):
+            response = asyncio.run(admin_views.api_login(request))
+
+        self.assertEqual(response.status_code, 401)
+        payload = json.loads(response.body.decode())
+        self.assertEqual(payload["status"], "fail")
 
     def test_dashboard_returns_tables(self):
         class DummyCursor:
@@ -88,7 +104,7 @@ class AdminApiTestCase(unittest.TestCase):
                             }
                         ],
                     ):
-                        response = asyncio.run(api_dashboard(request))
+                        response = asyncio.run(admin_views.api_dashboard(request))
 
         self.assertEqual(response.status_code, 200)
         payload = json.loads(response.body.decode())

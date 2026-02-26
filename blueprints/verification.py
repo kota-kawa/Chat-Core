@@ -1,10 +1,9 @@
-import random
-
 from fastapi import APIRouter, Request
 
 from services.async_utils import run_blocking
 from services.email_service import send_email
 from services.llm_daily_limit import consume_auth_email_daily_quota
+from services.security import constant_time_compare, generate_verification_code
 from services.users import (
     create_user,
     get_user_by_email,
@@ -51,7 +50,7 @@ async def api_send_verification_email(request: Request):
         user_id = user["id"]
 
     # 6桁コード生成→セッションへ
-    code = str(random.randint(100000, 999999))
+    code = generate_verification_code()
     request.session["verification_code"] = code
     request.session["temp_user_id"] = user_id  # どのユーザーか紐付け
 
@@ -79,7 +78,8 @@ async def api_verify_registration_code(request: Request):
     if not session_code or not user_id:
         return jsonify({"status": "fail", "error": "セッション情報がありません。最初からやり直してください"}, status_code=400)
 
-    if user_code != session_code:
+    submitted_code = str(user_code or "")
+    if not constant_time_compare(submitted_code, str(session_code)):
         return jsonify({"status": "fail", "error": "認証コードが違います。"}, status_code=400)
 
     # ここから成功処理 ----------------------------------------------------

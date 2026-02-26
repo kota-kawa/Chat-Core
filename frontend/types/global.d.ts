@@ -4,8 +4,6 @@ type HtmlTagProps = DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement>;
 
 declare global {
   interface Window {
-    switchToLogin?: () => void;
-    switchToRegister?: () => void;
     loggedIn?: boolean;
     currentChatRoomId?: string | null;
     isEditingOrder?: boolean;
@@ -90,7 +88,6 @@ declare global {
     interface IntrinsicElements {
       "action-menu": HtmlTagProps;
       "chat-action-menu": HtmlTagProps;
-      "my-spinner": HtmlTagProps;
       "user-icon": HtmlTagProps;
     }
   }

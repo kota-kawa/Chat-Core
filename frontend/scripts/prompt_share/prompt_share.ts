@@ -89,6 +89,16 @@ function initPromptSharePage(attempt = 0) {
     return truncateText(content, CONTENT_CHAR_LIMIT);
   }
 
+  function escapeHtml(value: unknown) {
+    const text = value === null || value === undefined ? "" : String(value);
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   function updateBookmarkButtonState(button: HTMLButtonElement | null, isBookmarked: boolean) {
     if (!button) return;
     button.classList.toggle("bookmarked", isBookmarked);
@@ -163,6 +173,10 @@ function initPromptSharePage(attempt = 0) {
       : `<i class="bi bi-bookmark"></i>`;
 
     const truncatedContent = truncateContent(prompt.content);
+    const safeTitle = escapeHtml(truncateTitle(prompt.title));
+    const safeContent = escapeHtml(truncatedContent);
+    const safeCategory = escapeHtml(prompt.category || "");
+    const safeAuthor = escapeHtml(prompt.author || "");
 
     card.innerHTML = `
       <button class="meatball-menu" type="button" aria-label="その他の操作" aria-haspopup="true" aria-expanded="false">
@@ -175,13 +189,13 @@ function initPromptSharePage(attempt = 0) {
         <button class="dropdown-item" type="button" role="menuitem">報告する</button>
       </div>
 
-      <h3>${truncateTitle(prompt.title)}</h3>
-      <p class="prompt-card__content">${truncatedContent}</p>
+      <h3>${safeTitle}</h3>
+      <p class="prompt-card__content">${safeContent}</p>
 
       <div class="prompt-meta">
         <div class="prompt-meta-info">
-          <span>カテゴリ: ${prompt.category}</span>
-          <span>投稿者: ${prompt.author}</span>
+          <span>カテゴリ: ${safeCategory}</span>
+          <span>投稿者: ${safeAuthor}</span>
         </div>
         <div class="prompt-actions">
           <button class="prompt-action-btn comment-btn" type="button" aria-label="コメント">
@@ -356,7 +370,8 @@ function initPromptSharePage(attempt = 0) {
       .catch((err) => {
         console.error("プロンプト取得エラー:", err);
         if (promptContainer) {
-          promptContainer.innerHTML = `<p>エラーが発生しました: ${err.message}</p>`;
+          const message = err instanceof Error ? err.message : String(err);
+          promptContainer.innerHTML = `<p>エラーが発生しました: ${escapeHtml(message)}</p>`;
         }
       });
   }
@@ -542,7 +557,8 @@ function initPromptSharePage(attempt = 0) {
       })
       .catch((err) => {
         console.error("検索エラー:", err);
-        promptCardsSection.innerHTML = `<p>エラーが発生しました: ${err.message}</p>`;
+        const message = err instanceof Error ? err.message : String(err);
+        promptCardsSection.innerHTML = `<p>エラーが発生しました: ${escapeHtml(message)}</p>`;
       });
   }
 

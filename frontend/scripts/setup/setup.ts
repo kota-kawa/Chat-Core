@@ -112,6 +112,16 @@ function getFallbackTasks() {
   }));
 }
 
+function escapeHtml(value: unknown) {
+  const text = value === null || value === undefined ? "" : String(value);
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function loadTaskCards() {
   const ioModal = document.getElementById("io-modal");
   const ioModalContent = document.getElementById("io-modal-content");
@@ -187,16 +197,20 @@ function loadTaskCards() {
       toggleBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         if (!ioModal || !ioModalContent) return;
+        const safeTask = escapeHtml(card.dataset.task || "");
+        const safePromptTemplate = escapeHtml(card.dataset.prompt_template || "");
+        const safeInputExamples = escapeHtml(card.dataset.input_examples || "");
+        const safeOutputExamples = escapeHtml(card.dataset.output_examples || "");
         ioModalContent.innerHTML = `
           <h5 style="margin-bottom:1rem;">タスク詳細</h5>
           <div style="margin-bottom:.5rem;font-weight:bold;">タスク名</div>
-          <div style="margin-bottom:1rem;">${card.dataset.task}</div>
+          <div style="margin-bottom:1rem;">${safeTask}</div>
           <div style="margin-bottom:.5rem;font-weight:bold;">プロンプトテンプレート</div>
-          <div style="margin-bottom:1rem;">${card.dataset.prompt_template}</div>
+          <div style="margin-bottom:1rem;">${safePromptTemplate}</div>
           <div style="margin-bottom:.5rem;font-weight:bold;">入力例</div>
-          <div style="margin-bottom:1rem;">${card.dataset.input_examples}</div>
+          <div style="margin-bottom:1rem;">${safeInputExamples}</div>
           <div style="margin-bottom:.5rem;font-weight:bold;">出力例</div>
-          <div>${card.dataset.output_examples}</div>`;
+          <div>${safeOutputExamples}</div>`;
         ioModal.style.display = "block";
       });
 

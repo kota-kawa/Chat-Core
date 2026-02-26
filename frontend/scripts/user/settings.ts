@@ -149,6 +149,16 @@ const initSettingsPage = () => {
     return chars.length > 17 ? chars.slice(0, 17).join("") + "..." : title;
   }
 
+  function escapeHtml(value: unknown) {
+    const text = value === null || value === undefined ? "" : String(value);
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   type PromptRecord = {
     id?: string | number;
     title: string;
@@ -220,21 +230,29 @@ const initSettingsPage = () => {
             const prompt = toPromptRecord(rawPrompt);
             const card = document.createElement("div");
             card.classList.add("prompt-card");
+            const safeTitle = escapeHtml(truncateTitle(prompt.title));
+            const safeContent = escapeHtml(prompt.content);
+            const safeCategory = escapeHtml(prompt.category);
+            const safeCreatedAt = escapeHtml(prompt.createdAt ? new Date(prompt.createdAt).toLocaleString() : "");
+            const safeInputExamples = escapeHtml(prompt.inputExamples || "");
+            const safeOutputExamples = escapeHtml(prompt.outputExamples || "");
+            const safePromptId = escapeHtml(prompt.id ?? "");
+
             card.innerHTML = `
-              <h3>${truncateTitle(prompt.title)}</h3>
-              <p>${prompt.content}</p>
+              <h3>${safeTitle}</h3>
+              <p>${safeContent}</p>
               <div class="meta">
-                <span>カテゴリ: ${prompt.category}</span><br>
-                <span>投稿日: ${prompt.createdAt ? new Date(prompt.createdAt).toLocaleString() : ""}</span>
+                <span>カテゴリ: ${safeCategory}</span><br>
+                <span>投稿日: ${safeCreatedAt}</span>
               </div>
               <!-- 隠し要素として入力例と出力例を保持 -->
-              <p class="d-none input-examples">${prompt.inputExamples || ""}</p>
-              <p class="d-none output-examples">${prompt.outputExamples || ""}</p>
+              <p class="d-none input-examples">${safeInputExamples}</p>
+              <p class="d-none output-examples">${safeOutputExamples}</p>
               <div class="btn-group">
-                <button class="btn btn-sm btn-warning edit-btn" data-id="${prompt.id ?? ""}">
+                <button class="btn btn-sm btn-warning edit-btn" data-id="${safePromptId}">
                   <i class="bi bi-pencil"></i> 編集
                 </button>
-                <button class="btn btn-sm btn-danger delete-btn" data-id="${prompt.id ?? ""}">
+                <button class="btn btn-sm btn-danger delete-btn" data-id="${safePromptId}">
                   <i class="bi bi-trash"></i> 削除
                 </button>
               </div>
@@ -314,18 +332,34 @@ const initSettingsPage = () => {
           card.classList.add("prompt-card");
 
           const createdAt = entry.createdAt ? new Date(entry.createdAt).toLocaleString() : "";
+          const safeTitle = escapeHtml(truncateTitle(entry.title));
+          const safeContent = escapeHtml(entry.content);
+          const safeCategory = escapeHtml(entry.category);
+          const safeInputExamples = escapeHtml(entry.inputExamples);
+          const safeOutputExamples = escapeHtml(entry.outputExamples);
+          const safeCreatedAt = escapeHtml(createdAt);
+          const safeEntryId = escapeHtml(entry.id ?? "");
+          const safeCategoryBlock = entry.category
+            ? `<div class="meta"><strong>カテゴリ:</strong> ${safeCategory}</div>`
+            : "";
+          const safeInputBlock = entry.inputExamples
+            ? `<div class="meta"><strong>入力例:</strong> ${safeInputExamples}</div>`
+            : "";
+          const safeOutputBlock = entry.outputExamples
+            ? `<div class="meta"><strong>出力例:</strong> ${safeOutputExamples}</div>`
+            : "";
 
           card.innerHTML = `
-            <h3>${truncateTitle(entry.title)}</h3>
-            <p>${entry.content}</p>
-            ${entry.category ? `<div class="meta"><strong>カテゴリ:</strong> ${entry.category}</div>` : ""}
-            ${entry.inputExamples ? `<div class="meta"><strong>入力例:</strong> ${entry.inputExamples}</div>` : ""}
-            ${entry.outputExamples ? `<div class="meta"><strong>出力例:</strong> ${entry.outputExamples}</div>` : ""}
+            <h3>${safeTitle}</h3>
+            <p>${safeContent}</p>
+            ${safeCategoryBlock}
+            ${safeInputBlock}
+            ${safeOutputBlock}
             <div class="meta">
-              <span>保存日: ${createdAt}</span>
+              <span>保存日: ${safeCreatedAt}</span>
             </div>
             <div class="btn-group">
-              <button class="btn btn-sm btn-danger remove-prompt-list-btn" data-id="${entry.id ?? ""}">
+              <button class="btn btn-sm btn-danger remove-prompt-list-btn" data-id="${safeEntryId}">
                 <i class="bi bi-trash"></i> 削除
               </button>
             </div>
@@ -338,7 +372,8 @@ const initSettingsPage = () => {
       })
       .catch((err) => {
         console.error("プロンプトリスト取得エラー:", err);
-        promptListEntriesEl.innerHTML = `<p>${err.message}</p>`;
+        const message = err instanceof Error ? err.message : String(err);
+        promptListEntriesEl.innerHTML = `<p>${escapeHtml(message)}</p>`;
       });
   }
 

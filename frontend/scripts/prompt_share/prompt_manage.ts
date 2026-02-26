@@ -17,6 +17,16 @@ const initPromptManage = () => {
     return truncateText(content, CONTENT_CHAR_LIMIT);
   }
 
+  function escapeHtml(value: unknown) {
+    const text = value === null || value === undefined ? "" : String(value);
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   type PromptRecord = {
     id?: string | number;
     title: string;
@@ -65,22 +75,29 @@ const initPromptManage = () => {
             const card = document.createElement("div");
             card.classList.add("prompt-card");
             const truncatedContent = truncateContent(prompt.content);
+            const safeTitle = escapeHtml(truncateTitle(prompt.title));
+            const safeContent = escapeHtml(truncatedContent);
+            const safeCategory = escapeHtml(prompt.category);
+            const safeCreatedAt = escapeHtml(prompt.createdAt ? new Date(prompt.createdAt).toLocaleString() : "");
+            const safeInputExamples = escapeHtml(prompt.inputExamples || "");
+            const safeOutputExamples = escapeHtml(prompt.outputExamples || "");
+            const safePromptId = escapeHtml(prompt.id ?? "");
 
             card.innerHTML = `
-              <h3>${truncateTitle(prompt.title)}</h3>
-              <p class="prompt-card__content">${truncatedContent}</p>
+              <h3>${safeTitle}</h3>
+              <p class="prompt-card__content">${safeContent}</p>
               <div class="meta">
-                <span>カテゴリ: ${prompt.category}</span><br>
-                <span>投稿日: ${prompt.createdAt ? new Date(prompt.createdAt).toLocaleString() : ""}</span>
+                <span>カテゴリ: ${safeCategory}</span><br>
+                <span>投稿日: ${safeCreatedAt}</span>
               </div>
               <!-- 隠し要素として入力例と出力例を保持 -->
-              <p class="d-none input-examples">${prompt.inputExamples || ""}</p>
-              <p class="d-none output-examples">${prompt.outputExamples || ""}</p>
+              <p class="d-none input-examples">${safeInputExamples}</p>
+              <p class="d-none output-examples">${safeOutputExamples}</p>
               <div class="btn-group">
-                <button class="btn btn-sm btn-warning edit-btn" data-id="${prompt.id ?? ""}">
+                <button class="btn btn-sm btn-warning edit-btn" data-id="${safePromptId}">
                   <i class="bi bi-pencil"></i> 編集
                 </button>
-                <button class="btn btn-sm btn-danger delete-btn" data-id="${prompt.id ?? ""}">
+                <button class="btn btn-sm btn-danger delete-btn" data-id="${safePromptId}">
                   <i class="bi bi-trash"></i> 削除
                 </button>
               </div>

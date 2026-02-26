@@ -29,6 +29,16 @@ const initPromptSearch = () => {
     return truncateText(content, CONTENT_CHAR_LIMIT);
   }
 
+  function escapeHtml(value: unknown) {
+    const text = value === null || value === undefined ? "" : String(value);
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   type PromptSearchRecord = {
     title: string;
     content: string;
@@ -84,13 +94,17 @@ const initPromptSearch = () => {
             // カテゴリフィルタ用に data-category 属性を設定
             card.setAttribute("data-category", prompt.category);
             const truncatedContent = truncateContent(prompt.content);
+            const safeTitle = escapeHtml(truncateTitle(prompt.title));
+            const safeContent = escapeHtml(truncatedContent);
+            const safeCategory = escapeHtml(prompt.category);
+            const safeAuthor = escapeHtml(prompt.author);
 
             card.innerHTML = `
-              <h3>${truncateTitle(prompt.title)}</h3>
-              <p class="prompt-card__content">${truncatedContent}</p>
+              <h3>${safeTitle}</h3>
+              <p class="prompt-card__content">${safeContent}</p>
               <div class="prompt-meta">
-                <span>カテゴリ: ${prompt.category}</span>
-                <span>投稿者: ${prompt.author}</span>
+                <span>カテゴリ: ${safeCategory}</span>
+                <span>投稿者: ${safeAuthor}</span>
               </div>
             `;
             card.dataset.fullTitle = prompt.title;
@@ -103,7 +117,8 @@ const initPromptSearch = () => {
       })
       .catch((err) => {
         console.error("検索エラー:", err);
-        promptCardsSection.innerHTML = `<p>エラーが発生しました: ${err.message}</p>`;
+        const message = err instanceof Error ? err.message : String(err);
+        promptCardsSection.innerHTML = `<p>エラーが発生しました: ${escapeHtml(message)}</p>`;
       });
   }
 

@@ -20,11 +20,30 @@ from services.web import (
 from . import admin_bp
 import os
 
+try:
+    from psycopg2 import sql as pg_sql
+except ModuleNotFoundError:  # pragma: no cover - optional for test envs
+    pg_sql = None
+
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "[REMOVED_SECRET]")
 
 
-def _quote_identifier(name: str) -> str:
-    return f"`{name.replace('`', '``')}`"
+def _require_pg_sql():
+    if pg_sql is None:  # pragma: no cover - depends on optional dependency
+        raise RuntimeError("psycopg2 is required for admin SQL composition.")
+    return pg_sql
+
+
+def _sql_identifier(name: str):
+    return _require_pg_sql().Identifier(name)
+
+
+def _normalize_fragment(fragment: str) -> str:
+    return fragment.rstrip(";").strip()
+
+
+def _has_multiple_statements(fragment: str) -> bool:
+    return ";" in fragment
 
 
 def frontend_admin_dashboard_url(request: Request, **params) -> str:
@@ -116,20 +135,79 @@ async def logout(request: Request):
 
 
 def _fetch_tables(cursor) -> list[str]:
-    cursor.execute("SHOW TABLES")
+    cursor.execute(
+        """
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = current_schema()
+          AND table_type = 'BASE TABLE'
+        ORDER BY table_name
+        """
+    )
     return [row[0] for row in cursor.fetchall()]
 
 
 def _fetch_table_columns(cursor, table_name: str) -> list[dict[str, object]]:
-    cursor.execute(f"SHOW COLUMNS FROM {_quote_identifier(table_name)}")
+    cursor.execute(
+        """
+        SELECT
+            attr.attname AS column_name,
+            pg_catalog.format_type(attr.atttypid, attr.atttypmod) AS column_type,
+            NOT attr.attnotnull AS is_nullable,
+            CASE
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM pg_catalog.pg_index idx
+                    WHERE idx.indrelid = rel.oid
+                      AND idx.indisprimary
+                      AND attr.attnum = ANY(idx.indkey)
+                ) THEN 'PRI'
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM pg_catalog.pg_index idx
+                    WHERE idx.indrelid = rel.oid
+                      AND idx.indisunique
+                      AND attr.attnum = ANY(idx.indkey)
+                ) THEN 'UNI'
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM pg_catalog.pg_index idx
+                    WHERE idx.indrelid = rel.oid
+                      AND NOT idx.indisunique
+                      AND attr.attnum = ANY(idx.indkey)
+                ) THEN 'MUL'
+                ELSE ''
+            END AS column_key,
+            pg_catalog.pg_get_expr(def.adbin, def.adrelid) AS column_default,
+            CASE
+                WHEN attr.attidentity IN ('a', 'd')
+                     OR pg_catalog.pg_get_expr(def.adbin, def.adrelid) LIKE 'nextval(%'
+                THEN 'auto_increment'
+                ELSE ''
+            END AS extra
+        FROM pg_catalog.pg_attribute attr
+        JOIN pg_catalog.pg_class rel
+          ON rel.oid = attr.attrelid
+        JOIN pg_catalog.pg_namespace nsp
+          ON nsp.oid = rel.relnamespace
+        LEFT JOIN pg_catalog.pg_attrdef def
+          ON def.adrelid = attr.attrelid
+         AND def.adnum = attr.attnum
+        WHERE nsp.nspname = current_schema()
+          AND rel.relname = %s
+          AND attr.attnum > 0
+          AND NOT attr.attisdropped
+        ORDER BY attr.attnum
+        """,
+        (table_name,),
+    )
     columns: list[dict[str, object]] = []
     for row in cursor.fetchall():
-        # SHOW COLUMNS returns: Field, Type, Null, Key, Default, Extra
         columns.append(
             {
                 "name": row[0],
                 "type": row[1],
-                "nullable": row[2] == "YES",
+                "nullable": bool(row[2]),
                 "key": row[3],
                 "default": row[4],
                 "extra": row[5],
@@ -139,10 +217,46 @@ def _fetch_table_columns(cursor, table_name: str) -> list[dict[str, object]]:
 
 
 def _fetch_table_preview(cursor, table_name: str) -> tuple[list[str], list[tuple]]:
-    cursor.execute(f"SELECT * FROM {_quote_identifier(table_name)} LIMIT 100")
+    psql = _require_pg_sql()
+    cursor.execute(
+        psql.SQL("SELECT * FROM {} LIMIT 100").format(_sql_identifier(table_name))
+    )
     rows = cursor.fetchall()
     column_names = [desc[0] for desc in cursor.description]
     return column_names, rows
+
+
+def _build_create_table_sql(
+    table_name: str, column_definitions: str, table_options: str = ""
+):
+    psql = _require_pg_sql()
+    statement = psql.SQL("CREATE TABLE {} ({})").format(
+        _sql_identifier(table_name), psql.SQL(column_definitions)
+    )
+    if table_options:
+        statement = statement + psql.SQL(" ") + psql.SQL(table_options)
+    return statement
+
+
+def _build_drop_table_sql(table_name: str):
+    psql = _require_pg_sql()
+    return psql.SQL("DROP TABLE {}").format(_sql_identifier(table_name))
+
+
+def _build_add_column_sql(table_name: str, column_name: str, column_type: str):
+    psql = _require_pg_sql()
+    return psql.SQL("ALTER TABLE {} ADD COLUMN {} {}").format(
+        _sql_identifier(table_name),
+        _sql_identifier(column_name),
+        psql.SQL(column_type),
+    )
+
+
+def _build_drop_column_sql(table_name: str, column_name: str):
+    psql = _require_pg_sql()
+    return psql.SQL("ALTER TABLE {} DROP COLUMN {}").format(
+        _sql_identifier(table_name), _sql_identifier(column_name)
+    )
 
 
 @admin_bp.get("/", name="admin.dashboard")
@@ -216,9 +330,13 @@ async def create_table(request: Request):
         flash(request, "Table name and column definition are required.", "error")
         return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
 
+    if _has_multiple_statements(column_definitions):
+        flash(request, "カラム定義に複数の文を含めることはできません。", "error")
+        return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
+
     if table_options:
-        normalized_options = table_options.rstrip(";").strip()
-        if ";" in normalized_options:
+        normalized_options = _normalize_fragment(table_options)
+        if _has_multiple_statements(normalized_options):
             flash(request, "テーブルオプションに複数の文を含めることはできません。", "error")
             return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
         table_options = normalized_options
@@ -228,10 +346,9 @@ async def create_table(request: Request):
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
-        create_sql = f"CREATE TABLE {_quote_identifier(table_name)} ({column_definitions})"
-        if table_options:
-            create_sql = f"{create_sql} {table_options}"
-        cursor.execute(create_sql)
+        cursor.execute(
+            _build_create_table_sql(table_name, column_definitions, table_options)
+        )
         connection.commit()
         flash(request, f"Table '{table_name}' created successfully.", "success")
     except Error as exc:
@@ -263,9 +380,15 @@ async def api_create_table(request: Request):
             status_code=400,
         )
 
+    if _has_multiple_statements(column_definitions):
+        flash(request, "カラム定義に複数の文を含めることはできません。", "error")
+        return jsonify(
+            {"status": "fail", "error": "Invalid column definition."}, status_code=400
+        )
+
     if table_options:
-        normalized_options = table_options.rstrip(";").strip()
-        if ";" in normalized_options:
+        normalized_options = _normalize_fragment(table_options)
+        if _has_multiple_statements(normalized_options):
             flash(request, "テーブルオプションに複数の文を含めることはできません。", "error")
             return jsonify(
                 {"status": "fail", "error": "Invalid table options."}, status_code=400
@@ -277,10 +400,9 @@ async def api_create_table(request: Request):
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
-        create_sql = f"CREATE TABLE {_quote_identifier(table_name)} ({column_definitions})"
-        if table_options:
-            create_sql = f"{create_sql} {table_options}"
-        cursor.execute(create_sql)
+        cursor.execute(
+            _build_create_table_sql(table_name, column_definitions, table_options)
+        )
         connection.commit()
         flash(request, f"Table '{table_name}' created successfully.", "success")
         return jsonify({"status": "success", "redirect": frontend_admin_dashboard_url(request)})
@@ -313,7 +435,7 @@ async def delete_table(request: Request):
         if table_name not in existing_tables:
             flash(request, f"Table '{table_name}' does not exist.", "error")
             return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
-        cursor.execute(f"DROP TABLE {_quote_identifier(table_name)}")
+        cursor.execute(_build_drop_table_sql(table_name))
         connection.commit()
         flash(request, f"Table '{table_name}' deleted successfully.", "success")
     except Error as exc:
@@ -353,7 +475,7 @@ async def api_delete_table(request: Request):
             return jsonify(
                 {"status": "fail", "error": "Table does not exist."}, status_code=404
             )
-        cursor.execute(f"DROP TABLE {_quote_identifier(table_name)}")
+        cursor.execute(_build_drop_table_sql(table_name))
         connection.commit()
         flash(request, f"Table '{table_name}' deleted successfully.", "success")
         return jsonify({"status": "success", "redirect": frontend_admin_dashboard_url(request)})
@@ -381,6 +503,12 @@ async def add_column(request: Request):
             frontend_admin_dashboard_url(request, table=table_name), status_code=302
         )
 
+    if _has_multiple_statements(column_type):
+        flash(request, "カラム定義に複数の文を含めることはできません。", "error")
+        return RedirectResponse(
+            frontend_admin_dashboard_url(request, table=table_name), status_code=302
+        )
+
     connection = None
     cursor = None
     try:
@@ -399,9 +527,7 @@ async def add_column(request: Request):
                 frontend_admin_dashboard_url(request, table=table_name), status_code=302
             )
 
-        cursor.execute(
-            f"ALTER TABLE {_quote_identifier(table_name)} ADD COLUMN {_quote_identifier(column_name)} {column_type}"
-        )
+        cursor.execute(_build_add_column_sql(table_name, column_name, column_type))
         connection.commit()
         flash(request, f"カラム '{column_name}' をテーブル '{table_name}' に追加しました。", "success")
     except Error as exc:
@@ -434,6 +560,12 @@ async def api_add_column(request: Request):
             {"status": "fail", "error": "Required fields are missing."}, status_code=400
         )
 
+    if _has_multiple_statements(column_type):
+        flash(request, "カラム定義に複数の文を含めることはできません。", "error")
+        return jsonify(
+            {"status": "fail", "error": "Invalid column definition."}, status_code=400
+        )
+
     connection = None
     cursor = None
     try:
@@ -454,9 +586,7 @@ async def api_add_column(request: Request):
                 {"status": "fail", "error": "Column already exists."}, status_code=400
             )
 
-        cursor.execute(
-            f"ALTER TABLE {_quote_identifier(table_name)} ADD COLUMN {_quote_identifier(column_name)} {column_type}"
-        )
+        cursor.execute(_build_add_column_sql(table_name, column_name, column_type))
         connection.commit()
         flash(request, f"カラム '{column_name}' をテーブル '{table_name}' に追加しました。", "success")
         return jsonify(
@@ -514,9 +644,7 @@ async def delete_column(request: Request):
                 frontend_admin_dashboard_url(request, table=table_name), status_code=302
             )
 
-        cursor.execute(
-            f"ALTER TABLE {_quote_identifier(table_name)} DROP COLUMN {_quote_identifier(target_column)}"
-        )
+        cursor.execute(_build_drop_column_sql(table_name, target_column))
         connection.commit()
         flash(request, f"カラム '{target_column}' をテーブル '{table_name}' から削除しました。", "success")
     except Error as exc:
@@ -576,9 +704,7 @@ async def api_delete_column(request: Request):
                 {"status": "fail", "error": "Cannot delete the last column."}, status_code=400
             )
 
-        cursor.execute(
-            f"ALTER TABLE {_quote_identifier(table_name)} DROP COLUMN {_quote_identifier(target_column)}"
-        )
+        cursor.execute(_build_drop_column_sql(table_name, target_column))
         connection.commit()
         flash(
             request,

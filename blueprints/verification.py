@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Request
 
 from services.async_utils import run_blocking
@@ -11,9 +13,10 @@ from services.users import (
     get_user_by_id,
     copy_default_tasks_for_user,
 )
-from services.web import jsonify, require_json_dict
+from services.web import jsonify, log_and_internal_server_error, require_json_dict
 
 verification_bp = APIRouter()
+logger = logging.getLogger(__name__)
 
 @verification_bp.post("/api/send_verification_email", name="verification.api_send_verification_email")
 async def api_send_verification_email(request: Request):
@@ -62,8 +65,12 @@ async def api_send_verification_email(request: Request):
     try:
         await run_blocking(send_email, to_address=email, subject=subject, body_text=body_text)
         return jsonify({"status": "success"})
-    except Exception as e:
-        return jsonify({"status": "fail", "error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to send registration verification email.",
+            status="fail",
+        )
 
 @verification_bp.post("/api/verify_registration_code", name="verification.api_verify_registration_code")
 async def api_verify_registration_code(request: Request):

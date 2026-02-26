@@ -1,11 +1,14 @@
 # search_module.py
+import logging
+
 from fastapi import APIRouter, Request
 
 from services.async_utils import run_blocking
 from services.db import get_db_connection  # 既存の DB 接続関数を利用
-from services.web import jsonify
+from services.web import jsonify, log_and_internal_server_error
 
 search_bp = APIRouter(prefix="/search")
+logger = logging.getLogger(__name__)
 
 
 def _search_public_prompts(query):
@@ -55,5 +58,8 @@ async def search_prompts(request: Request):
     try:
         prompts = await run_blocking(_search_public_prompts, query)
         return jsonify({'prompts': prompts})
-    except Exception as e:
-        return jsonify({'error': str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to search public prompts.",
+        )

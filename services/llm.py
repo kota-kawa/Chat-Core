@@ -1,5 +1,6 @@
 """LLM service module using OpenAI client for multiple providers."""
 
+import logging
 import os
 from openai import OpenAI
 
@@ -29,6 +30,7 @@ gemini_client = (
     if gemini_api_key
     else None
 )
+logger = logging.getLogger(__name__)
 
 
 def get_groq_response(conversation_messages, model_name):
@@ -43,8 +45,8 @@ def get_groq_response(conversation_messages, model_name):
             max_tokens=1024,
         )
         return response.choices[0].message.content
-    except Exception as e:
-        print(f"Groq API Error: {e}")
+    except Exception:
+        logger.exception("Groq API call failed.")
         return "エラーが発生しました。後でもう一度お試しください。"
 
 
@@ -60,8 +62,8 @@ def get_gemini_response(conversation_messages, model_name):
             max_tokens=1024,
         )
         return response.choices[0].message.content
-    except Exception as e:
-        print(f"Google Gemini API Error: {e}")
+    except Exception:
+        logger.exception("Google Gemini API call failed.")
         return "エラーが発生しました。後でもう一度お試しください。"
 
 
@@ -72,7 +74,11 @@ def get_llm_response(conversation_messages, model_name):
         return get_groq_response(conversation_messages, model_name)
 
     valid_models = sorted(VALID_GEMINI_MODELS | VALID_GROQ_MODELS)
-    print(f"Invalid model: {model_name}. Valid models: {valid_models}")
+    logger.warning(
+        "Invalid model requested: %s. Valid models: %s",
+        model_name,
+        valid_models,
+    )
     return (
         f"エラー: 無効なモデル '{model_name}' が指定されました。"
         f"有効なモデル: {', '.join(valid_models)}"

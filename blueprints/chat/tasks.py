@@ -1,11 +1,15 @@
+import logging
+
 from fastapi import Request
 
 from services.async_utils import run_blocking
 from services.db import get_db_connection
 from services.default_tasks import default_task_payloads
-from services.web import jsonify, require_json_dict
+from services.web import jsonify, log_and_internal_server_error, require_json_dict
 
 from . import chat_bp
+
+logger = logging.getLogger(__name__)
 
 
 def _fetch_tasks_from_db(user_id):
@@ -190,14 +194,14 @@ async def get_tasks(request: Request):
         try:
             tasks = await run_blocking(_fetch_tasks_from_db, user_id)
 
-        except Exception as db_err:
-            print(f"Database error in get_tasks: {db_err}")
+        except Exception:
+            logger.exception("Database error while loading tasks.")
             # ログインユーザーの場合、DBエラーはそのままエラーとして扱う（または空リスト？）
             # ここでは安全のためエラーをログに出しつつ、
             # もし未ログインならデフォルトタスクを返すようにフローを継続する
             if user_id:
                 # ユーザーがいるのにDBエラーなら500にする（frontendでハンドリングされる）
-                raise db_err
+                raise
             # 未ログインならDBエラーでも続行（tasks=[] のまま）
 
         # 未ログイン かつ タスクが取得できていない場合はデフォルトタスクを使用
@@ -206,8 +210,11 @@ async def get_tasks(request: Request):
 
         return jsonify({"tasks": tasks})
 
-    except Exception as e:
-        return jsonify({"error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to load tasks.",
+        )
 
 
 # タスクカード並び替え
@@ -226,8 +233,11 @@ async def update_tasks_order(request: Request):
     try:
         await run_blocking(_update_tasks_order_for_user, user_id, new_order)
         return jsonify({"message": "Order updated"}, status_code=200)
-    except Exception as e:
-        return jsonify({"error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to update task order.",
+        )
 
 
 @chat_bp.post("/api/delete_task", name="chat.delete_task")
@@ -245,8 +255,11 @@ async def delete_task(request: Request):
     try:
         await run_blocking(_delete_task_for_user, user_id, task_name)
         return jsonify({"message": "Task deleted"}, status_code=200)
-    except Exception as e:
-        return jsonify({"error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to delete task.",
+        )
 
 
 @chat_bp.post("/api/edit_task", name="chat.edit_task")
@@ -282,9 +295,11 @@ async def edit_task(request: Request):
 
         return jsonify({"message": "Task updated"}, status_code=200)
 
-    except Exception as e:
-        print("EDIT_TASK_EXCEPTION:", e)
-        return jsonify({"error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to edit task.",
+        )
 
 
 @chat_bp.post("/api/add_task", name="chat.add_task")
@@ -315,5 +330,8 @@ async def add_task(request: Request):
             output_examples,
         )
         return jsonify({"message": "タスクが追加されました"}, status_code=201)
-    except Exception as e:
-        return jsonify({"error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to add task.",
+        )

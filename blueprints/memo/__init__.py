@@ -1,14 +1,22 @@
 from __future__ import annotations
 
+import logging
 from typing import List
 
 from fastapi import APIRouter, Request
 
 from services.async_utils import run_blocking
 from services.db import Error, get_db_connection
-from services.web import flash, get_json, jsonify, redirect_to_frontend
+from services.web import (
+    flash,
+    get_json,
+    jsonify,
+    log_and_internal_server_error,
+    redirect_to_frontend,
+)
 
 memo_bp = APIRouter(prefix="/memo")
+logger = logging.getLogger(__name__)
 
 
 def _ensure_title(ai_response: str, provided_title: str) -> str:
@@ -125,8 +133,12 @@ async def api_create_memo(request: Request):
         )
         flash(request, "メモを保存しました。", "success")
         return jsonify({"status": "success", "memo_id": memo_id})
-    except Error as exc:
-        return jsonify({"status": "fail", "error": str(exc)}, status_code=500)
+    except Error:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to create memo entry.",
+            status="fail",
+        )
 
 
 @memo_bp.api_route("", methods=["GET", "POST"], name="memo.create_memo")

@@ -1,4 +1,5 @@
 import os
+import logging
 from datetime import date, datetime, timedelta
 from threading import Lock
 
@@ -15,6 +16,7 @@ _AUTH_EMAIL_DAILY_COUNT_KEY_PREFIX = "auth_email:daily_send_total"
 
 _in_memory_lock = Lock()
 _in_memory_daily_counts = {}
+logger = logging.getLogger(__name__)
 
 
 def _get_daily_limit(env_name, default_limit):
@@ -22,9 +24,11 @@ def _get_daily_limit(env_name, default_limit):
     try:
         limit = int(raw_limit)
     except (TypeError, ValueError):
-        print(
-            f"Invalid {env_name}: {raw_limit}. "
-            f"Fallback to {default_limit}."
+        logger.warning(
+            "Invalid %s value '%s'. Falling back to %s.",
+            env_name,
+            raw_limit,
+            default_limit,
         )
         return default_limit
     return max(limit, 0)
@@ -63,8 +67,8 @@ return {1, current}
         current = int(result[1])
         remaining = max(daily_limit - current, 0)
         return allowed, remaining
-    except Exception as exc:
-        print(f"Redis quota tracking failed, fallback to in-memory: {exc}")
+    except Exception:
+        logger.exception("Redis quota tracking failed; falling back to in-memory.")
         return None
 
 

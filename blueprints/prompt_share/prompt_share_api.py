@@ -1,11 +1,14 @@
 # prompt_share/prompt_share_api.py
+import logging
+
 from fastapi import APIRouter, Request
 
 from services.async_utils import run_blocking
 from services.db import get_db_connection
-from services.web import jsonify, require_json_dict
+from services.web import jsonify, log_and_internal_server_error, require_json_dict
 
 prompt_share_api_bp = APIRouter(prefix="/prompt_share/api")
+logger = logging.getLogger(__name__)
 
 
 def _extract_id(row):
@@ -224,8 +227,11 @@ async def get_prompts(request: Request):
     try:
         prompts = await run_blocking(_get_prompts_with_flags, user_id)
         return jsonify({"prompts": prompts})
-    except Exception as e:
-        return jsonify({"error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to load shared prompts.",
+        )
 
 
 @prompt_share_api_bp.post("/prompts", name="prompt_share_api.create_prompt")
@@ -261,8 +267,11 @@ async def create_prompt(request: Request):
             output_examples,
         )
         return jsonify({"message": "プロンプトが作成されました。", "prompt_id": prompt_id}, status_code=201)
-    except Exception as e:
-        return jsonify({"error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to create shared prompt.",
+        )
 
 
 @prompt_share_api_bp.post("/bookmark", name="prompt_share_api.add_bookmark")
@@ -293,8 +302,11 @@ async def add_bookmark(request: Request):
             output_examples,
         )
         return jsonify(payload, status_code=status_code)
-    except Exception as e:
-        return jsonify({"error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to add bookmark.",
+        )
 
 
 @prompt_share_api_bp.delete("/bookmark", name="prompt_share_api.remove_bookmark")
@@ -314,8 +326,11 @@ async def remove_bookmark(request: Request):
     try:
         await run_blocking(_remove_bookmark_for_user, user_id, title)
         return jsonify({"message": "ブックマークが削除されました。"})
-    except Exception as e:
-        return jsonify({"error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to remove bookmark.",
+        )
 
 
 @prompt_share_api_bp.post("/prompt_list", name="prompt_share_api.add_prompt_to_list")
@@ -350,5 +365,8 @@ async def add_prompt_to_list(request: Request):
             output_examples,
         )
         return jsonify(payload, status_code=status_code)
-    except Exception as e:
-        return jsonify({"error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to add prompt to prompt list.",
+        )

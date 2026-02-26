@@ -1,20 +1,30 @@
 # app.py
+import logging
 import os
 import threading
 import time
 from datetime import timedelta
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
 from blueprints.chat import cleanup_ephemeral_chats
 from services.db import close_db_pool
 from services.default_tasks import ensure_default_tasks_seeded
 from services.default_shared_prompts import ensure_default_shared_prompts
 from services.session_middleware import PermanentSessionMiddleware
+from services.web import DEFAULT_INTERNAL_ERROR_MESSAGE, jsonify
 
 # Load environment variables
 load_dotenv()
+
+log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+resolved_log_level = getattr(logging, log_level, logging.INFO)
+logging.basicConfig(
+    level=resolved_log_level,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -68,7 +78,10 @@ app.include_router(memo_bp)
 
 def periodic_cleanup():
     while True:
-        cleanup_ephemeral_chats()
+        try:
+            cleanup_ephemeral_chats()
+        except Exception:
+            logger.exception("Failed to clean up ephemeral chats.")
         # 1分ごとにエフェメラルチャットのクリーンアップ処理を実行
         time.sleep(6000)
 
@@ -78,16 +91,16 @@ def start_cleanup_thread():
     try:
         inserted = ensure_default_tasks_seeded()
         if inserted > 0:
-            print(f"Seeded {inserted} default tasks.")
-    except Exception as exc:
-        print(f"Failed to seed default tasks: {exc}")
+            logger.info("Seeded %s default tasks.", inserted)
+    except Exception:
+        logger.exception("Failed to seed default tasks.")
 
     try:
         inserted = ensure_default_shared_prompts()
         if inserted > 0:
-            print(f"Seeded {inserted} sample shared prompts.")
-    except Exception as exc:
-        print(f"Failed to seed sample shared prompts: {exc}")
+            logger.info("Seeded %s sample shared prompts.", inserted)
+    except Exception:
+        logger.exception("Failed to seed sample shared prompts.")
 
     cleanup_thread = threading.Thread(target=periodic_cleanup, daemon=True)
     cleanup_thread.start()
@@ -96,6 +109,17 @@ def start_cleanup_thread():
 @app.on_event("shutdown")
 def shutdown_db_pool():
     close_db_pool()
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.exception(
+        "Unhandled exception on %s %s",
+        request.method,
+        request.url.path,
+        exc_info=exc,
+    )
+    return jsonify({"error": DEFAULT_INTERNAL_ERROR_MESSAGE}, status_code=500)
 
 
 if __name__ == "__main__":

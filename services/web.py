@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from typing import Any, Dict, List, Tuple
 from urllib.parse import urlencode
@@ -10,6 +11,7 @@ from starlette.responses import JSONResponse, RedirectResponse
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_INTERNAL_ERROR_MESSAGE = "内部エラーが発生しました。"
 
 
 async def get_json(request: Request) -> Any | None:
@@ -21,6 +23,21 @@ async def get_json(request: Request) -> Any | None:
 
 def jsonify(payload: Any, status_code: int = 200) -> JSONResponse:
     return JSONResponse(content=jsonable_encoder(payload), status_code=status_code)
+
+
+def log_and_internal_server_error(
+    logger: logging.Logger,
+    context: str,
+    *,
+    status: str | None = None,
+    message: str = DEFAULT_INTERNAL_ERROR_MESSAGE,
+    error_key: str = "error",
+) -> JSONResponse:
+    logger.exception(context)
+    payload: Dict[str, Any] = {error_key: message}
+    if status is not None:
+        payload["status"] = status
+    return jsonify(payload, status_code=500)
 
 
 async def require_json_dict(

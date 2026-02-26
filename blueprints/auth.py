@@ -1,4 +1,5 @@
 import copy
+import logging
 import os
 
 import requests
@@ -12,6 +13,7 @@ except ModuleNotFoundError:  # pragma: no cover - optional for test envs
     Flow = None
 
 from services.web import (
+    log_and_internal_server_error,
     jsonify,
     require_json_dict,
     frontend_login_url,
@@ -58,6 +60,7 @@ GOOGLE_SCOPES = [
 ]
 
 auth_bp = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def _fetch_google_user_info(access_token: str):
@@ -209,8 +212,12 @@ async def api_send_login_code(request: Request):
     try:
         await run_blocking(send_email, to_address=email, subject=subject, body_text=body_text)
         return jsonify({"status": "success", "message": "認証コードを送信しました"})
-    except Exception as e:
-        return jsonify({"status": "fail", "error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to send login verification code email.",
+            status="fail",
+        )
 
 @auth_bp.post("/api/verify_login_code", name="auth.api_verify_login_code")
 async def api_verify_login_code(request: Request):

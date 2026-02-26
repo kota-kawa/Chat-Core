@@ -1,4 +1,5 @@
 from datetime import date
+import logging
 
 from fastapi import Request
 
@@ -9,9 +10,11 @@ from services.chat_service import (
     rename_chat_room_in_db,
 )
 
-from services.web import jsonify, require_json_dict
+from services.web import jsonify, log_and_internal_server_error, require_json_dict
 
 from . import chat_bp, cleanup_ephemeral_chats, ephemeral_store, get_session_id
+
+logger = logging.getLogger(__name__)
 
 
 def _fetch_user_rooms(user_id):
@@ -119,8 +122,11 @@ async def new_chat_room(request: Request):
                 },
                 status_code=201,
             )
-        except Exception as e:
-            return jsonify({"error": str(e)}, status_code=500)
+        except Exception:
+            return log_and_internal_server_error(
+                logger,
+                "Failed to create chat room for authenticated user.",
+            )
     else:
         # 非ログインユーザーの場合は、1日10回まで利用可能
         today = date.today().isoformat()
@@ -154,8 +160,11 @@ async def get_chat_rooms(request: Request):
         try:
             rooms = await run_blocking(_fetch_user_rooms, user_id)
             return jsonify({"rooms": rooms})
-        except Exception as e:
-            return jsonify({"error": str(e)}, status_code=500)
+        except Exception:
+            return log_and_internal_server_error(
+                logger,
+                "Failed to fetch chat rooms for authenticated user.",
+            )
     else:
         # 非ログインユーザーにはサイドバー上でチャットルーム一覧は表示しない
         return jsonify({"rooms": []})
@@ -179,8 +188,11 @@ async def delete_chat_room(request: Request):
                 _delete_room_for_user, room_id, session["user_id"]
             )
             return jsonify(payload, status_code=status_code)
-        except Exception as e:
-            return jsonify({"error": str(e)}, status_code=500)
+        except Exception:
+            return log_and_internal_server_error(
+                logger,
+                "Failed to delete chat room for authenticated user.",
+            )
     else:
         sid = get_session_id(session)
         if not await run_blocking(ephemeral_store.delete_room, sid, room_id):
@@ -211,8 +223,11 @@ async def rename_chat_room(request: Request):
 
             await run_blocking(rename_chat_room_in_db, room_id, new_title)
             return jsonify({"message": "ルーム名を変更しました"}, status_code=200)
-        except Exception as e:
-            return jsonify({"error": str(e)}, status_code=500)
+        except Exception:
+            return log_and_internal_server_error(
+                logger,
+                "Failed to rename chat room for authenticated user.",
+            )
     else:
         sid = get_session_id(session)
         if not await run_blocking(ephemeral_store.rename_room, sid, room_id, new_title):

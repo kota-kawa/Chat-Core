@@ -1,11 +1,14 @@
 # prompt_manage_api.py
+import logging
+
 from fastapi import APIRouter, Request
 
 from services.async_utils import run_blocking
 from services.db import get_db_connection
-from services.web import jsonify, require_json_dict
+from services.web import jsonify, log_and_internal_server_error, require_json_dict
 
 prompt_manage_api_bp = APIRouter(prefix="/prompt_manage/api")
+logger = logging.getLogger(__name__)
 
 
 def _fetch_my_prompts(user_id):
@@ -165,8 +168,11 @@ async def get_my_prompts(request: Request):
     try:
         prompts = await run_blocking(_fetch_my_prompts, user_id)
         return jsonify({"prompts": prompts})
-    except Exception as e:
-        return jsonify({"error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to load my prompts.",
+        )
 
 
 @prompt_manage_api_bp.get("/saved_prompts", name="prompt_manage_api.get_saved_prompts")
@@ -179,8 +185,11 @@ async def get_saved_prompts(request: Request):
     try:
         prompts = await run_blocking(_fetch_saved_prompts, user_id)
         return jsonify({"prompts": prompts})
-    except Exception as e:
-        return jsonify({"error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to load saved prompts.",
+        )
 
 
 @prompt_manage_api_bp.get("/prompt_list", name="prompt_manage_api.get_prompt_list")
@@ -193,8 +202,11 @@ async def get_prompt_list(request: Request):
     try:
         prompts = await run_blocking(_fetch_prompt_list, user_id)
         return jsonify({"prompts": prompts})
-    except Exception as e:
-        return jsonify({"error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to load prompt list.",
+        )
 
 
 @prompt_manage_api_bp.delete(
@@ -211,8 +223,11 @@ async def delete_prompt_list_entry(entry_id: int, request: Request):
         if deleted == 0:
             return jsonify({"error": "対象のプロンプトが見つかりませんでした。"}, status_code=404)
         return jsonify({"message": "プロンプトを削除しました。"})
-    except Exception as e:
-        return jsonify({"error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to delete prompt list entry.",
+        )
 
 
 @prompt_manage_api_bp.delete(
@@ -229,8 +244,11 @@ async def delete_saved_prompt(prompt_id: int, request: Request):
         if deleted == 0:
             return jsonify({"error": "対象の保存済みプロンプトが見つかりませんでした。"}, status_code=404)
         return jsonify({"message": "保存したプロンプトを削除しました。"})
-    except Exception as e:
-        return jsonify({"error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to delete saved prompt.",
+        )
 
 
 @prompt_manage_api_bp.put("/prompts/{prompt_id}", name="prompt_manage_api.update_prompt")
@@ -265,8 +283,11 @@ async def update_prompt(prompt_id: int, request: Request):
         if updated == 0:
             return jsonify({"error": "対象のプロンプトが見つかりませんでした。"}, status_code=404)
         return jsonify({"message": "プロンプトが更新されました。"})
-    except Exception as e:
-        return jsonify({"error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to update prompt.",
+        )
 
 
 @prompt_manage_api_bp.delete("/prompts/{prompt_id}", name="prompt_manage_api.delete_prompt")
@@ -281,5 +302,8 @@ async def delete_prompt(prompt_id: int, request: Request):
         if deleted == 0:
             return jsonify({"error": "対象のプロンプトが見つかりませんでした。"}, status_code=404)
         return jsonify({"message": "プロンプトが削除されました。"})
-    except Exception as e:
-        return jsonify({"error": str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to delete prompt.",
+        )

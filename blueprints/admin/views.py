@@ -1,4 +1,5 @@
 import inspect
+import logging
 import os
 from functools import wraps
 from typing import Optional
@@ -16,6 +17,7 @@ from services.web import (
     get_flashed_messages,
     get_json,
     jsonify,
+    log_and_internal_server_error,
     redirect_to_frontend,
     url_for,
 )
@@ -28,6 +30,7 @@ except ModuleNotFoundError:  # pragma: no cover - optional for test envs
     pg_sql = None
 
 ADMIN_PASSWORD_HASH = (os.getenv("ADMIN_PASSWORD_HASH") or "").strip()
+logger = logging.getLogger(__name__)
 
 
 def _verify_admin_password(password: str) -> bool:
@@ -424,8 +427,9 @@ async def api_dashboard(request: Request):
         rows = dashboard_data["rows"]
         if dashboard_data["missing_selected_table"]:
             flash(request, "The selected table does not exist.", "error")
-    except Error as exc:  # pragma: no cover - defensive logging
-        error = str(exc)
+    except Error:  # pragma: no cover - defensive logging
+        logger.exception("Failed to load admin dashboard data.")
+        error = "ダッシュボード情報の取得に失敗しました。"
 
     messages = get_flashed_messages(request, with_categories=True)
 
@@ -471,8 +475,9 @@ async def create_table(request: Request):
             _create_table_in_db, table_name, column_definitions, table_options
         )
         flash(request, f"Table '{table_name}' created successfully.", "success")
-    except Error as exc:
-        flash(request, f"Failed to create table: {exc}", "error")
+    except Error:
+        logger.exception("Failed to create table.")
+        flash(request, "Failed to create table due to an internal error.", "error")
 
     return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
 
@@ -516,9 +521,13 @@ async def api_create_table(request: Request):
         )
         flash(request, f"Table '{table_name}' created successfully.", "success")
         return jsonify({"status": "success", "redirect": frontend_admin_dashboard_url(request)})
-    except Error as exc:
-        flash(request, f"Failed to create table: {exc}", "error")
-        return jsonify({"status": "fail", "error": str(exc)}, status_code=500)
+    except Error:
+        flash(request, "Failed to create table due to an internal error.", "error")
+        return log_and_internal_server_error(
+            logger,
+            "Admin API create-table failed.",
+            status="fail",
+        )
 
 
 @admin_bp.post("/delete-table", name="admin.delete_table")
@@ -537,8 +546,9 @@ async def delete_table(request: Request):
             flash(request, f"Table '{table_name}' does not exist.", "error")
             return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
         flash(request, f"Table '{table_name}' deleted successfully.", "success")
-    except Error as exc:
-        flash(request, f"Failed to delete table: {exc}", "error")
+    except Error:
+        logger.exception("Failed to delete table.")
+        flash(request, "Failed to delete table due to an internal error.", "error")
 
     return RedirectResponse(frontend_admin_dashboard_url(request), status_code=302)
 
@@ -567,9 +577,13 @@ async def api_delete_table(request: Request):
             )
         flash(request, f"Table '{table_name}' deleted successfully.", "success")
         return jsonify({"status": "success", "redirect": frontend_admin_dashboard_url(request)})
-    except Error as exc:
-        flash(request, f"Failed to delete table: {exc}", "error")
-        return jsonify({"status": "fail", "error": str(exc)}, status_code=500)
+    except Error:
+        flash(request, "Failed to delete table due to an internal error.", "error")
+        return log_and_internal_server_error(
+            logger,
+            "Admin API delete-table failed.",
+            status="fail",
+        )
 
 
 @admin_bp.post("/add-column", name="admin.add_column")
@@ -603,8 +617,9 @@ async def add_column(request: Request):
                 frontend_admin_dashboard_url(request, table=table_name), status_code=302
             )
         flash(request, f"カラム '{column_name}' をテーブル '{table_name}' に追加しました。", "success")
-    except Error as exc:
-        flash(request, f"カラムの追加に失敗しました: {exc}", "error")
+    except Error:
+        logger.exception("Failed to add column.")
+        flash(request, "カラムの追加に失敗しました。内部エラーが発生しました。", "error")
 
     return RedirectResponse(
         frontend_admin_dashboard_url(request, table=table_name), status_code=302
@@ -653,9 +668,13 @@ async def api_add_column(request: Request):
                 "redirect": frontend_admin_dashboard_url(request, table=table_name),
             }
         )
-    except Error as exc:
-        flash(request, f"カラムの追加に失敗しました: {exc}", "error")
-        return jsonify({"status": "fail", "error": str(exc)}, status_code=500)
+    except Error:
+        flash(request, "カラムの追加に失敗しました。内部エラーが発生しました。", "error")
+        return log_and_internal_server_error(
+            logger,
+            "Admin API add-column failed.",
+            status="fail",
+        )
 
 
 @admin_bp.post("/delete-column", name="admin.delete_column")
@@ -694,8 +713,9 @@ async def delete_column(request: Request):
                 frontend_admin_dashboard_url(request, table=table_name), status_code=302
             )
         flash(request, f"カラム '{target_column}' をテーブル '{table_name}' から削除しました。", "success")
-    except Error as exc:
-        flash(request, f"カラムの削除に失敗しました: {exc}", "error")
+    except Error:
+        logger.exception("Failed to delete column.")
+        flash(request, "カラムの削除に失敗しました。内部エラーが発生しました。", "error")
 
     return RedirectResponse(
         frontend_admin_dashboard_url(request, table=table_name), status_code=302
@@ -751,6 +771,10 @@ async def api_delete_column(request: Request):
                 "redirect": frontend_admin_dashboard_url(request, table=table_name),
             }
         )
-    except Error as exc:
-        flash(request, f"カラムの削除に失敗しました: {exc}", "error")
-        return jsonify({"status": "fail", "error": str(exc)}, status_code=500)
+    except Error:
+        flash(request, "カラムの削除に失敗しました。内部エラーが発生しました。", "error")
+        return log_and_internal_server_error(
+            logger,
+            "Admin API delete-column failed.",
+            status="fail",
+        )

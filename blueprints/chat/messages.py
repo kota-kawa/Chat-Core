@@ -1,6 +1,7 @@
 import re
 import json
 import html
+import logging
 from datetime import date
 
 from fastapi import Request
@@ -13,7 +14,7 @@ from services.chat_service import (
 )
 from services.llm_daily_limit import consume_llm_daily_quota
 from services.llm import get_llm_response, GEMINI_DEFAULT_MODEL
-from services.web import jsonify, require_json_dict
+from services.web import jsonify, log_and_internal_server_error, require_json_dict
 
 from . import (
     chat_bp,
@@ -21,6 +22,8 @@ from . import (
     cleanup_ephemeral_chats,
     ephemeral_store,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _validate_room_owner(room_id, user_id, forbidden_message):
@@ -139,8 +142,11 @@ async def chat(request: Request):
             )
             if payload is not None:
                 return jsonify(payload, status_code=status_code)
-        except Exception as e:
-            return jsonify({"error": str(e)}, status_code=500)
+        except Exception:
+            return log_and_internal_server_error(
+                logger,
+                "Failed to validate chat room ownership before posting.",
+            )
 
         escaped = html.escape(user_message)
         formatted_user_message = escaped.replace("\n", "<br>")
@@ -182,8 +188,8 @@ async def chat(request: Request):
             if ex_str.startswith("["):
                 try:
                     return json.loads(ex_str)
-                except Exception as e:
-                    print("JSONパースエラー:", e)
+                except Exception:
+                    logger.warning("Failed to parse examples JSON; using raw text fallback.")
                     return [ex_str]
             else:
                 return [ex_str]
@@ -254,14 +260,20 @@ async def get_chat_history(request: Request):
             )
             if payload is not None:
                 return jsonify(payload, status_code=status_code)
-        except Exception as e:
-            return jsonify({"error": str(e)}, status_code=500)
+        except Exception:
+            return log_and_internal_server_error(
+                logger,
+                "Failed to validate chat room ownership before history fetch.",
+            )
 
         try:
             messages = await run_blocking(_fetch_chat_history, chat_room_id)
             return jsonify({"messages": messages})
-        except Exception as e:
-            return jsonify({"error": str(e)}, status_code=500)
+        except Exception:
+            return log_and_internal_server_error(
+                logger,
+                "Failed to fetch chat history.",
+            )
     else:
         sid = get_session_id(session)
         if not await run_blocking(ephemeral_store.room_exists, sid, chat_room_id):

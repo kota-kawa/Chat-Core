@@ -1,5 +1,6 @@
 import os
 import shutil
+import logging
 
 from fastapi import Request
 from werkzeug.utils import secure_filename
@@ -7,9 +8,11 @@ from werkzeug.utils import secure_filename
 from services.async_utils import run_blocking
 from services.db import get_db_connection
 from services.users import get_user_by_id
-from services.web import BASE_DIR, jsonify
+from services.web import BASE_DIR, jsonify, log_and_internal_server_error
 
 from . import chat_bp
+
+logger = logging.getLogger(__name__)
 
 
 def _save_avatar_file(upload_dir, filepath, avatar_file_obj):
@@ -89,5 +92,8 @@ async def user_profile(request: Request):
             'message': 'プロフィールを更新しました',
             'avatar_url': avatar_url         # 新しい画像 URL（ない場合は null）
         })
-    except Exception as e:
-        return jsonify({'error': str(e)}, status_code=500)
+    except Exception:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to update user profile.",
+        )

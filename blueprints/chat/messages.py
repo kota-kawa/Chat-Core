@@ -10,6 +10,7 @@ from services.chat_service import (
     save_message_to_db,
     get_chat_room_messages,
 )
+from services.llm_daily_limit import consume_llm_daily_quota
 from services.llm import get_gemini_response  # get_groq_response commented out
 from services.web import get_json, jsonify
 
@@ -143,6 +144,18 @@ async def chat(request: Request):
         conversation_messages.append(system_prompt)
 
     conversation_messages += all_messages
+
+    can_access_llm, _, daily_limit = consume_llm_daily_quota()
+    if not can_access_llm:
+        return jsonify(
+            {
+                "error": (
+                    f"本日のLLM API利用上限（全ユーザー合計 {daily_limit} 回）に達しました。"
+                    "日付が変わってから再度お試しください。"
+                )
+            },
+            status_code=429,
+        )
 
     try:
         with open('extra_prompt.txt', 'w', encoding='utf-8') as f:

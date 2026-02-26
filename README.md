@@ -47,6 +47,8 @@ docker-compose up --build
 Set these in `.env` or in `docker-compose.yml`:
 - `GROQ_API_KEY`: Groq API key
 - `Gemini_API_KEY`: Google Generative AI API key
+- `LLM_DAILY_API_LIMIT`: daily cap for total `/api/chat` LLM calls across all users (default: `300`)
+- `AUTH_EMAIL_DAILY_SEND_LIMIT`: daily cap for login/verification email sends across all users (default: `50`)
 - `FLASK_SECRET_KEY`: session secret
 - `SEND_ADDRESS` / `SEND_PASSWORD`: Gmail account for verification emails
 - `POSTGRES_HOST` / `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB`: PostgreSQL settings
@@ -125,6 +127,8 @@ docker-compose up --build
 ## 必要な環境変数
 - `GROQ_API_KEY`: Groq API キー
 - `Gemini_API_KEY`: Google Generative AI API キー
+- `LLM_DAILY_API_LIMIT`: 全ユーザー合計の`/api/chat`経由LLM呼び出し日次上限（デフォルト: `300`）
+- `AUTH_EMAIL_DAILY_SEND_LIMIT`: 全ユーザー合計のログイン/認証メール送信日次上限（デフォルト: `50`）
 - `FLASK_SECRET_KEY`: セッション用シークレット
 - `SEND_ADDRESS` / `SEND_PASSWORD`: 認証メール送信用 Gmail
 - `POSTGRES_HOST` / `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB`: PostgreSQL 設定

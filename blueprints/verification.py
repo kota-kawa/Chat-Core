@@ -3,6 +3,7 @@ import random
 from fastapi import APIRouter, Request
 
 from services.email_service import send_email
+from services.llm_daily_limit import consume_auth_email_daily_quota
 from services.users import (
     create_user,
     get_user_by_email,
@@ -27,6 +28,19 @@ async def api_send_verification_email(request: Request):
     email = data.get("email")
     if not email:
         return jsonify({"status": "fail", "error": "メールアドレスが指定されていません"}, status_code=400)
+
+    can_send_email, _, daily_limit = consume_auth_email_daily_quota()
+    if not can_send_email:
+        return jsonify(
+            {
+                "status": "fail",
+                "error": (
+                    f"本日の認証メール送信上限（全ユーザー合計 {daily_limit} 件）に達しました。"
+                    "日付が変わってから再度お試しください。"
+                ),
+            },
+            status_code=429,
+        )
 
     # すでにユーザーがあれば再利用、なければ作成
     user = get_user_by_email(email)

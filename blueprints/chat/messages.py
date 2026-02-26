@@ -11,7 +11,7 @@ from services.chat_service import (
     get_chat_room_messages,
 )
 from services.llm_daily_limit import consume_llm_daily_quota
-from services.llm import get_gemini_response  # get_groq_response commented out
+from services.llm import get_llm_response, GEMINI_DEFAULT_MODEL
 from services.web import get_json, jsonify
 
 from . import (
@@ -31,7 +31,7 @@ async def chat(request: Request):
 
     user_message = data["message"]
     chat_room_id = data.get("chat_room_id", "default")
-    model = data.get("model", "gemini-1.5-flash")
+    model = data.get("model", GEMINI_DEFAULT_MODEL)
 
     # 非ログインユーザーの場合、新規チャット・続けてのチャットの回数としてカウント
     session = request.session
@@ -163,8 +163,7 @@ async def chat(request: Request):
     except Exception as e:
         print("Failed to write conversation_messages to extra_prompt.txt:", e)
 
-    # Always use Gemini since Groq models have been removed
-    bot_reply = get_gemini_response(conversation_messages, model)
+    bot_reply = get_llm_response(conversation_messages, model)
 
     if "user_id" in session:
         save_message_to_db(chat_room_id, bot_reply, "assistant")

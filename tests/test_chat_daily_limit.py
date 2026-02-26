@@ -51,7 +51,7 @@ class ChatDailyLimitTestCase(unittest.TestCase):
                             "blueprints.chat.messages.consume_llm_daily_quota",
                             return_value=(False, 0, 300),
                         ):
-                            with patch("blueprints.chat.messages.get_gemini_response") as mock_llm:
+                            with patch("blueprints.chat.messages.get_llm_response") as mock_llm:
                                 response = asyncio.run(chat(request))
 
         self.assertEqual(response.status_code, 429)

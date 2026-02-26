@@ -5,6 +5,8 @@ python-multipart
 itsdangerous
 werkzeug
 psycopg2-binary
+SQLAlchemy
+alembic
 google-auth
 google-auth-oauthlib
 requests

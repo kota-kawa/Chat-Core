@@ -43,10 +43,27 @@ docker-compose up --build
 - Frontend: `http://localhost:3000`
 - API: `http://localhost:5004`
 
+## Database Migrations (Alembic)
+For existing environments, apply incremental DB changes with Alembic:
+
+```sh
+# Install dependencies first
+pip install -r requirements.txt
+
+# Apply all migrations
+alembic upgrade head
+```
+
+- `db/init.sql` remains the bootstrap schema for brand-new databases.
+- `alembic/versions/` contains incremental migration history.
+- `db/performance_indexes.sql` is kept as a direct SQL fallback for index-only updates.
+
 ## Required Environment Variables
 Set these in `.env` or in `docker-compose.yml`:
 - `GROQ_API_KEY`: Groq API key
 - `Gemini_API_KEY`: Google Generative AI API key
+- `GROQ_MODEL`: Groq model name used by OpenAI SDK (default: `openai/gpt-oss-20b`)
+- `GEMINI_DEFAULT_MODEL`: default Gemini model when `model` is omitted (default: `gemini-2.5-flash`)
 - `LLM_DAILY_API_LIMIT`: daily cap for total `/api/chat` LLM calls across all users (default: `300`)
 - `AUTH_EMAIL_DAILY_SEND_LIMIT`: daily cap for login/verification email sends across all users (default: `50`)
 - `FLASK_SECRET_KEY`: session secret
@@ -124,9 +141,26 @@ docker-compose up --build
 - フロントエンド: `http://localhost:3000`
 - API: `http://localhost:5004`
 
+## データベースマイグレーション（Alembic）
+既存環境への段階的なDB変更は Alembic で適用します。
+
+```sh
+# 先に依存関係をインストール
+pip install -r requirements.txt
+
+# 全マイグレーションを適用
+alembic upgrade head
+```
+
+- `db/init.sql`: 新規DBの初期スキーマ
+- `alembic/versions/`: 段階的な変更履歴
+- `db/performance_indexes.sql`: インデックスのみを直接適用するフォールバックSQL
+
 ## 必要な環境変数
 - `GROQ_API_KEY`: Groq API キー
 - `Gemini_API_KEY`: Google Generative AI API キー
+- `GROQ_MODEL`: OpenAI SDK経由で使うGroqモデル名（デフォルト: `openai/gpt-oss-20b`）
+- `GEMINI_DEFAULT_MODEL`: `model`未指定時に使うGeminiモデル（デフォルト: `gemini-2.5-flash`）
 - `LLM_DAILY_API_LIMIT`: 全ユーザー合計の`/api/chat`経由LLM呼び出し日次上限（デフォルト: `300`）
 - `AUTH_EMAIL_DAILY_SEND_LIMIT`: 全ユーザー合計のログイン/認証メール送信日次上限（デフォルト: `50`）
 - `FLASK_SECRET_KEY`: セッション用シークレット

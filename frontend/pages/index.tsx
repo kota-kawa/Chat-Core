@@ -30,6 +30,7 @@ const bodyMarkup = `
       <div class="form-group">
         <label class="form-label">AIモデル選択</label>
         <select id="ai-model">
+          <option value="openai/gpt-oss-20b">Groq: openai/gpt-oss-20b（高速推論）</option>
           <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite（高速・軽量）</option>
           <option value="gemini-2.5-flash" selected>gemini-2.5-flash（標準・推奨）</option>
         </select>

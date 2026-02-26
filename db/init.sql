@@ -1,4 +1,6 @@
 -- usersテーブル
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 CREATE TABLE users (
     id          SERIAL PRIMARY KEY,
     email       VARCHAR(255)    NOT NULL UNIQUE,
@@ -18,6 +20,9 @@ CREATE TABLE chat_rooms (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+CREATE INDEX IF NOT EXISTS idx_chat_rooms_user_created_at
+    ON chat_rooms (user_id, created_at DESC);
+
 -- chat_historyテーブル
 CREATE TABLE chat_history (
     id SERIAL PRIMARY KEY,
@@ -26,6 +31,9 @@ CREATE TABLE chat_history (
     sender VARCHAR(20) CHECK (sender IN ('user','assistant')),
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_chat_history_room_id_id
+    ON chat_history (chat_room_id, id);
 
 -- 個人ユーザーが管理するプロンプトとfew shot
 CREATE TABLE task_with_examples (
@@ -46,6 +54,15 @@ CREATE TABLE task_with_examples (
     ON DELETE CASCADE
 );
 
+CREATE INDEX IF NOT EXISTS idx_task_with_examples_user_name
+    ON task_with_examples (user_id, name);
+
+CREATE INDEX IF NOT EXISTS idx_task_with_examples_user_order
+    ON task_with_examples (user_id, display_order, id);
+
+CREATE INDEX IF NOT EXISTS idx_task_with_examples_user_created_at
+    ON task_with_examples (user_id, created_at DESC, id DESC);
+
 -- プロンプト共有のためのテーブル
 CREATE TABLE IF NOT EXISTS prompts (
     id SERIAL PRIMARY KEY,
@@ -60,6 +77,28 @@ CREATE TABLE IF NOT EXISTS prompts (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_prompts_public_created_at
+    ON prompts (is_public, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_prompts_user_created_at
+    ON prompts (user_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_prompts_public_title_trgm
+    ON prompts USING gin (title gin_trgm_ops)
+    WHERE is_public = TRUE;
+
+CREATE INDEX IF NOT EXISTS idx_prompts_public_content_trgm
+    ON prompts USING gin (content gin_trgm_ops)
+    WHERE is_public = TRUE;
+
+CREATE INDEX IF NOT EXISTS idx_prompts_public_category_trgm
+    ON prompts USING gin (category gin_trgm_ops)
+    WHERE is_public = TRUE;
+
+CREATE INDEX IF NOT EXISTS idx_prompts_public_author_trgm
+    ON prompts USING gin (author gin_trgm_ops)
+    WHERE is_public = TRUE;
 
 -- プロンプトリストを管理するテーブル
 CREATE TABLE IF NOT EXISTS prompt_list_entries (
@@ -86,6 +125,13 @@ CREATE TABLE IF NOT EXISTS prompt_list_entries (
 CREATE INDEX idx_prompt_list_user_title
     ON prompt_list_entries (user_id, title);
 
+CREATE INDEX IF NOT EXISTS idx_prompt_list_user_created_at
+    ON prompt_list_entries (user_id, created_at DESC, id DESC);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_prompt_list_user_title_when_prompt_null
+    ON prompt_list_entries (user_id, title)
+    WHERE prompt_id IS NULL;
+
 -- AIメモを保存するためのテーブル
 CREATE TABLE IF NOT EXISTS memo_entries (
     id SERIAL PRIMARY KEY,
@@ -101,6 +147,12 @@ CREATE TABLE IF NOT EXISTS memo_entries (
         REFERENCES users(id)
         ON DELETE SET NULL
 );
+
+CREATE INDEX IF NOT EXISTS idx_memo_entries_created_at
+    ON memo_entries (created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_memo_entries_user_created_at
+    ON memo_entries (user_id, created_at DESC);
 
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$

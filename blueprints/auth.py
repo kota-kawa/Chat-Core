@@ -12,8 +12,8 @@ except ModuleNotFoundError:  # pragma: no cover - optional for test envs
     Flow = None
 
 from services.web import (
-    get_json,
     jsonify,
+    require_json_dict,
     frontend_login_url,
     frontend_url,
     redirect_to_frontend,
@@ -176,7 +176,10 @@ async def api_send_login_code(request: Request):
     - 対象ユーザーが存在し、かつ is_verified=True であれば認証コードを生成し、メール送信する
     - 認証コードとユーザーIDはセッション変数 (login_verification_code, login_temp_user_id) に一時保存
     """
-    data = await get_json(request)
+    data, error_response = await require_json_dict(request, status="fail")
+    if error_response is not None:
+        return error_response
+
     email = data.get("email")
     if not email:
         return jsonify({"status": "fail", "error": "メールアドレスが指定されていません"}, status_code=400)
@@ -216,7 +219,10 @@ async def api_verify_login_code(request: Request):
     - POST JSON: { "authCode": "ユーザーが入力した認証コード" }
     - セッションに保存した認証コードと照合し、一致すればログイン（session["user_id"] にユーザーIDを保存）する
     """
-    data = await get_json(request)
+    data, error_response = await require_json_dict(request, status="fail")
+    if error_response is not None:
+        return error_response
+
     auth_code = data.get("authCode")
     session = request.session
     session_code = session.get("login_verification_code")

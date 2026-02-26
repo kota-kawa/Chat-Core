@@ -3,7 +3,7 @@ from fastapi import APIRouter, Request
 
 from services.async_utils import run_blocking
 from services.db import get_db_connection
-from services.web import get_json, jsonify
+from services.web import jsonify, require_json_dict
 
 prompt_manage_api_bp = APIRouter(prefix="/prompt_manage/api")
 
@@ -239,7 +239,10 @@ async def update_prompt(prompt_id: int, request: Request):
     if "user_id" not in request.session:
         return jsonify({"error": "ログインしていません"}, status_code=401)
     user_id = request.session["user_id"]
-    data = await get_json(request)
+    data, error_response = await require_json_dict(request)
+    if error_response is not None:
+        return error_response
+
     title = data.get("title")
     category = data.get("category")
     content = data.get("content")

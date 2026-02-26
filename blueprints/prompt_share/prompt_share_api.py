@@ -3,7 +3,7 @@ from fastapi import APIRouter, Request
 
 from services.async_utils import run_blocking
 from services.db import get_db_connection
-from services.web import get_json, jsonify
+from services.web import jsonify, require_json_dict
 
 prompt_share_api_bp = APIRouter(prefix="/prompt_share/api")
 
@@ -235,7 +235,10 @@ async def create_prompt(request: Request):
         return jsonify({"error": "ログインしていません"}, status_code=401)
     user_id = request.session["user_id"]
 
-    data = await get_json(request)
+    data, error_response = await require_json_dict(request)
+    if error_response is not None:
+        return error_response
+
     title = data.get("title")
     category = data.get("category")
     content = data.get("content")
@@ -268,7 +271,10 @@ async def add_bookmark(request: Request):
         return jsonify({"error": "ログインしていません"}, status_code=401)
     user_id = request.session["user_id"]
 
-    data = await get_json(request)
+    data, error_response = await require_json_dict(request)
+    if error_response is not None:
+        return error_response
+
     title = data.get("title")
     content = data.get("content")
     input_examples = data.get("input_examples", "")
@@ -297,7 +303,10 @@ async def remove_bookmark(request: Request):
         return jsonify({"error": "ログインしていません"}, status_code=401)
     user_id = request.session["user_id"]
 
-    data = await get_json(request)
+    data, error_response = await require_json_dict(request)
+    if error_response is not None:
+        return error_response
+
     title = data.get("title")
     if not title:
         return jsonify({"error": "必要なフィールドが不足しています"}, status_code=400)
@@ -315,7 +324,10 @@ async def add_prompt_to_list(request: Request):
         return jsonify({"error": "ログインしていません"}, status_code=401)
     user_id = request.session["user_id"]
 
-    data = await get_json(request) or {}
+    data, error_response = await require_json_dict(request)
+    if error_response is not None:
+        return error_response
+
     prompt_id = data.get("prompt_id")
     title = data.get("title")
     category = data.get("category", "")

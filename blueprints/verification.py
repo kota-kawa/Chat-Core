@@ -11,7 +11,7 @@ from services.users import (
     get_user_by_id,
     copy_default_tasks_for_user,
 )
-from services.web import get_json, jsonify
+from services.web import jsonify, require_json_dict
 
 verification_bp = APIRouter()
 
@@ -24,7 +24,10 @@ async def api_send_verification_email(request: Request):
     - コードは session["verification_code"] に一時的に保存 (本番ではDBでもOK)
     - session["temp_user_id"] に仮保存
     """
-    data = await get_json(request)
+    data, error_response = await require_json_dict(request, status="fail")
+    if error_response is not None:
+        return error_response
+
     email = data.get("email")
     if not email:
         return jsonify({"status": "fail", "error": "メールアドレスが指定されていません"}, status_code=400)
@@ -70,10 +73,13 @@ async def api_verify_registration_code(request: Request):
     ・一致すればユーザーを is_verified=True にしログイン状態へ
     ・このタイミングで初期タスクをユーザー専用に複製
     """
-    data        = await get_json(request)
-    user_code   = data.get("authCode")
-    session_code= request.session.get("verification_code")
-    user_id     = request.session.get("temp_user_id")
+    data, error_response = await require_json_dict(request, status="fail")
+    if error_response is not None:
+        return error_response
+
+    user_code = data.get("authCode")
+    session_code = request.session.get("verification_code")
+    user_id = request.session.get("temp_user_id")
 
     if not session_code or not user_id:
         return jsonify({"status": "fail", "error": "セッション情報がありません。最初からやり直してください"}, status_code=400)

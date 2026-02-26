@@ -5,21 +5,38 @@ from typing import Any, Dict, List, Tuple
 from urllib.parse import urlencode
 
 from fastapi import Request
+from fastapi.encoders import jsonable_encoder
 from starlette.responses import JSONResponse, RedirectResponse
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-async def get_json(request: Request) -> Dict[str, Any] | None:
+async def get_json(request: Request) -> Any | None:
     try:
         return await request.json()
     except Exception:
         return None
 
 
-def jsonify(payload: Dict[str, Any], status_code: int = 200) -> JSONResponse:
-    return JSONResponse(payload, status_code=status_code)
+def jsonify(payload: Any, status_code: int = 200) -> JSONResponse:
+    return JSONResponse(content=jsonable_encoder(payload), status_code=status_code)
+
+
+async def require_json_dict(
+    request: Request,
+    *,
+    error_message: str = "JSON形式が不正です。",
+    status: str | None = None,
+) -> tuple[Dict[str, Any] | None, JSONResponse | None]:
+    data = await get_json(request)
+    if isinstance(data, dict):
+        return data, None
+
+    payload: Dict[str, Any] = {"error": error_message}
+    if status is not None:
+        payload["status"] = status
+    return None, jsonify(payload, status_code=400)
 
 
 def set_session_permanent(session: dict, value: bool) -> None:

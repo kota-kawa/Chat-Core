@@ -13,7 +13,7 @@ from services.chat_service import (
 )
 from services.llm_daily_limit import consume_llm_daily_quota
 from services.llm import get_llm_response, GEMINI_DEFAULT_MODEL
-from services.web import get_json, jsonify
+from services.web import jsonify, require_json_dict
 
 from . import (
     chat_bp,
@@ -97,8 +97,11 @@ def _fetch_chat_history(chat_room_id):
 @chat_bp.post("/api/chat", name="chat.chat")
 async def chat(request: Request):
     await run_blocking(cleanup_ephemeral_chats)
-    data = await get_json(request)
-    if not data or "message" not in data:
+    data, error_response = await require_json_dict(request)
+    if error_response is not None:
+        return error_response
+
+    if "message" not in data:
         return jsonify({"error": "'message' が必要です。"}, status_code=400)
 
     user_message = data["message"]
@@ -147,7 +150,7 @@ async def chat(request: Request):
     else:
         sid = get_session_id(session)
         if not await run_blocking(ephemeral_store.room_exists, sid, chat_room_id):
-            return jsonify({"error": "該当ルームが存在しません"}), 404
+            return jsonify({"error": "該当ルームが存在しません"}, status_code=404)
 
         escaped = html.escape(user_message)
         formatted_user_message = escaped.replace("\n", "<br>")

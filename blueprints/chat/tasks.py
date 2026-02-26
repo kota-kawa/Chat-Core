@@ -3,7 +3,7 @@ from fastapi import Request
 from services.async_utils import run_blocking
 from services.db import get_db_connection
 from services.default_tasks import default_task_payloads
-from services.web import get_json, jsonify
+from services.web import jsonify, require_json_dict
 
 from . import chat_bp
 
@@ -213,9 +213,12 @@ async def get_tasks(request: Request):
 # タスクカード並び替え
 @chat_bp.post("/api/update_tasks_order", name="chat.update_tasks_order")
 async def update_tasks_order(request: Request):
-    data       = await get_json(request)
-    new_order  = data.get("order")
-    user_id    = request.session.get("user_id")
+    data, error_response = await require_json_dict(request)
+    if error_response is not None:
+        return error_response
+
+    new_order = data.get("order")
+    user_id = request.session.get("user_id")
     if not user_id:
         return jsonify({"error": "ログインが必要です"}, status_code=403)
     if not new_order or not isinstance(new_order, list):
@@ -229,9 +232,12 @@ async def update_tasks_order(request: Request):
 
 @chat_bp.post("/api/delete_task", name="chat.delete_task")
 async def delete_task(request: Request):
-    data      = await get_json(request)
+    data, error_response = await require_json_dict(request)
+    if error_response is not None:
+        return error_response
+
     task_name = data.get("task")
-    user_id   = request.session.get("user_id")
+    user_id = request.session.get("user_id")
     if not user_id:
         return jsonify({"error": "ログインが必要です"}, status_code=403)
     if not task_name:
@@ -245,11 +251,14 @@ async def delete_task(request: Request):
 
 @chat_bp.post("/api/edit_task", name="chat.edit_task")
 async def edit_task(request: Request):
-    data            = await get_json(request)
-    old_task        = data.get("old_task")
-    new_task        = data.get("new_task")
+    data, error_response = await require_json_dict(request)
+    if error_response is not None:
+        return error_response
+
+    old_task = data.get("old_task")
+    new_task = data.get("new_task")
     prompt_template = data.get("prompt_template")
-    input_examples  = data.get("input_examples")
+    input_examples = data.get("input_examples")
     output_examples = data.get("output_examples")
 
     user_id = request.session.get("user_id")
@@ -280,10 +289,13 @@ async def edit_task(request: Request):
 
 @chat_bp.post("/api/add_task", name="chat.add_task")
 async def add_task(request: Request):
-    data = await get_json(request)
-    title           = data.get("title")
-    prompt_content  = data.get("prompt_content")
-    input_examples  = data.get("input_examples", "")
+    data, error_response = await require_json_dict(request)
+    if error_response is not None:
+        return error_response
+
+    title = data.get("title")
+    prompt_content = data.get("prompt_content")
+    input_examples = data.get("input_examples", "")
     output_examples = data.get("output_examples", "")
 
     user_id = request.session.get("user_id")

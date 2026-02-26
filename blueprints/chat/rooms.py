@@ -9,7 +9,7 @@ from services.chat_service import (
     rename_chat_room_in_db,
 )
 
-from services.web import get_json, jsonify
+from services.web import jsonify, require_json_dict
 
 from . import chat_bp, cleanup_ephemeral_chats, ephemeral_store, get_session_id
 
@@ -96,8 +96,11 @@ def _delete_room_for_user(room_id, user_id):
 @chat_bp.post("/api/new_chat_room", name="chat.new_chat_room")
 async def new_chat_room(request: Request):
     await run_blocking(cleanup_ephemeral_chats)
-    data = await get_json(request)
-    if not data or "id" not in data:
+    data, error_response = await require_json_dict(request)
+    if error_response is not None:
+        return error_response
+
+    if "id" not in data:
         return jsonify({"error": "'id' フィールドが必要です。"}, status_code=400)
     room_id = data["id"]
     title = data.get("title", "新規チャット")
@@ -161,7 +164,10 @@ async def get_chat_rooms(request: Request):
 @chat_bp.post("/api/delete_chat_room", name="chat.delete_chat_room")
 async def delete_chat_room(request: Request):
     await run_blocking(cleanup_ephemeral_chats)
-    data = await get_json(request)
+    data, error_response = await require_json_dict(request)
+    if error_response is not None:
+        return error_response
+
     room_id = data.get('room_id')
     if not room_id:
         return jsonify({"error": "room_id is required"}, status_code=400)
@@ -185,7 +191,10 @@ async def delete_chat_room(request: Request):
 @chat_bp.post("/api/rename_chat_room", name="chat.rename_chat_room")
 async def rename_chat_room(request: Request):
     await run_blocking(cleanup_ephemeral_chats)
-    data = await get_json(request)
+    data, error_response = await require_json_dict(request)
+    if error_response is not None:
+        return error_response
+
     room_id = data.get("room_id")
     new_title = data.get("new_title")
     if not room_id or not new_title:

@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from blueprints.chat import cleanup_ephemeral_chats
+from services.default_tasks import ensure_default_tasks_seeded
 from services.default_shared_prompts import ensure_default_shared_prompts
 from services.session_middleware import PermanentSessionMiddleware
 
@@ -73,6 +74,13 @@ def periodic_cleanup():
 
 @app.on_event("startup")
 def start_cleanup_thread():
+    try:
+        inserted = ensure_default_tasks_seeded()
+        if inserted > 0:
+            print(f"Seeded {inserted} default tasks.")
+    except Exception as exc:
+        print(f"Failed to seed default tasks: {exc}")
+
     try:
         inserted = ensure_default_shared_prompts()
         if inserted > 0:

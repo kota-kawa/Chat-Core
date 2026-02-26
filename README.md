@@ -56,6 +56,7 @@ alembic upgrade head
 ```
 
 - `db/init.sql` remains the bootstrap schema for brand-new databases.
+- Default task definitions are centralized in `frontend/data/default_tasks.json` and seeded on startup.
 - `alembic/versions/` contains incremental migration history.
 - `db/performance_indexes.sql` is kept as a direct SQL fallback for index-only updates.
 
@@ -161,6 +162,7 @@ alembic upgrade head
 ```
 
 - `db/init.sql`: 新規DBの初期スキーマ
+- 既定タスク定義は `frontend/data/default_tasks.json` を単一ソースとして起動時に投入
 - `alembic/versions/`: 段階的な変更履歴
 - `db/performance_indexes.sql`: インデックスのみを直接適用するフォールバックSQL
 

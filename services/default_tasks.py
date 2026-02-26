@@ -1,124 +1,42 @@
-DEFAULT_TASKS = [
-    {
-        "name": "📧 メール作成",
-        "prompt_template": "状況や作業環境をもとに、メールを作成して。",
-        "input_examples": "新製品リリースの案内のメール作成をしたい。",
-        "output_examples": (
-            "件名：新製品発売のご案内\n"
-            "本文：拝啓　時下ますますご健勝のこととお慶び申し上げます。さて、この度弊社では画期的な新製品を"
-            "リリースいたしましたので、ご案内申し上げます。つきましては、詳細資料を同封いたしましたので"
-            "ご一読いただけますと幸甚です。今後とも何卒よろしくお願い申し上げます。"
-        ),
-        "display_order": 0,
-    },
-    {
-        "name": "💡 アイデア発想",
-        "prompt_template": "独創的なアイデアの発想をしてほしい。",
-        "input_examples": "店舗の集客を増やすためのアイデアを考えて。",
-        "output_examples": (
-            "1. お得なクーポン付きSNSキャンペーンの実施 "
-            "2. 店舗イベントの定期開催 "
-            "3. 地域の他店舗と連携したスタンプラリー企画"
-        ),
-        "display_order": 1,
-    },
-    {
-        "name": "📄 要約",
-        "prompt_template": "状況・作業環境に入力された文を要約して。",
-        "input_examples": "長編小説のストーリーを簡潔にまとめたいので、要約して。",
-        "output_examples": (
-            "本作品は、主人公が旅を通じて自分自身と向き合い、家族の絆を再確認する物語です。"
-            "主要なテーマは成長と和解で、山場となるシーンでは過去の葛藤を乗り越える様子が描かれています。"
-        ),
-        "display_order": 2,
-    },
-    {
-        "name": "🛠️ 問題解決",
-        "prompt_template": "問題解決に協力してほしい。",
-        "input_examples": "人事トラブル（メンバー同士の衝突）の問題解決をしたい。",
-        "output_examples": (
-            "1. 当事者双方からヒアリングを行い、事実関係を整理する "
-            "2. 第三者が入る調整会議を設定し、意見をすり合わせる "
-            "3. 再発防止のためのコミュニケーションルールを策定"
-        ),
-        "display_order": 3,
-    },
-    {
-        "name": "📋 問題へ回答",
-        "prompt_template": "問題へ回答するのを手伝ってほしい。",
-        "input_examples": "物理の問題：自由落下の公式を教えてください。",
-        "output_examples": (
-            "自由落下の距離を表す公式は、d = (1/2)gt^2 です（gは重力加速度、tは落下時間）。"
-            "初速度が0の場合に適用できます。"
-        ),
-        "display_order": 4,
-    },
-    {
-        "name": "ℹ️ 情報提供",
-        "prompt_template": "状況・作業環境に入力されたものについての情報提供をしてほしい。",
-        "input_examples": "新型コロナウイルスの最新情報が知りたい。",
-        "output_examples": (
-            "現在の感染状況は地域によって大きく異なりますが、新しい変異株の動向やワクチン接種の進捗が焦点"
-            "となっています。最新情報は厚生労働省の公式サイトやWHOのリリースを確認するのが望ましいです。"
-        ),
-        "display_order": 5,
-    },
-    {
-        "name": "🍳 レシピ",
-        "prompt_template": "状況・作業環境に入力された情報をもとにレシピを考えて。",
-        "input_examples": "野菜がメインで、ヘルシーな朝食のレシピが知りたい。",
-        "output_examples": (
-            "グリル野菜と卵を使ったオーブン焼きはいかがでしょう。お好みの野菜（パプリカ、ズッキーニ、玉ねぎ"
-            "など）をカットして卵と一緒に耐熱皿に入れ、オリーブオイルと塩コショウで調味。オーブンで焼けば"
-            "ヘルシーかつ手軽に作れます。"
-        ),
-        "display_order": 6,
-    },
-    {
-        "name": "✈️ 旅行計画",
-        "prompt_template": "状況・作業環境の内容をもとに、旅行計画を立ててほしい。",
-        "input_examples": "国内旅行、2泊3日、温泉と自然を満喫したいので、旅行計画を考えて。",
-        "output_examples": (
-            "草津温泉（群馬県）をおすすめします。1日目は湯畑周辺を散策し、温泉街を楽しむ。"
-            "2日目は近隣の自然公園で軽いハイキングをして、夜は旅館で温泉三昧。3日目は地元の名物を堪能して"
-            "から帰路へ。"
-        ),
-        "display_order": 7,
-    },
-    {
-        "name": "💬 悩み相談",
-        "prompt_template": "悩み相談にのってほしい。",
-        "input_examples": "恋愛で告白する勇気が出ないです。",
-        "output_examples": (
-            "まずは自分の気持ちを素直に認めましょう。そして、相手とのコミュニケーションで小さなステップを"
-            "積み重ね、信頼関係を築くことが大切です。失敗を恐れる気持ちはわかりますが、行動しなければ何も"
-            "変わりません。勇気を出して一歩を踏み出すことで、状況が前向きに進む可能性があります。"
-        ),
-        "display_order": 8,
-    },
-    {
-        "name": "📨 メッセージへの返答",
-        "prompt_template": "状況・作業環境の内容を踏まえて、メッセージへの返答を一緒に考えてほしい。",
-        "input_examples": "上司から「すぐに会議室に来て」とLINEで連絡がきた場合にどのようにメッセージに返答すればよい？",
-        "output_examples": "了解しました。すぐに向かいます。何か準備が必要なものはありますか？",
-        "display_order": 9,
-    },
-    {
-        "name": "💑 デート計画",
-        "prompt_template": "状況・作業環境の内容を踏まえて、デートの計画を立ててほしい。",
-        "input_examples": "花火大会に行く予定、夜メインで楽しみたいので、デート計画を立てて。",
-        "output_examples": (
-            "夕方から浴衣で合流し、屋台で食べ歩きを楽しんだ後、花火をゆっくり観賞。"
-            "その後は近くのバーで軽くドリンクを飲みながら余韻に浸るのはいかがでしょうか。"
-        ),
-        "display_order": 10,
-    },
-]
+import json
+from functools import lru_cache
+from pathlib import Path
+
+from .db import get_db_connection
+
+DEFAULT_TASKS_JSON = (
+    Path(__file__).resolve().parent.parent / "frontend" / "data" / "default_tasks.json"
+)
+
+
+@lru_cache(maxsize=1)
+def load_default_tasks() -> list[dict]:
+    with DEFAULT_TASKS_JSON.open(encoding="utf-8") as fp:
+        tasks = json.load(fp)
+
+    if not isinstance(tasks, list):
+        raise ValueError("default_tasks.json must contain a list.")
+
+    normalized: list[dict] = []
+    for index, task in enumerate(tasks):
+        if not isinstance(task, dict):
+            raise ValueError("Each default task must be an object.")
+
+        normalized.append(
+            {
+                "name": str(task["name"]),
+                "prompt_template": str(task["prompt_template"]),
+                "input_examples": str(task["input_examples"]),
+                "output_examples": str(task["output_examples"]),
+                "display_order": int(task.get("display_order", index)),
+            }
+        )
+    return normalized
 
 
 def default_task_payloads() -> list[dict]:
     payloads = []
-    for task in DEFAULT_TASKS:
+    for task in load_default_tasks():
         payloads.append(
             {
                 "name": task["name"],
@@ -133,7 +51,7 @@ def default_task_payloads() -> list[dict]:
 
 def default_task_rows() -> list[tuple]:
     rows = []
-    for task in DEFAULT_TASKS:
+    for task in load_default_tasks():
         rows.append(
             (
                 task["name"],
@@ -144,3 +62,55 @@ def default_task_rows() -> list[tuple]:
             )
         )
     return rows
+
+
+def _extract_name(row):
+    if row is None:
+        return None
+    if isinstance(row, dict):
+        return row.get("name")
+    return row[0]
+
+
+def ensure_default_tasks_seeded() -> int:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            SELECT name
+              FROM task_with_examples
+             WHERE user_id IS NULL
+            """
+        )
+        existing_names = {
+            name
+            for name in (_extract_name(row) for row in cursor.fetchall())
+            if isinstance(name, str)
+        }
+
+        inserted = 0
+        for name, template, input_example, output_example, display_order in default_task_rows():
+            if name in existing_names:
+                continue
+
+            cursor.execute(
+                """
+                INSERT INTO task_with_examples
+                      (user_id, name, prompt_template, input_examples, output_examples, display_order)
+                VALUES (NULL, %s, %s, %s, %s, %s)
+                """,
+                (name, template, input_example, output_example, display_order),
+            )
+            inserted += 1
+
+        if inserted > 0:
+            conn.commit()
+
+        return inserted
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cursor.close()
+        conn.close()

@@ -1,0 +1,149 @@
+from .db import get_db_connection
+
+SAMPLE_PROMPT_OWNER_EMAIL = "sample-prompts@chat-core.local"
+SAMPLE_PROMPT_OWNER_NAME = "運営サンプル"
+
+DEFAULT_SHARED_PROMPTS = [
+    {
+        "title": "会議の議事録を短時間で整理するテンプレート",
+        "category": "仕事",
+        "content": (
+            "以下の会議メモを、決定事項・保留事項・担当者アクションに分けて整理してください。"
+            "曖昧な点は「確認事項」として列挙し、最後に次回会議までのToDoを箇条書きでまとめてください。"
+        ),
+        "input_examples": "メモ: 新機能Aは来月公開予定。UI修正は田中さん担当。API仕様は未確定。",
+        "output_examples": (
+            "決定事項: 新機能Aは来月公開予定\n"
+            "保留事項: API仕様の確定\n"
+            "担当者アクション: UI修正(田中さん)\n"
+            "確認事項: API仕様の最終レビュー日\n"
+            "ToDo: API仕様確定会議を設定"
+        ),
+    },
+    {
+        "title": "英語プレゼン練習用フィードバックプロンプト",
+        "category": "勉強",
+        "content": (
+            "以下の英語スピーチ原稿を評価し、文法・語彙・発音しづらい箇所・聞き手への伝わりやすさの観点で"
+            "改善案を提案してください。最後に60秒版の短縮原稿も作成してください。"
+        ),
+        "input_examples": "Today I want to talk about why team communication is important in project.",
+        "output_examples": (
+            "文法: in project -> in projects\n"
+            "語彙: important の代わりに critical を提案\n"
+            "60秒版: Team communication is critical for project success..."
+        ),
+    },
+    {
+        "title": "旅行プランを予算内で最適化するプロンプト",
+        "category": "旅行",
+        "content": (
+            "希望条件と予算をもとに、移動・宿泊・食事・観光を含む1日ごとの旅行プランを作成してください。"
+            "予算超過の可能性がある場合は、代替案を優先度順に提示してください。"
+        ),
+        "input_examples": "2泊3日で福岡旅行。予算は6万円。グルメ中心で移動は公共交通機関。",
+        "output_examples": (
+            "1日目: 博多ラーメン巡り + 中洲散策\n"
+            "2日目: 太宰府天満宮 + 屋台\n"
+            "3日目: 市場で朝食後に帰路\n"
+            "代替案: 宿泊をビジネスホテルに変更すると約8,000円節約"
+        ),
+    },
+    {
+        "title": "趣味ブログのネタ出しと構成案を作る",
+        "category": "趣味",
+        "content": (
+            "テーマに沿ってブログ記事のネタを5件提案し、それぞれにタイトル案・導入文・見出し構成(3つ)を"
+            "作成してください。初心者にも読みやすい語り口でお願いします。"
+        ),
+        "input_examples": "テーマ: 週末に始めるフィルムカメラ",
+        "output_examples": (
+            "ネタ1 タイトル: 初心者向けフィルムカメラの選び方\n"
+            "導入文: 最初の一台選びで迷わないために...\n"
+            "見出し: 1. 必要な機能 2. 予算別おすすめ 3. 購入後の最初の設定"
+        ),
+    },
+]
+
+
+def _extract_id(row, key_name="id"):
+    if row is None:
+        return None
+    if isinstance(row, dict):
+        return row.get(key_name)
+    return row[0]
+
+
+def _ensure_sample_owner(cursor):
+    cursor.execute(
+        "SELECT id FROM users WHERE email = %s",
+        (SAMPLE_PROMPT_OWNER_EMAIL,),
+    )
+    row = cursor.fetchone()
+    owner_id = _extract_id(row)
+    if owner_id is not None:
+        return owner_id
+
+    cursor.execute(
+        """
+        INSERT INTO users (email, username, is_verified)
+        VALUES (%s, %s, TRUE)
+        RETURNING id
+        """,
+        (SAMPLE_PROMPT_OWNER_EMAIL, SAMPLE_PROMPT_OWNER_NAME),
+    )
+    row = cursor.fetchone()
+    owner_id = _extract_id(row)
+    if owner_id is None:
+        raise RuntimeError("Failed to create sample prompt owner.")
+    return owner_id
+
+
+def ensure_default_shared_prompts():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        owner_user_id = _ensure_sample_owner(cursor)
+        inserted = 0
+
+        for prompt in DEFAULT_SHARED_PROMPTS:
+            cursor.execute(
+                """
+                SELECT 1
+                  FROM prompts
+                 WHERE user_id = %s
+                   AND title = %s
+                """,
+                (owner_user_id, prompt["title"]),
+            )
+            if cursor.fetchone():
+                continue
+
+            cursor.execute(
+                """
+                INSERT INTO prompts
+                    (user_id, is_public, title, category, content, author, input_examples, output_examples, created_at)
+                VALUES (%s, TRUE, %s, %s, %s, %s, %s, %s, NOW())
+                """,
+                (
+                    owner_user_id,
+                    prompt["title"],
+                    prompt["category"],
+                    prompt["content"],
+                    SAMPLE_PROMPT_OWNER_NAME,
+                    prompt["input_examples"],
+                    prompt["output_examples"],
+                ),
+            )
+            inserted += 1
+
+        if inserted > 0:
+            conn.commit()
+
+        return inserted
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cursor.close()
+        conn.close()

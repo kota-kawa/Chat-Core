@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from blueprints.chat import cleanup_ephemeral_chats
+from services.default_shared_prompts import ensure_default_shared_prompts
 from services.session_middleware import PermanentSessionMiddleware
 
 # Load environment variables
@@ -72,6 +73,13 @@ def periodic_cleanup():
 
 @app.on_event("startup")
 def start_cleanup_thread():
+    try:
+        inserted = ensure_default_shared_prompts()
+        if inserted > 0:
+            print(f"Seeded {inserted} sample shared prompts.")
+    except Exception as exc:
+        print(f"Failed to seed sample shared prompts: {exc}")
+
     cleanup_thread = threading.Thread(target=periodic_cleanup, daemon=True)
     cleanup_thread.start()
 

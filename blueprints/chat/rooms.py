@@ -1,5 +1,6 @@
 from datetime import date
 import logging
+from typing import Any
 
 from fastapi import Request
 
@@ -10,14 +11,24 @@ from services.chat_service import (
     rename_chat_room_in_db,
 )
 
-from services.web import jsonify, log_and_internal_server_error, require_json_dict
+from services.request_models import (
+    ChatRoomIdRequest,
+    NewChatRoomRequest,
+    RenameChatRoomRequest,
+)
+from services.web import (
+    jsonify,
+    log_and_internal_server_error,
+    require_json_dict,
+    validate_payload_model,
+)
 
 from . import chat_bp, cleanup_ephemeral_chats, ephemeral_store, get_session_id
 
 logger = logging.getLogger(__name__)
 
 
-def _fetch_user_rooms(user_id):
+def _fetch_user_rooms(user_id: int) -> list[dict[str, Any]]:
     conn = None
     cursor = None
     try:
@@ -48,7 +59,9 @@ def _fetch_user_rooms(user_id):
             conn.close()
 
 
-def _validate_room_owner(room_id, user_id):
+def _validate_room_owner(
+    room_id: str, user_id: int
+) -> tuple[bool, dict[str, str] | None, int | None]:
     conn = None
     cursor = None
     try:
@@ -69,7 +82,7 @@ def _validate_room_owner(room_id, user_id):
             conn.close()
 
 
-def _delete_room_for_user(room_id, user_id):
+def _delete_room_for_user(room_id: str, user_id: int) -> tuple[dict[str, str], int]:
     conn = None
     cursor = None
     try:
@@ -103,10 +116,16 @@ async def new_chat_room(request: Request):
     if error_response is not None:
         return error_response
 
-    if "id" not in data:
-        return jsonify({"error": "'id' フィールドが必要です。"}, status_code=400)
-    room_id = data["id"]
-    title = data.get("title", "新規チャット")
+    payload, validation_error = validate_payload_model(
+        data,
+        NewChatRoomRequest,
+        error_message="'id' フィールドが必要です。",
+    )
+    if validation_error is not None:
+        return validation_error
+
+    room_id = payload.id
+    title = payload.title
 
     session = request.session
     if "user_id" in session:
@@ -177,9 +196,15 @@ async def delete_chat_room(request: Request):
     if error_response is not None:
         return error_response
 
-    room_id = data.get('room_id')
-    if not room_id:
-        return jsonify({"error": "room_id is required"}, status_code=400)
+    payload, validation_error = validate_payload_model(
+        data,
+        ChatRoomIdRequest,
+        error_message="room_id is required",
+    )
+    if validation_error is not None:
+        return validation_error
+
+    room_id = payload.room_id
 
     session = request.session
     if "user_id" in session:
@@ -207,10 +232,16 @@ async def rename_chat_room(request: Request):
     if error_response is not None:
         return error_response
 
-    room_id = data.get("room_id")
-    new_title = data.get("new_title")
-    if not room_id or not new_title:
-        return jsonify({"error": "room_id と new_title が必要です"}, status_code=400)
+    payload, validation_error = validate_payload_model(
+        data,
+        RenameChatRoomRequest,
+        error_message="room_id と new_title が必要です",
+    )
+    if validation_error is not None:
+        return validation_error
+
+    room_id = payload.room_id
+    new_title = payload.new_title
 
     session = request.session
     if "user_id" in session:

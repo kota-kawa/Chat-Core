@@ -5,6 +5,7 @@ from fastapi import APIRouter, Request
 from services.async_utils import run_blocking
 from services.email_service import send_email
 from services.llm_daily_limit import consume_auth_email_daily_quota
+from services.request_models import AuthCodeRequest, EmailRequest
 from services.security import constant_time_compare, generate_verification_code
 from services.users import (
     create_user,
@@ -13,7 +14,12 @@ from services.users import (
     get_user_by_id,
     copy_default_tasks_for_user,
 )
-from services.web import jsonify, log_and_internal_server_error, require_json_dict
+from services.web import (
+    jsonify,
+    log_and_internal_server_error,
+    require_json_dict,
+    validate_payload_model,
+)
 
 verification_bp = APIRouter()
 logger = logging.getLogger(__name__)
@@ -31,9 +37,16 @@ async def api_send_verification_email(request: Request):
     if error_response is not None:
         return error_response
 
-    email = data.get("email")
-    if not email:
-        return jsonify({"status": "fail", "error": "メールアドレスが指定されていません"}, status_code=400)
+    payload, validation_error = validate_payload_model(
+        data,
+        EmailRequest,
+        error_message="メールアドレスが指定されていません",
+        status="fail",
+    )
+    if validation_error is not None:
+        return validation_error
+
+    email = payload.email
 
     can_send_email, _, daily_limit = await run_blocking(consume_auth_email_daily_quota)
     if not can_send_email:
@@ -84,7 +97,16 @@ async def api_verify_registration_code(request: Request):
     if error_response is not None:
         return error_response
 
-    user_code = data.get("authCode")
+    payload, validation_error = validate_payload_model(
+        data,
+        AuthCodeRequest,
+        error_message="認証コードが違います。",
+        status="fail",
+    )
+    if validation_error is not None:
+        return validation_error
+
+    user_code = payload.authCode
     session_code = request.session.get("verification_code")
     user_id = request.session.get("temp_user_id")
 

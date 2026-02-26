@@ -30,5 +30,5 @@
 - PRs should include: a clear description, linked issue (if any), test notes (commands + results), and screenshots or screen captures for UI changes.
 
 ## Security & Configuration Tips
-- Required environment variables include `GROQ_API_KEY`, `Gemini_API_KEY`, `FLASK_SECRET_KEY`, email credentials, PostgreSQL settings, and Redis settings (if using Redis auth). Keep secrets in environment variables or `.env` and out of git.
-- Disable `FLASK_DEBUG` in production and review Docker defaults before deploying.
+- Required environment variables include `GROQ_API_KEY`, `Gemini_API_KEY`, `FASTAPI_SECRET_KEY`, email credentials, PostgreSQL settings, and Redis settings (if using Redis auth). (`FLASK_SECRET_KEY` is kept as a legacy fallback.) Keep secrets in environment variables or `.env` and out of git.
+- Disable `FASTAPI_DEBUG` in production and review Docker defaults before deploying.

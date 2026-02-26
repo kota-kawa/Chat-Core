@@ -1,6 +1,7 @@
 import copy
 import logging
 import os
+from typing import Any
 
 import requests
 from dotenv import load_dotenv
@@ -16,12 +17,14 @@ from services.web import (
     log_and_internal_server_error,
     jsonify,
     require_json_dict,
+    validate_payload_model,
     frontend_login_url,
     frontend_url,
     redirect_to_frontend,
     set_session_permanent,
     url_for,
 )
+from services.request_models import AuthCodeRequest, EmailRequest
 from services.async_utils import run_blocking
 from services.users import (
     get_user_by_email,
@@ -32,12 +35,13 @@ from services.users import (
 )
 from services.email_service import send_email
 from services.llm_daily_limit import consume_auth_email_daily_quota
+from services.runtime_config import is_production_env
 from services.security import constant_time_compare, generate_verification_code
 
 load_dotenv()
 
 # Allow OAuth over HTTP in non-production environments
-if os.getenv("FLASK_ENV") != "production":
+if not is_production_env():
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 GOOGLE_CLIENT_CONFIG = {
@@ -63,7 +67,7 @@ auth_bp = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-def _fetch_google_user_info(access_token: str):
+def _fetch_google_user_info(access_token: str) -> dict[str, Any]:
     response = requests.get(
         "https://www.googleapis.com/oauth2/v2/userinfo",
         headers={"Authorization": f"Bearer {access_token}"},
@@ -183,9 +187,16 @@ async def api_send_login_code(request: Request):
     if error_response is not None:
         return error_response
 
-    email = data.get("email")
-    if not email:
-        return jsonify({"status": "fail", "error": "メールアドレスが指定されていません"}, status_code=400)
+    payload, validation_error = validate_payload_model(
+        data,
+        EmailRequest,
+        error_message="メールアドレスが指定されていません",
+        status="fail",
+    )
+    if validation_error is not None:
+        return validation_error
+
+    email = payload.email
     user = await run_blocking(get_user_by_email, email)
     if not user or not user["is_verified"]:
         return jsonify(
@@ -230,7 +241,16 @@ async def api_verify_login_code(request: Request):
     if error_response is not None:
         return error_response
 
-    auth_code = data.get("authCode")
+    payload, validation_error = validate_payload_model(
+        data,
+        AuthCodeRequest,
+        error_message="認証コードが違います",
+        status="fail",
+    )
+    if validation_error is not None:
+        return validation_error
+
+    auth_code = payload.authCode
     session = request.session
     session_code = session.get("login_verification_code")
     user_id = session.get("login_temp_user_id")

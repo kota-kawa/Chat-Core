@@ -3,6 +3,7 @@ import json
 import html
 import logging
 from datetime import date
+from typing import Any
 
 from fastapi import Request
 
@@ -14,7 +15,13 @@ from services.chat_service import (
 )
 from services.llm_daily_limit import consume_llm_daily_quota
 from services.llm import get_llm_response, GEMINI_DEFAULT_MODEL
-from services.web import jsonify, log_and_internal_server_error, require_json_dict
+from services.request_models import ChatMessageRequest
+from services.web import (
+    jsonify,
+    log_and_internal_server_error,
+    require_json_dict,
+    validate_payload_model,
+)
 
 from . import (
     chat_bp,
@@ -26,7 +33,9 @@ from . import (
 logger = logging.getLogger(__name__)
 
 
-def _validate_room_owner(room_id, user_id, forbidden_message):
+def _validate_room_owner(
+    room_id: str, user_id: int, forbidden_message: str
+) -> tuple[dict[str, str] | None, int | None]:
     conn = None
     cursor = None
     try:
@@ -47,7 +56,7 @@ def _validate_room_owner(room_id, user_id, forbidden_message):
             conn.close()
 
 
-def _fetch_prompt_data(task):
+def _fetch_prompt_data(task: str) -> dict[str, Any] | None:
     conn = None
     cursor = None
     try:
@@ -66,7 +75,7 @@ def _fetch_prompt_data(task):
             conn.close()
 
 
-def _fetch_chat_history(chat_room_id):
+def _fetch_chat_history(chat_room_id: str) -> list[dict[str, str]]:
     conn = None
     cursor = None
     try:
@@ -104,12 +113,17 @@ async def chat(request: Request):
     if error_response is not None:
         return error_response
 
-    if "message" not in data:
-        return jsonify({"error": "'message' が必要です。"}, status_code=400)
+    payload, validation_error = validate_payload_model(
+        data,
+        ChatMessageRequest,
+        error_message="'message' が必要です。",
+    )
+    if validation_error is not None:
+        return validation_error
 
-    user_message = data["message"]
-    chat_room_id = data.get("chat_room_id", "default")
-    model = data.get("model", GEMINI_DEFAULT_MODEL)
+    user_message = payload.message
+    chat_room_id = payload.chat_room_id
+    model = payload.model or GEMINI_DEFAULT_MODEL
 
     # 非ログインユーザーの場合、新規チャット・続けてのチャットの回数としてカウント
     session = request.session
@@ -181,7 +195,7 @@ async def chat(request: Request):
         output_examples_str = prompt_data.get("output_examples", "")
         extra_prompt = ""
 
-        def parse_examples(ex_str):
+        def parse_examples(ex_str: str) -> list[str]:
             if not ex_str:
                 return []
             ex_str = ex_str.strip()

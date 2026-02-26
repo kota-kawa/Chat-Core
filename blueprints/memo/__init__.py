@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import logging
-from typing import List
+from typing import Any
 
 from fastapi import APIRouter, Request
 
+from services.request_models import MemoCreateRequest
 from services.async_utils import run_blocking
 from services.db import Error, get_db_connection
 from services.web import (
@@ -13,6 +14,7 @@ from services.web import (
     jsonify,
     log_and_internal_server_error,
     redirect_to_frontend,
+    validate_payload_model,
 )
 
 memo_bp = APIRouter(prefix="/memo")
@@ -33,7 +35,7 @@ def _ensure_title(ai_response: str, provided_title: str) -> str:
     return "新しいメモ"
 
 
-def _fetch_recent_memos(limit: int = 10) -> List[dict]:
+def _fetch_recent_memos(limit: int = 10) -> list[dict[str, Any]]:
     connection = None
     cursor = None
     try:
@@ -64,7 +66,7 @@ def _fetch_recent_memos(limit: int = 10) -> List[dict]:
             connection.close()
 
 
-def _serialize_memo(memo: dict) -> dict:
+def _serialize_memo(memo: dict[str, Any]) -> dict[str, Any]:
     created_at = memo.get("created_at")
     created_at_str = created_at.strftime("%Y-%m-%d %H:%M") if created_at else None
     return {
@@ -77,7 +79,12 @@ def _serialize_memo(memo: dict) -> dict:
     }
 
 
-def _insert_memo(input_content: str, ai_response: str, resolved_title: str, tags: str):
+def _insert_memo(
+    input_content: str,
+    ai_response: str,
+    resolved_title: str,
+    tags: str,
+) -> int | None:
     connection = None
     cursor = None
     try:
@@ -116,20 +123,26 @@ async def api_create_memo(request: Request):
         form = await request.form()
         data = {key: value for key, value in form.items()}
 
-    input_content = (data.get("input_content") or "").strip()
-    ai_response = (data.get("ai_response") or "").strip()
-    title = (data.get("title") or "").strip()
-    tags = (data.get("tags") or "").strip()
+    if not isinstance(data, dict):
+        data = {}
 
-    if not ai_response:
-        return jsonify(
-            {"status": "fail", "error": "AIの回答を入力してください。"}, status_code=400
-        )
+    payload, validation_error = validate_payload_model(
+        data,
+        MemoCreateRequest,
+        error_message="AIの回答を入力してください。",
+        status="fail",
+    )
+    if validation_error is not None:
+        return validation_error
 
-    resolved_title = _ensure_title(ai_response, title)
+    resolved_title = _ensure_title(payload.ai_response, payload.title)
     try:
         memo_id = await run_blocking(
-            _insert_memo, input_content, ai_response, resolved_title, tags
+            _insert_memo,
+            payload.input_content,
+            payload.ai_response,
+            resolved_title,
+            payload.tags,
         )
         flash(request, "メモを保存しました。", "success")
         return jsonify({"status": "success", "memo_id": memo_id})

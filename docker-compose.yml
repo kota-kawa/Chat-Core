@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    container_name: flask_app
+    container_name: fastapi_app
     environment:
       - PYTHONUNBUFFERED=1
       - GROQ_API_KEY=${GROQ_API_KEY}
@@ -28,9 +28,9 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_DB=0
-      # FastAPI のホットリロード用（FLASK_ENV は SameSite/secure 切替に使用）
-      - FLASK_ENV=development
-      - FLASK_DEBUG=1
+      # FastAPI のホットリロード用（FASTAPI_ENV は SameSite/secure 切替に使用）
+      - FASTAPI_ENV=development
+      - FASTAPI_DEBUG=1
     ports:
       - "5004:5004"
     volumes:

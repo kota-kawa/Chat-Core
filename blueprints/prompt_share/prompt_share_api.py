@@ -1,17 +1,29 @@
 # prompt_share/prompt_share_api.py
 import logging
+from typing import Any
 
 from fastapi import APIRouter, Request
 
 from services.async_utils import run_blocking
 from services.db import get_db_connection
-from services.web import jsonify, log_and_internal_server_error, require_json_dict
+from services.request_models import (
+    BookmarkCreateRequest,
+    BookmarkDeleteRequest,
+    PromptListEntryCreateRequest,
+    SharedPromptCreateRequest,
+)
+from services.web import (
+    jsonify,
+    log_and_internal_server_error,
+    require_json_dict,
+    validate_payload_model,
+)
 
 prompt_share_api_bp = APIRouter(prefix="/prompt_share/api")
 logger = logging.getLogger(__name__)
 
 
-def _extract_id(row):
+def _extract_id(row: dict[str, Any] | tuple[Any, ...] | None) -> Any:
     if row is None:
         return None
     if isinstance(row, dict):
@@ -19,7 +31,7 @@ def _extract_id(row):
     return row[0]
 
 
-def _get_prompts_with_flags(user_id):
+def _get_prompts_with_flags(user_id: int | None) -> list[dict[str, Any]]:
     conn = None
     cursor = None
     try:
@@ -79,8 +91,14 @@ def _get_prompts_with_flags(user_id):
 
 
 def _create_prompt_for_user(
-    user_id, title, category, content, author, input_examples, output_examples
-):
+    user_id: int,
+    title: str,
+    category: str,
+    content: str,
+    author: str,
+    input_examples: str,
+    output_examples: str,
+) -> Any:
     conn = None
     cursor = None
     try:
@@ -104,7 +122,13 @@ def _create_prompt_for_user(
             conn.close()
 
 
-def _add_bookmark_for_user(user_id, title, content, input_examples, output_examples):
+def _add_bookmark_for_user(
+    user_id: int,
+    title: str,
+    content: str,
+    input_examples: str,
+    output_examples: str,
+) -> tuple[dict[str, Any], int]:
     conn = None
     cursor = None
     try:
@@ -137,7 +161,7 @@ def _add_bookmark_for_user(user_id, title, content, input_examples, output_examp
             conn.close()
 
 
-def _remove_bookmark_for_user(user_id, title):
+def _remove_bookmark_for_user(user_id: int, title: str) -> None:
     conn = None
     cursor = None
     try:
@@ -156,8 +180,14 @@ def _remove_bookmark_for_user(user_id, title):
 
 
 def _add_prompt_list_entry_for_user(
-    user_id, prompt_id, title, category, content, input_examples, output_examples
-):
+    user_id: int,
+    prompt_id: int | None,
+    title: str,
+    category: str,
+    content: str,
+    input_examples: str,
+    output_examples: str,
+) -> tuple[dict[str, Any], int]:
     conn = None
     cursor = None
     try:
@@ -245,26 +275,24 @@ async def create_prompt(request: Request):
     if error_response is not None:
         return error_response
 
-    title = data.get("title")
-    category = data.get("category")
-    content = data.get("content")
-    author = data.get("author")
-    input_examples = data.get("input_examples", "")
-    output_examples = data.get("output_examples", "")
-
-    if not title or not category or not content or not author:
-        return jsonify({"error": "必要なフィールドが不足しています。"}, status_code=400)
+    payload, validation_error = validate_payload_model(
+        data,
+        SharedPromptCreateRequest,
+        error_message="必要なフィールドが不足しています。",
+    )
+    if validation_error is not None:
+        return validation_error
 
     try:
         prompt_id = await run_blocking(
             _create_prompt_for_user,
             user_id,
-            title,
-            category,
-            content,
-            author,
-            input_examples,
-            output_examples,
+            payload.title,
+            payload.category,
+            payload.content,
+            payload.author,
+            payload.input_examples,
+            payload.output_examples,
         )
         return jsonify({"message": "プロンプトが作成されました。", "prompt_id": prompt_id}, status_code=201)
     except Exception:
@@ -284,24 +312,24 @@ async def add_bookmark(request: Request):
     if error_response is not None:
         return error_response
 
-    title = data.get("title")
-    content = data.get("content")
-    input_examples = data.get("input_examples", "")
-    output_examples = data.get("output_examples", "")
-
-    if not title or not content:
-        return jsonify({"error": "必要なフィールドが不足しています"}, status_code=400)
+    request_payload, validation_error = validate_payload_model(
+        data,
+        BookmarkCreateRequest,
+        error_message="必要なフィールドが不足しています",
+    )
+    if validation_error is not None:
+        return validation_error
 
     try:
-        payload, status_code = await run_blocking(
+        response_payload, status_code = await run_blocking(
             _add_bookmark_for_user,
             user_id,
-            title,
-            content,
-            input_examples,
-            output_examples,
+            request_payload.title,
+            request_payload.content,
+            request_payload.input_examples,
+            request_payload.output_examples,
         )
-        return jsonify(payload, status_code=status_code)
+        return jsonify(response_payload, status_code=status_code)
     except Exception:
         return log_and_internal_server_error(
             logger,
@@ -319,12 +347,16 @@ async def remove_bookmark(request: Request):
     if error_response is not None:
         return error_response
 
-    title = data.get("title")
-    if not title:
-        return jsonify({"error": "必要なフィールドが不足しています"}, status_code=400)
+    request_payload, validation_error = validate_payload_model(
+        data,
+        BookmarkDeleteRequest,
+        error_message="必要なフィールドが不足しています",
+    )
+    if validation_error is not None:
+        return validation_error
 
     try:
-        await run_blocking(_remove_bookmark_for_user, user_id, title)
+        await run_blocking(_remove_bookmark_for_user, user_id, request_payload.title)
         return jsonify({"message": "ブックマークが削除されました。"})
     except Exception:
         return log_and_internal_server_error(
@@ -343,28 +375,26 @@ async def add_prompt_to_list(request: Request):
     if error_response is not None:
         return error_response
 
-    prompt_id = data.get("prompt_id")
-    title = data.get("title")
-    category = data.get("category", "")
-    content = data.get("content")
-    input_examples = data.get("input_examples", "")
-    output_examples = data.get("output_examples", "")
-
-    if not title or not content:
-        return jsonify({"error": "必要なフィールドが不足しています"}, status_code=400)
+    request_payload, validation_error = validate_payload_model(
+        data,
+        PromptListEntryCreateRequest,
+        error_message="必要なフィールドが不足しています",
+    )
+    if validation_error is not None:
+        return validation_error
 
     try:
-        payload, status_code = await run_blocking(
+        response_payload, status_code = await run_blocking(
             _add_prompt_list_entry_for_user,
             user_id,
-            prompt_id,
-            title,
-            category,
-            content,
-            input_examples,
-            output_examples,
+            request_payload.prompt_id,
+            request_payload.title,
+            request_payload.category,
+            request_payload.content,
+            request_payload.input_examples,
+            request_payload.output_examples,
         )
-        return jsonify(payload, status_code=status_code)
+        return jsonify(response_payload, status_code=status_code)
     except Exception:
         return log_and_internal_server_error(
             logger,

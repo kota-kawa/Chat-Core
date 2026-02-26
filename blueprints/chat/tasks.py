@@ -1,18 +1,30 @@
 import logging
+from typing import Any
 
 from fastapi import Request
 
 from services.async_utils import run_blocking
 from services.db import get_db_connection
 from services.default_tasks import default_task_payloads
-from services.web import jsonify, log_and_internal_server_error, require_json_dict
+from services.request_models import (
+    AddTaskRequest,
+    DeleteTaskRequest,
+    EditTaskRequest,
+    UpdateTasksOrderRequest,
+)
+from services.web import (
+    jsonify,
+    log_and_internal_server_error,
+    require_json_dict,
+    validate_payload_model,
+)
 
 from . import chat_bp
 
 logger = logging.getLogger(__name__)
 
 
-def _fetch_tasks_from_db(user_id):
+def _fetch_tasks_from_db(user_id: int | None) -> list[dict[str, Any]]:
     conn = None
     cursor = None
     try:
@@ -56,7 +68,7 @@ def _fetch_tasks_from_db(user_id):
             conn.close()
 
 
-def _update_tasks_order_for_user(user_id, new_order):
+def _update_tasks_order_for_user(user_id: int, new_order: list[str]) -> None:
     conn = None
     cursor = None
     try:
@@ -79,7 +91,7 @@ def _update_tasks_order_for_user(user_id, new_order):
             conn.close()
 
 
-def _delete_task_for_user(user_id, task_name):
+def _delete_task_for_user(user_id: int, task_name: str) -> None:
     conn = None
     cursor = None
     try:
@@ -96,13 +108,13 @@ def _delete_task_for_user(user_id, task_name):
 
 
 def _edit_task_for_user(
-    user_id,
-    old_task,
-    new_task,
-    prompt_template,
-    input_examples,
-    output_examples,
-):
+    user_id: int,
+    old_task: str,
+    new_task: str,
+    prompt_template: str | None,
+    input_examples: str | None,
+    output_examples: str | None,
+) -> bool:
     conn = None
     sel_cursor = None
     upd_cursor = None
@@ -153,7 +165,13 @@ def _edit_task_for_user(
             conn.close()
 
 
-def _add_task_for_user(user_id, title, prompt_content, input_examples, output_examples):
+def _add_task_for_user(
+    user_id: int,
+    title: str,
+    prompt_content: str,
+    input_examples: str,
+    output_examples: str,
+) -> None:
     conn = None
     cursor = None
     try:
@@ -224,12 +242,18 @@ async def update_tasks_order(request: Request):
     if error_response is not None:
         return error_response
 
-    new_order = data.get("order")
     user_id = request.session.get("user_id")
     if not user_id:
         return jsonify({"error": "ログインが必要です"}, status_code=403)
-    if not new_order or not isinstance(new_order, list):
-        return jsonify({"error": "order must be a list"}, status_code=400)
+    payload, validation_error = validate_payload_model(
+        data,
+        UpdateTasksOrderRequest,
+        error_message="order must be a list",
+    )
+    if validation_error is not None:
+        return validation_error
+
+    new_order = payload.order
     try:
         await run_blocking(_update_tasks_order_for_user, user_id, new_order)
         return jsonify({"message": "Order updated"}, status_code=200)
@@ -246,12 +270,18 @@ async def delete_task(request: Request):
     if error_response is not None:
         return error_response
 
-    task_name = data.get("task")
     user_id = request.session.get("user_id")
     if not user_id:
         return jsonify({"error": "ログインが必要です"}, status_code=403)
-    if not task_name:
-        return jsonify({"error": "task is required"}, status_code=400)
+    payload, validation_error = validate_payload_model(
+        data,
+        DeleteTaskRequest,
+        error_message="task is required",
+    )
+    if validation_error is not None:
+        return validation_error
+
+    task_name = payload.task
     try:
         await run_blocking(_delete_task_for_user, user_id, task_name)
         return jsonify({"message": "Task deleted"}, status_code=200)
@@ -268,27 +298,27 @@ async def edit_task(request: Request):
     if error_response is not None:
         return error_response
 
-    old_task = data.get("old_task")
-    new_task = data.get("new_task")
-    prompt_template = data.get("prompt_template")
-    input_examples = data.get("input_examples")
-    output_examples = data.get("output_examples")
-
     user_id = request.session.get("user_id")
     if not user_id:
         return jsonify({"error": "ログインが必要です"}, status_code=403)
-    if not old_task or not new_task:
-        return jsonify({"error": "old_task と new_task は必須です"}, status_code=400)
+
+    payload, validation_error = validate_payload_model(
+        data,
+        EditTaskRequest,
+        error_message="old_task と new_task は必須です",
+    )
+    if validation_error is not None:
+        return validation_error
 
     try:
         updated = await run_blocking(
             _edit_task_for_user,
             user_id,
-            old_task,
-            new_task,
-            prompt_template,
-            input_examples,
-            output_examples,
+            payload.old_task,
+            payload.new_task,
+            payload.prompt_template,
+            payload.input_examples,
+            payload.output_examples,
         )
         if not updated:
             return jsonify({"error": "他ユーザーのタスクは編集できません"}, status_code=403)
@@ -308,26 +338,26 @@ async def add_task(request: Request):
     if error_response is not None:
         return error_response
 
-    title = data.get("title")
-    prompt_content = data.get("prompt_content")
-    input_examples = data.get("input_examples", "")
-    output_examples = data.get("output_examples", "")
-
     user_id = request.session.get("user_id")
     if not user_id:
         return jsonify({"error": "ログインが必要です"}, status_code=403)
 
-    if not title or not prompt_content:
-        return jsonify({"error": "タイトルとプロンプト内容は必須です。"}, status_code=400)
+    payload, validation_error = validate_payload_model(
+        data,
+        AddTaskRequest,
+        error_message="タイトルとプロンプト内容は必須です。",
+    )
+    if validation_error is not None:
+        return validation_error
 
     try:
         await run_blocking(
             _add_task_for_user,
             user_id,
-            title,
-            prompt_content,
-            input_examples,
-            output_examples,
+            payload.title,
+            payload.prompt_content,
+            payload.input_examples,
+            payload.output_examples,
         )
         return jsonify({"message": "タスクが追加されました"}, status_code=201)
     except Exception:

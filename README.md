@@ -27,7 +27,7 @@ cd Strike_Chat
 # Example:
 # GROQ_API_KEY=xxxxx
 # Gemini_API_KEY=xxxxx
-# FLASK_SECRET_KEY=xxxxx
+# FASTAPI_SECRET_KEY=xxxxx
 # SEND_ADDRESS=example@gmail.com
 # SEND_PASSWORD=app_password
 # ADMIN_PASSWORD_HASH=pbkdf2_sha256$...
@@ -68,13 +68,13 @@ Set these in `.env` or in `docker-compose.yml`:
 - `GEMINI_DEFAULT_MODEL`: default Gemini model when `model` is omitted (default: `gemini-2.5-flash`)
 - `LLM_DAILY_API_LIMIT`: daily cap for total `/api/chat` LLM calls across all users (default: `300`)
 - `AUTH_EMAIL_DAILY_SEND_LIMIT`: daily cap for login/verification email sends across all users (default: `50`)
-- `FLASK_SECRET_KEY`: session secret
+- `FASTAPI_SECRET_KEY`: session secret (`FLASK_SECRET_KEY` is supported as a legacy fallback)
 - `ADMIN_PASSWORD_HASH`: hashed admin password in format `pbkdf2_sha256$iterations$salt$hash` (no in-code default)
 - `SEND_ADDRESS` / `SEND_PASSWORD`: Gmail account for verification emails (`EMAIL_SEND_PASSWORD` is accepted as a legacy fallback)
 - `POSTGRES_HOST` / `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB`: PostgreSQL settings
 - `DB_POOL_MIN_CONN` / `DB_POOL_MAX_CONN`: DB connection pool min/max size (defaults: `1` / `10`)
 - `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` / `REDIS_PASSWORD` (optional): Redis settings
-- `FLASK_ENV`: set to `production` to enable stricter SameSite/Secure settings
+- `FASTAPI_ENV`: set to `production` to enable stricter SameSite/Secure settings (`FLASK_ENV` is supported as a legacy fallback)
 
 Generate `ADMIN_PASSWORD_HASH` with:
 
@@ -104,7 +104,7 @@ python3 -c "from services.security import hash_password; print(hash_password('yo
 Use BEM-style `kebab-case` class names and document purpose/dependencies at the top of each file.
 
 ## Production Notes
-- Set `FLASK_ENV=production` to enable secure cookie settings.
+- Set `FASTAPI_ENV=production` to enable secure cookie settings.
 - Keep secrets out of version control; use `.env` or a secrets manager.
 - Pin dependencies and update regularly.
 
@@ -174,13 +174,13 @@ alembic upgrade head
 - `GEMINI_DEFAULT_MODEL`: `model`未指定時に使うGeminiモデル（デフォルト: `gemini-2.5-flash`）
 - `LLM_DAILY_API_LIMIT`: 全ユーザー合計の`/api/chat`経由LLM呼び出し日次上限（デフォルト: `300`）
 - `AUTH_EMAIL_DAILY_SEND_LIMIT`: 全ユーザー合計のログイン/認証メール送信日次上限（デフォルト: `50`）
-- `FLASK_SECRET_KEY`: セッション用シークレット
+- `FASTAPI_SECRET_KEY`: セッション用シークレット（`FLASK_SECRET_KEY` は旧環境向けフォールバックとして利用可）
 - `ADMIN_PASSWORD_HASH`: 管理者パスワードのハッシュ（形式: `pbkdf2_sha256$iterations$salt$hash`、コード内デフォルトなし）
 - `SEND_ADDRESS` / `SEND_PASSWORD`: 認証メール送信用 Gmail（`EMAIL_SEND_PASSWORD` は旧環境向けフォールバックとして利用可）
 - `POSTGRES_HOST` / `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB`: PostgreSQL 設定
 - `DB_POOL_MIN_CONN` / `DB_POOL_MAX_CONN`: DB コネクションプール最小/最大数（デフォルト: `1` / `10`）
 - `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` / `REDIS_PASSWORD`（任意）: Redis 設定
-- `FLASK_ENV`: `production` で SameSite/Secure 設定を強化
+- `FASTAPI_ENV`: `production` で SameSite/Secure 設定を強化（`FLASK_ENV` は旧環境向けフォールバックとして利用可）
 
 `ADMIN_PASSWORD_HASH` の生成例:
 
@@ -210,7 +210,7 @@ python3 -c "from services.security import hash_password; print(hash_password('yo
 BEM 風の `kebab-case` を推奨し、ファイル冒頭に目的・依存関係を記載します。
 
 ## 本番運用のポイント
-- `FLASK_ENV=production` で Secure 設定を有効化
+- `FASTAPI_ENV=production` で Secure 設定を有効化
 - 秘密情報は `.env` or シークレット管理へ
 - 依存関係の定期更新を推奨
 

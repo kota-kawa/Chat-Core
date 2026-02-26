@@ -1,0 +1,58 @@
+import unittest
+
+from pydantic import ValidationError
+
+from services.request_models import (
+    AddTaskRequest,
+    MemoCreateRequest,
+    PromptListEntryCreateRequest,
+    SharedPromptCreateRequest,
+    UpdateTasksOrderRequest,
+)
+
+
+def _validate(model_cls, data):
+    validate = getattr(model_cls, "model_validate", None)
+    if callable(validate):
+        return validate(data)
+    return model_cls.parse_obj(data)
+
+
+class RequestModelsTestCase(unittest.TestCase):
+    def test_add_task_rejects_blank_title(self):
+        with self.assertRaises(ValidationError):
+            _validate(
+                AddTaskRequest,
+                {"title": "   ", "prompt_content": "prompt"},
+            )
+
+    def test_update_tasks_order_requires_non_empty_list(self):
+        with self.assertRaises(ValidationError):
+            _validate(UpdateTasksOrderRequest, {"order": []})
+
+    def test_memo_create_requires_non_empty_ai_response(self):
+        with self.assertRaises(ValidationError):
+            _validate(MemoCreateRequest, {"input_content": "foo", "ai_response": "   "})
+
+    def test_prompt_create_rejects_blank_required_field(self):
+        with self.assertRaises(ValidationError):
+            _validate(
+                SharedPromptCreateRequest,
+                {
+                    "title": "title",
+                    "category": "   ",
+                    "content": "content",
+                    "author": "author",
+                },
+            )
+
+    def test_prompt_list_entry_parses_prompt_id_type(self):
+        payload = _validate(
+            PromptListEntryCreateRequest,
+            {"prompt_id": "12", "title": "t", "content": "c"},
+        )
+        self.assertEqual(payload.prompt_id, 12)
+
+
+if __name__ == "__main__":
+    unittest.main()

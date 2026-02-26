@@ -2,16 +2,18 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, TypeVar
 from urllib.parse import urlencode
 
 from fastapi import Request
 from fastapi.encoders import jsonable_encoder
+from pydantic import BaseModel, ValidationError
 from starlette.responses import JSONResponse, RedirectResponse
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_INTERNAL_ERROR_MESSAGE = "内部エラーが発生しました。"
+ModelT = TypeVar("ModelT", bound=BaseModel)
 
 
 async def get_json(request: Request) -> Any | None:
@@ -54,6 +56,26 @@ async def require_json_dict(
     if status is not None:
         payload["status"] = status
     return None, jsonify(payload, status_code=400)
+
+
+def validate_payload_model(
+    data: Dict[str, Any],
+    model_class: type[ModelT],
+    *,
+    error_message: str,
+    status: str | None = None,
+    error_key: str = "error",
+) -> tuple[ModelT | None, JSONResponse | None]:
+    try:
+        validate = getattr(model_class, "model_validate", None)
+        if callable(validate):
+            return validate(data), None
+        return model_class.parse_obj(data), None  # pragma: no cover - pydantic v1 fallback
+    except ValidationError:
+        payload: Dict[str, Any] = {error_key: error_message}
+        if status is not None:
+            payload["status"] = status
+        return None, jsonify(payload, status_code=400)
 
 
 def set_session_permanent(session: dict, value: bool) -> None:

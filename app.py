@@ -2,7 +2,7 @@
 import logging
 import os
 import threading
-import time
+from contextlib import asynccontextmanager
 from datetime import timedelta
 
 from dotenv import load_dotenv
@@ -12,6 +12,7 @@ from blueprints.chat import cleanup_ephemeral_chats
 from services.db import close_db_pool
 from services.default_tasks import ensure_default_tasks_seeded
 from services.default_shared_prompts import ensure_default_shared_prompts
+from services.runtime_config import get_session_secret_key, is_production_env
 from services.session_middleware import PermanentSessionMiddleware
 from services.web import DEFAULT_INTERNAL_ERROR_MESSAGE, jsonify
 
@@ -26,19 +27,66 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
-
-secret_key = os.environ.get("FLASK_SECRET_KEY")
+secret_key = get_session_secret_key()
 if not secret_key:
-    raise ValueError("No FLASK_SECRET_KEY set for Flask application")
+    raise ValueError(
+        "No session secret key set. Define FASTAPI_SECRET_KEY "
+        "(or legacy FLASK_SECRET_KEY)."
+    )
 permanent_max_age = int(timedelta(days=30).total_seconds())
 
-if os.getenv("FLASK_ENV") == "production":
+if is_production_env():
     same_site = "none"
     https_only = True
 else:
     same_site = "lax"
     https_only = False
+
+
+def periodic_cleanup(stop_event: threading.Event) -> None:
+    while not stop_event.is_set():
+        try:
+            cleanup_ephemeral_chats()
+        except Exception:
+            logger.exception("Failed to clean up ephemeral chats.")
+        # 1分ごとにエフェメラルチャットのクリーンアップ処理を実行
+        stop_event.wait(timeout=6000)
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    try:
+        inserted = ensure_default_tasks_seeded()
+        if inserted > 0:
+            logger.info("Seeded %s default tasks.", inserted)
+    except Exception:
+        logger.exception("Failed to seed default tasks.")
+
+    try:
+        inserted = ensure_default_shared_prompts()
+        if inserted > 0:
+            logger.info("Seeded %s sample shared prompts.", inserted)
+    except Exception:
+        logger.exception("Failed to seed sample shared prompts.")
+
+    cleanup_stop_event = threading.Event()
+    cleanup_thread = threading.Thread(
+        target=periodic_cleanup,
+        args=(cleanup_stop_event,),
+        daemon=True,
+        name="ephemeral-chat-cleanup",
+    )
+    cleanup_thread.start()
+
+    try:
+        yield
+    finally:
+        cleanup_stop_event.set()
+        cleanup_thread.join(timeout=1)
+        close_db_pool()
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     PermanentSessionMiddleware,
@@ -74,41 +122,6 @@ app.include_router(search_bp)
 app.include_router(prompt_manage_api_bp)
 app.include_router(admin_bp)
 app.include_router(memo_bp)
-
-
-def periodic_cleanup():
-    while True:
-        try:
-            cleanup_ephemeral_chats()
-        except Exception:
-            logger.exception("Failed to clean up ephemeral chats.")
-        # 1分ごとにエフェメラルチャットのクリーンアップ処理を実行
-        time.sleep(6000)
-
-
-@app.on_event("startup")
-def start_cleanup_thread():
-    try:
-        inserted = ensure_default_tasks_seeded()
-        if inserted > 0:
-            logger.info("Seeded %s default tasks.", inserted)
-    except Exception:
-        logger.exception("Failed to seed default tasks.")
-
-    try:
-        inserted = ensure_default_shared_prompts()
-        if inserted > 0:
-            logger.info("Seeded %s sample shared prompts.", inserted)
-    except Exception:
-        logger.exception("Failed to seed sample shared prompts.")
-
-    cleanup_thread = threading.Thread(target=periodic_cleanup, daemon=True)
-    cleanup_thread.start()
-
-
-@app.on_event("shutdown")
-def shutdown_db_pool():
-    close_db_pool()
 
 
 @app.exception_handler(Exception)

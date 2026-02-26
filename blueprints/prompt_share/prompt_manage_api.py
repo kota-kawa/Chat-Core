@@ -1,17 +1,24 @@
 # prompt_manage_api.py
 import logging
+from typing import Any
 
 from fastapi import APIRouter, Request
 
 from services.async_utils import run_blocking
 from services.db import get_db_connection
-from services.web import jsonify, log_and_internal_server_error, require_json_dict
+from services.request_models import PromptUpdateRequest
+from services.web import (
+    jsonify,
+    log_and_internal_server_error,
+    require_json_dict,
+    validate_payload_model,
+)
 
 prompt_manage_api_bp = APIRouter(prefix="/prompt_manage/api")
 logger = logging.getLogger(__name__)
 
 
-def _fetch_my_prompts(user_id):
+def _fetch_my_prompts(user_id: int) -> list[dict[str, Any]]:
     conn = None
     cursor = None
     try:
@@ -32,7 +39,7 @@ def _fetch_my_prompts(user_id):
             conn.close()
 
 
-def _fetch_saved_prompts(user_id):
+def _fetch_saved_prompts(user_id: int) -> list[dict[str, Any]]:
     conn = None
     cursor = None
     try:
@@ -53,7 +60,7 @@ def _fetch_saved_prompts(user_id):
             conn.close()
 
 
-def _fetch_prompt_list(user_id):
+def _fetch_prompt_list(user_id: int) -> list[dict[str, Any]]:
     conn = None
     cursor = None
     try:
@@ -74,7 +81,7 @@ def _fetch_prompt_list(user_id):
             conn.close()
 
 
-def _delete_prompt_list_entry_for_user(user_id, entry_id):
+def _delete_prompt_list_entry_for_user(user_id: int, entry_id: int) -> int:
     conn = None
     cursor = None
     try:
@@ -91,7 +98,7 @@ def _delete_prompt_list_entry_for_user(user_id, entry_id):
             conn.close()
 
 
-def _delete_saved_prompt_for_user(user_id, prompt_id):
+def _delete_saved_prompt_for_user(user_id: int, prompt_id: int) -> int:
     conn = None
     cursor = None
     try:
@@ -109,8 +116,14 @@ def _delete_saved_prompt_for_user(user_id, prompt_id):
 
 
 def _update_prompt_for_user(
-    user_id, prompt_id, title, category, content, input_examples, output_examples
-):
+    user_id: int,
+    prompt_id: int,
+    title: str,
+    category: str,
+    content: str,
+    input_examples: str,
+    output_examples: str,
+) -> int:
     conn = None
     cursor = None
     try:
@@ -142,7 +155,7 @@ def _update_prompt_for_user(
             conn.close()
 
 
-def _delete_prompt_for_user(user_id, prompt_id):
+def _delete_prompt_for_user(user_id: int, prompt_id: int) -> int:
     conn = None
     cursor = None
     try:
@@ -261,24 +274,24 @@ async def update_prompt(prompt_id: int, request: Request):
     if error_response is not None:
         return error_response
 
-    title = data.get("title")
-    category = data.get("category")
-    content = data.get("content")
-    input_examples = data.get("input_examples", "")
-    output_examples = data.get("output_examples", "")
-    if not title or not category or not content:
-        return jsonify({"error": "必要なフィールドが不足しています。"}, status_code=400)
+    payload, validation_error = validate_payload_model(
+        data,
+        PromptUpdateRequest,
+        error_message="必要なフィールドが不足しています。",
+    )
+    if validation_error is not None:
+        return validation_error
 
     try:
         updated = await run_blocking(
             _update_prompt_for_user,
             user_id,
             prompt_id,
-            title,
-            category,
-            content,
-            input_examples,
-            output_examples,
+            payload.title,
+            payload.category,
+            payload.content,
+            payload.input_examples,
+            payload.output_examples,
         )
         if updated == 0:
             return jsonify({"error": "対象のプロンプトが見つかりませんでした。"}, status_code=404)

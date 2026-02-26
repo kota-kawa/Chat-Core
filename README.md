@@ -68,8 +68,8 @@ Set these in `.env` or in `docker-compose.yml`:
 - `LLM_DAILY_API_LIMIT`: daily cap for total `/api/chat` LLM calls across all users (default: `300`)
 - `AUTH_EMAIL_DAILY_SEND_LIMIT`: daily cap for login/verification email sends across all users (default: `50`)
 - `FLASK_SECRET_KEY`: session secret
-- `ADMIN_PASSWORD_HASH`: hashed admin password in format `pbkdf2_sha256$iterations$salt$hash`
-- `SEND_ADDRESS` / `SEND_PASSWORD`: Gmail account for verification emails
+- `ADMIN_PASSWORD_HASH`: hashed admin password in format `pbkdf2_sha256$iterations$salt$hash` (no in-code default)
+- `SEND_ADDRESS` / `SEND_PASSWORD`: Gmail account for verification emails (`EMAIL_SEND_PASSWORD` is accepted as a legacy fallback)
 - `POSTGRES_HOST` / `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB`: PostgreSQL settings
 - `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` / `REDIS_PASSWORD` (optional): Redis settings
 - `FLASK_ENV`: set to `production` to enable stricter SameSite/Secure settings
@@ -172,8 +172,8 @@ alembic upgrade head
 - `LLM_DAILY_API_LIMIT`: 全ユーザー合計の`/api/chat`経由LLM呼び出し日次上限（デフォルト: `300`）
 - `AUTH_EMAIL_DAILY_SEND_LIMIT`: 全ユーザー合計のログイン/認証メール送信日次上限（デフォルト: `50`）
 - `FLASK_SECRET_KEY`: セッション用シークレット
-- `ADMIN_PASSWORD_HASH`: 管理者パスワードのハッシュ（形式: `pbkdf2_sha256$iterations$salt$hash`）
-- `SEND_ADDRESS` / `SEND_PASSWORD`: 認証メール送信用 Gmail
+- `ADMIN_PASSWORD_HASH`: 管理者パスワードのハッシュ（形式: `pbkdf2_sha256$iterations$salt$hash`、コード内デフォルトなし）
+- `SEND_ADDRESS` / `SEND_PASSWORD`: 認証メール送信用 Gmail（`EMAIL_SEND_PASSWORD` は旧環境向けフォールバックとして利用可）
 - `POSTGRES_HOST` / `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB`: PostgreSQL 設定
 - `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` / `REDIS_PASSWORD`（任意）: Redis 設定
 - `FLASK_ENV`: `production` で SameSite/Secure 設定を強化

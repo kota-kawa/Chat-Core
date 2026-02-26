@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from blueprints.chat import cleanup_ephemeral_chats
+from services.db import close_db_pool
 from services.default_tasks import ensure_default_tasks_seeded
 from services.default_shared_prompts import ensure_default_shared_prompts
 from services.session_middleware import PermanentSessionMiddleware
@@ -90,6 +91,11 @@ def start_cleanup_thread():
 
     cleanup_thread = threading.Thread(target=periodic_cleanup, daemon=True)
     cleanup_thread.start()
+
+
+@app.on_event("shutdown")
+def shutdown_db_pool():
+    close_db_pool()
 
 
 if __name__ == "__main__":

@@ -20,7 +20,7 @@ Strike_Chat is a FastAPI-based AI chat application with email-based authenticati
 
 ```sh
 # 1) Clone the repository
-git clone <repository url>
+git clone https://github.com/kota-kawa/Chat-Core.git
 cd Strike_Chat
 
 # 2) Create a .env file with required environment variables
@@ -43,6 +43,10 @@ docker-compose up --build
 
 - Frontend: `http://localhost:3000`
 - API: `http://localhost:5004`
+
+## UI Preview
+
+![UI preview](assets/images/chatcore_screenshot.png)
 
 ## Database Migrations (Alembic)
 For existing environments, apply incremental DB changes with Alembic:
@@ -93,6 +97,27 @@ python3 -c "from services.security import hash_password; print(hash_password('yo
 - `db/init.sql`: initial PostgreSQL schema
 - `frontend/`: Next.js frontend
 
+## Architecture Diagram
+```mermaid
+flowchart LR
+    U[User Browser]
+    FE[Next.js Frontend]
+    API[FastAPI Backend]
+    BP[Blueprints<br/>auth/chat/memo/prompt_share/admin]
+    SV[Services<br/>db/llm/email/user]
+    DB[(PostgreSQL)]
+    RD[(Redis Optional)]
+    LLM[Groq / Gemini APIs]
+    EM[Email Provider]
+
+    U --> FE --> API
+    API --> BP --> SV
+    SV --> DB
+    SV --> RD
+    SV --> LLM
+    SV --> EM
+```
+
 ## Engineering Highlights (for reviewers)
 - **Modular design**: feature-specific blueprints keep routing and templates scoped and maintainable.
 - **Clear separation of concerns**: integrations live in `services/`, keeping HTTP handlers thin and testable.
@@ -141,7 +166,7 @@ Strike_Chat は FastAPI で構築した AI チャットアプリです。メー�
 
 ```sh
 # 1) リポジトリを取得
-git clone <repository url>
+git clone https://github.com/kota-kawa/Chat-Core.git
 cd Strike_Chat
 
 # 2) .env に必要な環境変数を設定
@@ -153,6 +178,10 @@ docker-compose up --build
 
 - フロントエンド: `http://localhost:3000`
 - API: `http://localhost:5004`
+
+## UI Preview
+
+![UI preview](assets/images/chatcore_screenshot.png)
 
 ## データベースマイグレーション（Alembic）
 既存環境への段階的なDB変更は Alembic で適用します。
@@ -201,6 +230,27 @@ python3 -c "from services.security import hash_password; print(hash_password('yo
 - `templates/`・`static/`: 共有 HTML/CSS/JS
 - `db/init.sql`: 初期スキーマ
 - `frontend/`: Next.js フロントエンド
+
+## アーキテクチャ図
+```mermaid
+flowchart LR
+    U[ユーザーブラウザ]
+    FE[Next.js フロントエンド]
+    API[FastAPI バックエンド]
+    BP[Blueprints<br/>auth/chat/memo/prompt_share/admin]
+    SV[Services<br/>db/llm/email/user]
+    DB[(PostgreSQL)]
+    RD[(Redis 任意)]
+    LLM[Groq / Gemini API]
+    EM[メールプロバイダ]
+
+    U --> FE --> API
+    API --> BP --> SV
+    SV --> DB
+    SV --> RD
+    SV --> LLM
+    SV --> EM
+```
 
 ## レビュー観点の強み
 - **機能単位の分割設計**で保守性を高めた構成

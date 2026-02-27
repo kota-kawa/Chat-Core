@@ -64,6 +64,9 @@ alembic upgrade head
 Set these in `.env` or in `docker-compose.yml`:
 - `GROQ_API_KEY`: Groq API key
 - `Gemini_API_KEY`: Google Generative AI API key
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`: Google OAuth client credentials
+- `GOOGLE_PROJECT_ID`: Google OAuth project ID (`project_id` in client config)
+- `GOOGLE_JS_ORIGIN`: allowed JavaScript origin for Google OAuth (default: `https://chatcore-ai.com`)
 - `GROQ_MODEL`: Groq model name used by OpenAI SDK (default: `openai/gpt-oss-20b`)
 - `GEMINI_DEFAULT_MODEL`: default Gemini model when `model` is omitted (default: `gemini-2.5-flash`)
 - `LLM_DAILY_API_LIMIT`: daily cap for total `/api/chat` LLM calls across all users (default: `300`)
@@ -170,6 +173,9 @@ alembic upgrade head
 ## 必要な環境変数
 - `GROQ_API_KEY`: Groq API キー
 - `Gemini_API_KEY`: Google Generative AI API キー
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`: Google OAuth クライアント資格情報
+- `GOOGLE_PROJECT_ID`: Google OAuth の project_id
+- `GOOGLE_JS_ORIGIN`: Google OAuth の JavaScript origin（デフォルト: `https://chatcore-ai.com`）
 - `GROQ_MODEL`: OpenAI SDK経由で使うGroqモデル名（デフォルト: `openai/gpt-oss-20b`）
 - `GEMINI_DEFAULT_MODEL`: `model`未指定時に使うGeminiモデル（デフォルト: `gemini-2.5-flash`）
 - `LLM_DAILY_API_LIMIT`: 全ユーザー合計の`/api/chat`経由LLM呼び出し日次上限（デフォルト: `300`）

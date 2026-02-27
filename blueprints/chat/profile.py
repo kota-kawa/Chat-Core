@@ -29,15 +29,17 @@ def _update_user_profile(user_id, username, email, bio, avatar_url):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        fields = ["username=%s", "email=%s", "bio=%s"]
-        params = [username, email, bio]
-        if avatar_url:
-            fields.append("avatar_url=%s")
-            params.append(avatar_url)
-        params.append(user_id)
-
-        sql = f"UPDATE users SET {', '.join(fields)} WHERE id=%s"
-        cursor.execute(sql, params)
+        cursor.execute(
+            """
+            UPDATE users
+               SET username = %s,
+                   email = %s,
+                   bio = %s,
+                   avatar_url = COALESCE(%s, avatar_url)
+             WHERE id = %s
+            """,
+            (username, email, bio, avatar_url, user_id),
+        )
         conn.commit()
     except Exception:
         conn.rollback()

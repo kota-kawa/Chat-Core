@@ -50,13 +50,13 @@ if not is_production_env():
 GOOGLE_CLIENT_CONFIG = {
     "web": {
         "client_id": os.getenv("GOOGLE_CLIENT_ID"),
-        "project_id": "chatcore-ai-469306",
+        "project_id": os.getenv("GOOGLE_PROJECT_ID", ""),
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token",
         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
         "client_secret": os.getenv("GOOGLE_CLIENT_SECRET"),
         "redirect_uris": [],
-        "javascript_origins": ["https://chatcore-ai.com"],
+        "javascript_origins": [os.getenv("GOOGLE_JS_ORIGIN", "https://chatcore-ai.com")],
     }
 }
 

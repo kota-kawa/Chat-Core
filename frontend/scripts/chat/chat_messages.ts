@@ -48,26 +48,41 @@ function animateBotMessage(originalText: string) {
   let raw = "";
   let idx = 0;
   const chunk = 7;
-  const interval = 100;
-  const timer = setInterval(() => {
-    if (idx >= originalText.length) {
-      clearInterval(timer);
+  const typingInterval = 100;
+  const formatInterval = 2000;
+  let needsRender = false;
 
-      if (window.renderSanitizedHTML && window.formatLLMOutput) {
-        window.renderSanitizedHTML(msg, window.formatLLMOutput(raw));
-      }
+  const renderMarkdown = () => {
+    if (!needsRender) return;
+    if (window.renderSanitizedHTML && window.formatLLMOutput) {
+      window.renderSanitizedHTML(msg, window.formatLLMOutput(raw));
+    } else {
+      window.setTextWithLineBreaks?.(msg, raw);
+    }
+    needsRender = false;
+  };
+
+  const formatTimer = setInterval(() => {
+    renderMarkdown();
+  }, formatInterval);
+
+  const typingTimer = setInterval(() => {
+    if (idx >= originalText.length) {
+      clearInterval(typingTimer);
+      clearInterval(formatTimer);
+      renderMarkdown();
 
       if (window.saveMessageToLocalStorage) window.saveMessageToLocalStorage(raw, "bot");
       return;
     }
     raw += originalText.substr(idx, chunk);
     idx += chunk;
-
-    if (window.renderSanitizedHTML && window.formatLLMOutput) {
-      window.renderSanitizedHTML(msg, window.formatLLMOutput(raw));
-    }
     msg.dataset.fullText = raw;
-  }, interval);
+    needsRender = true;
+
+    // 最初の表示だけは即時に行い、以降は2秒ごとの整形更新に任せる
+    if (idx <= chunk) renderMarkdown();
+  }, typingInterval);
 }
 
 /* ローカル／サーバ履歴共通描画 */

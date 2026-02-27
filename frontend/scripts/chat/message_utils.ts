@@ -12,7 +12,33 @@
 function renderSanitizedHTML(
   element: HTMLElement,
   dirtyHtml: string,
-  allowed: string[] = ["a", "strong", "em", "code", "pre", "br", "p", "ul", "ol", "li", "blockquote", "img"]
+  allowed: string[] = [
+    "a",
+    "strong",
+    "em",
+    "code",
+    "pre",
+    "br",
+    "p",
+    "ul",
+    "ol",
+    "li",
+    "blockquote",
+    "img",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "hr",
+    "table",
+    "thead",
+    "tbody",
+    "tr",
+    "th",
+    "td"
+  ]
 ) {
   const clean = DOMPurify.sanitize(dirtyHtml, {
     ALLOWED_TAGS: allowed,

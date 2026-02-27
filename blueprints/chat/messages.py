@@ -38,6 +38,12 @@ from . import (
 
 logger = logging.getLogger(__name__)
 
+BASE_SYSTEM_PROMPT = """
+あなたは日本語で回答する親切なアシスタントです。
+「入力例:」と「出力例:」が提供されることがあるが、その情報はあくまで入力からの回答の例であり、【リクエスト】の部分に書かれていることが最もユーザーが求めていることなので、それを１番優先して。
+回答は必ず Markdown 形式で出力してください。必要に応じて見出し・箇条書き・コードブロックを使ってください。
+"""
+
 
 def _fetch_prompt_data(task: str) -> dict[str, Any] | None:
     # タスク名に対応するプロンプトテンプレートとfew-shot例を取得する
@@ -126,10 +132,7 @@ async def chat(request: Request):
 
     system_prompt = {
         "role": "system",
-        "content": """
-        あなたは日本語で回答する親切なアシスタントです。
-        「入力例:」と「出力例:」が提供されることがあるが、その情報はあくまで入力からの回答の例であり、【リクエスト】の部分に書かれていることが最もユーザーが求めていることなので、それを１番優先して。
-        """
+        "content": BASE_SYSTEM_PROMPT,
     }
 
     match = re.match(r"【状況・作業環境】(.+)\n【リクエスト】(.+)", user_message)
@@ -213,7 +216,7 @@ async def chat(request: Request):
 
         conversation_messages.append({
             "role": "system",
-            "content": "あなたは日本語で回答する便利なアシスタントです。",
+            "content": BASE_SYSTEM_PROMPT,
         })
         conversation_messages.append({
             "role": "system",

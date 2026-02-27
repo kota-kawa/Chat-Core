@@ -1,5 +1,6 @@
 // chat_ui.ts  – チャット画面 UI 共通ユーティリティ
 // --------------------------------------------------
+import { marked } from "marked";
 
 // グローバル初期化
 window.currentChatRoomId = window.currentChatRoomId || null;
@@ -24,30 +25,15 @@ function hideTypingIndicator() {
   window.typingIndicator.style.display = "none";
 }
 
-/* LLM 出力を HTML 整形（**太字**／改行・箇条書き） */
+/* LLM 出力の Markdown を HTML に変換 */
 function formatLLMOutput(text: string) {
-  let formatted = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-  const lines = formatted.split("\n");
-  let result = "";
-  let inList = false;
-
-  lines.forEach((line) => {
-    if (line.trim().startsWith("- ")) {
-      if (!inList) {
-        result += "<ul>";
-        inList = true;
-      }
-      result += "<li>" + line.trim().substring(2) + "</li>";
-    } else {
-      if (inList) {
-        result += "</ul>";
-        inList = false;
-      }
-      result += line + "<br>";
-    }
+  const normalized = text.replace(/\r\n/g, "\n");
+  const parsed = marked.parse(normalized, {
+    async: false,
+    gfm: true,
+    breaks: true
   });
-  if (inList) result += "</ul>";
-  return result;
+  return typeof parsed === "string" ? parsed : "";
 }
 
 /*  サイドバートグル処理  */

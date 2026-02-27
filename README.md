@@ -4,6 +4,10 @@
 
 ![UI preview](assets/images/chatcore_screenshot.png)
 
+## 🎬 Demo Videos
+
+Click a thumbnail to open the video on YouTube.
+
 <p align="center">
   <a href="https://youtu.be/TEZsreSRWTw" target="_blank" rel="noopener noreferrer">
     <img src="https://img.youtube.com/vi/TEZsreSRWTw/maxresdefault.jpg" alt="Watch the demo video" width="720">
@@ -157,6 +161,10 @@ Licensed under the Apache License, Version 2.0 - see the [LICENSE](LICENSE) file
 ## UI Preview
 
 ![UI preview](assets/images/chatcore_screenshot.png)
+
+## 🎬 Demo Videos
+
+Click a thumbnail to open the video on YouTube.
 
 <p align="center">
   <a href="https://youtu.be/TEZsreSRWTw" target="_blank" rel="noopener noreferrer">

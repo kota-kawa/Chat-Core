@@ -26,10 +26,14 @@ CREATE INDEX IF NOT EXISTS idx_chat_rooms_user_created_at
 -- chat_historyテーブル
 CREATE TABLE chat_history (
     id SERIAL PRIMARY KEY,
-    chat_room_id VARCHAR(255),
+    chat_room_id VARCHAR(255) NOT NULL,
     message TEXT,
     sender VARCHAR(20) CHECK (sender IN ('user','assistant')),
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_chat_history_room
+        FOREIGN KEY (chat_room_id)
+        REFERENCES chat_rooms(id)
+        ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_chat_history_room_id_id

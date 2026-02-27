@@ -12,9 +12,15 @@ from services.db import get_db_connection
 from services.chat_service import (
     save_message_to_db,
     get_chat_room_messages,
+    validate_room_owner,
 )
 from services.llm_daily_limit import consume_llm_daily_quota
-from services.llm import get_llm_response, GEMINI_DEFAULT_MODEL
+from services.llm import (
+    get_llm_response,
+    GEMINI_DEFAULT_MODEL,
+    LlmInvalidModelError,
+    LlmServiceError,
+)
 from services.request_models import ChatMessageRequest
 from services.web import (
     jsonify,
@@ -31,31 +37,6 @@ from . import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-def _validate_room_owner(
-    room_id: str, user_id: int, forbidden_message: str
-) -> tuple[dict[str, str] | None, int | None]:
-    # 指定ルームの所有者チェックを行い、失敗時はAPI返却形式で返す
-    # Validate room ownership and return API-shaped error on failure.
-    conn = None
-    cursor = None
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        check_q = "SELECT user_id FROM chat_rooms WHERE id = %s"
-        cursor.execute(check_q, (room_id,))
-        result = cursor.fetchone()
-        if not result:
-            return {"error": "該当ルームが存在しません"}, 404
-        if result[0] != user_id:
-            return {"error": forbidden_message}, 403
-        return None, None
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if conn is not None:
-            conn.close()
 
 
 def _fetch_prompt_data(task: str) -> dict[str, Any] | None:
@@ -156,7 +137,7 @@ async def chat(request: Request):
     if "user_id" in session:
         try:
             payload, status_code = await run_blocking(
-                _validate_room_owner,
+                validate_room_owner,
                 chat_room_id,
                 session["user_id"],
                 "他ユーザーのチャットルームには投稿できません",
@@ -255,7 +236,15 @@ async def chat(request: Request):
             status_code=429,
         )
 
-    bot_reply = await run_blocking(get_llm_response, conversation_messages, model)
+    try:
+        bot_reply = await run_blocking(get_llm_response, conversation_messages, model)
+    except LlmInvalidModelError as exc:
+        return jsonify({"error": str(exc)}, status_code=400)
+    except LlmServiceError:
+        return log_and_internal_server_error(
+            logger,
+            "Failed to get LLM response.",
+        )
 
     if "user_id" in session:
         await run_blocking(save_message_to_db, chat_room_id, bot_reply, "assistant")
@@ -277,7 +266,7 @@ async def get_chat_history(request: Request):
     if "user_id" in session:
         try:
             payload, status_code = await run_blocking(
-                _validate_room_owner,
+                validate_room_owner,
                 chat_room_id,
                 session["user_id"],
                 "他ユーザーのチャット履歴は見れません",

@@ -9,6 +9,7 @@ from services.db import get_db_connection
 from services.chat_service import (
     create_chat_room_in_db,
     rename_chat_room_in_db,
+    validate_room_owner,
 )
 
 from services.request_models import (
@@ -54,31 +55,6 @@ def _fetch_user_rooms(user_id: int) -> list[dict[str, Any]]:
                 }
             )
         return rooms
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if conn is not None:
-            conn.close()
-
-
-def _validate_room_owner(
-    room_id: str, user_id: int
-) -> tuple[bool, dict[str, str] | None, int | None]:
-    # ルームの所有者検証を行い、失敗時は API 返却用エラー情報を返す
-    # Verify room ownership and return API-ready error payload on failure.
-    conn = None
-    cursor = None
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        check_q = "SELECT user_id FROM chat_rooms WHERE id = %s"
-        cursor.execute(check_q, (room_id,))
-        result = cursor.fetchone()
-        if not result:
-            return False, {"error": "該当ルームが存在しません"}, 404
-        if result[0] != user_id:
-            return False, {"error": "他ユーザーのチャットルームは変更できません"}, 403
-        return True, None, None
     finally:
         if cursor is not None:
             cursor.close()
@@ -256,10 +232,13 @@ async def rename_chat_room(request: Request):
     session = request.session
     if "user_id" in session:
         try:
-            is_owner, payload, status_code = await run_blocking(
-                _validate_room_owner, room_id, session["user_id"]
+            payload, status_code = await run_blocking(
+                validate_room_owner,
+                room_id,
+                session["user_id"],
+                "他ユーザーのチャットルームは変更できません",
             )
-            if not is_owner:
+            if payload is not None:
                 return jsonify(payload, status_code=status_code)
 
             await run_blocking(rename_chat_room_in_db, room_id, new_title)

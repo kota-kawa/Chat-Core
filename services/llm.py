@@ -33,12 +33,36 @@ gemini_client = (
 logger = logging.getLogger(__name__)
 
 
+class LlmServiceError(RuntimeError):
+    # LLM連携で発生する例外の基底クラス
+    # Base exception class for LLM integration failures.
+    pass
+
+
+class LlmConfigurationError(LlmServiceError):
+    # APIキー未設定など、設定不備に関する例外
+    # Configuration-related exception (e.g., missing API key).
+    pass
+
+
+class LlmProviderError(LlmServiceError):
+    # 外部プロバイダ呼び出し失敗に関する例外
+    # Provider-call failure exception.
+    pass
+
+
+class LlmInvalidModelError(LlmServiceError):
+    # 未サポートモデル指定時の例外
+    # Unsupported model selection exception.
+    pass
+
+
 def get_groq_response(conversation_messages, model_name):
     # Groq 向けクライアントを使ってチャット補完を実行する
     # Run chat completion through the Groq client.
     """Groq API呼び出し (via OpenAI client)"""
     if groq_client is None:
-        return "エラー: GROQ_API_KEY が未設定です。"
+        raise LlmConfigurationError("GROQ_API_KEY が未設定です。")
 
     try:
         response = groq_client.chat.completions.create(
@@ -47,9 +71,9 @@ def get_groq_response(conversation_messages, model_name):
             max_tokens=1024,
         )
         return response.choices[0].message.content
-    except Exception:
+    except Exception as exc:
         logger.exception("Groq API call failed.")
-        return "エラーが発生しました。後でもう一度お試しください。"
+        raise LlmProviderError("Groq API call failed.") from exc
 
 
 def get_gemini_response(conversation_messages, model_name):
@@ -57,7 +81,7 @@ def get_gemini_response(conversation_messages, model_name):
     # Run chat completion through the Gemini client.
     """Google Gemini API呼び出し (via OpenAI client)"""
     if gemini_client is None:
-        return "エラー: Gemini_API_KEY が未設定です。"
+        raise LlmConfigurationError("Gemini_API_KEY が未設定です。")
 
     try:
         response = gemini_client.chat.completions.create(
@@ -66,14 +90,14 @@ def get_gemini_response(conversation_messages, model_name):
             max_tokens=1024,
         )
         return response.choices[0].message.content
-    except Exception:
+    except Exception as exc:
         logger.exception("Google Gemini API call failed.")
-        return "エラーが発生しました。後でもう一度お試しください。"
+        raise LlmProviderError("Google Gemini API call failed.") from exc
 
 
 def get_llm_response(conversation_messages, model_name):
-    # 指定モデル名でプロバイダを振り分け、不正モデルは明示的にエラー文字列を返す
-    # Route to provider by model name and return explicit error text for invalid models.
+    # 指定モデル名でプロバイダを振り分け、不正モデルは例外として扱う
+    # Route provider by model name and raise on invalid models.
     if model_name in VALID_GEMINI_MODELS:
         return get_gemini_response(conversation_messages, model_name)
     if model_name in VALID_GROQ_MODELS:
@@ -85,7 +109,7 @@ def get_llm_response(conversation_messages, model_name):
         model_name,
         valid_models,
     )
-    return (
-        f"エラー: 無効なモデル '{model_name}' が指定されました。"
+    raise LlmInvalidModelError(
+        f"無効なモデル '{model_name}' が指定されました。"
         f"有効なモデル: {', '.join(valid_models)}"
     )

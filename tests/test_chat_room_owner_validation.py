@@ -1,0 +1,81 @@
+import unittest
+from unittest.mock import patch
+
+from services.chat_service import validate_room_owner
+
+
+class FakeCursor:
+    def __init__(self, fetchone_result):
+        self.fetchone_result = fetchone_result
+        self.executed = []
+        self.closed = False
+
+    def execute(self, query, params=None):
+        self.executed.append((query, params))
+
+    def fetchone(self):
+        return self.fetchone_result
+
+    def close(self):
+        self.closed = True
+
+
+class FakeConnection:
+    def __init__(self, fetchone_result):
+        self._cursor = FakeCursor(fetchone_result)
+        self.closed = False
+
+    def cursor(self):
+        return self._cursor
+
+    def close(self):
+        self.closed = True
+
+
+class ChatRoomOwnerValidationTestCase(unittest.TestCase):
+    def test_validate_room_owner_returns_404_when_room_missing(self):
+        fake_connection = FakeConnection(fetchone_result=None)
+        with patch("services.chat_service.get_db_connection", return_value=fake_connection):
+            payload, status_code = validate_room_owner(
+                room_id="missing-room",
+                user_id=1,
+                forbidden_message="forbidden",
+            )
+
+        self.assertEqual(payload, {"error": "該当ルームが存在しません"})
+        self.assertEqual(status_code, 404)
+        self.assertTrue(fake_connection._cursor.closed)
+        self.assertTrue(fake_connection.closed)
+        self.assertEqual(fake_connection._cursor.executed[0][1], ("missing-room",))
+
+    def test_validate_room_owner_returns_403_for_other_users_room(self):
+        fake_connection = FakeConnection(fetchone_result=(99,))
+        with patch("services.chat_service.get_db_connection", return_value=fake_connection):
+            payload, status_code = validate_room_owner(
+                room_id="room-1",
+                user_id=1,
+                forbidden_message="他ユーザーのチャットルームには投稿できません",
+            )
+
+        self.assertEqual(payload, {"error": "他ユーザーのチャットルームには投稿できません"})
+        self.assertEqual(status_code, 403)
+        self.assertTrue(fake_connection._cursor.closed)
+        self.assertTrue(fake_connection.closed)
+
+    def test_validate_room_owner_returns_none_when_owner_matches(self):
+        fake_connection = FakeConnection(fetchone_result=(1,))
+        with patch("services.chat_service.get_db_connection", return_value=fake_connection):
+            payload, status_code = validate_room_owner(
+                room_id="room-1",
+                user_id=1,
+                forbidden_message="forbidden",
+            )
+
+        self.assertIsNone(payload)
+        self.assertIsNone(status_code)
+        self.assertTrue(fake_connection._cursor.closed)
+        self.assertTrue(fake_connection.closed)
+
+
+if __name__ == "__main__":
+    unittest.main()

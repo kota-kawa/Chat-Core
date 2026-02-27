@@ -10,6 +10,7 @@ from blueprints.auth import api_send_login_code
 from blueprints.chat.messages import chat
 from blueprints.chat.tasks import update_tasks_order
 from blueprints.prompt_share.prompt_manage_api import get_my_prompts
+from services.llm import LlmInvalidModelError
 
 
 def make_request(
@@ -99,6 +100,34 @@ class ApiValidationAndSerializationTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
         payload = json.loads(response.body.decode("utf-8"))
         self.assertEqual(payload["error"], "該当ルームが存在しません")
+
+    def test_chat_returns_400_when_invalid_model_is_requested(self):
+        request = make_request(
+            method="POST",
+            path="/api/chat",
+            json_body={"message": "こんにちは", "chat_room_id": "room-1", "model": "invalid-model"},
+            session={},
+        )
+
+        with patch("blueprints.chat.messages.cleanup_ephemeral_chats"):
+            with patch("blueprints.chat.messages.ephemeral_store.room_exists", return_value=True):
+                with patch("blueprints.chat.messages.ephemeral_store.get_messages", return_value=[]):
+                    with patch("blueprints.chat.messages.ephemeral_store.append_message"):
+                        with patch(
+                            "blueprints.chat.messages.consume_llm_daily_quota",
+                            return_value=(True, 0, 300),
+                        ):
+                            with patch(
+                                "blueprints.chat.messages.get_llm_response",
+                                side_effect=LlmInvalidModelError(
+                                    "無効なモデル 'invalid-model' が指定されました。"
+                                ),
+                            ):
+                                response = asyncio.run(chat(request))
+
+        self.assertEqual(response.status_code, 400)
+        payload = json.loads(response.body.decode("utf-8"))
+        self.assertIn("無効なモデル", payload["error"])
 
     def test_prompt_manage_serializes_datetime_consistently(self):
         request = make_request(

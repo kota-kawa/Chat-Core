@@ -41,11 +41,32 @@ class LlmServiceTestCase(unittest.TestCase):
         mock_gemini.chat.completions.create.assert_called_once()
 
     def test_get_llm_response_rejects_invalid_model(self):
-        response = llm.get_llm_response(
-            [{"role": "user", "content": "hello"}],
-            "invalid-model",
-        )
-        self.assertIn("無効なモデル", response)
+        with self.assertRaises(llm.LlmInvalidModelError) as cm:
+            llm.get_llm_response(
+                [{"role": "user", "content": "hello"}],
+                "invalid-model",
+            )
+
+        self.assertIn("無効なモデル", str(cm.exception))
+
+    def test_get_groq_response_raises_configuration_error_without_api_key(self):
+        with patch.object(llm, "groq_client", None):
+            with self.assertRaises(llm.LlmConfigurationError):
+                llm.get_groq_response(
+                    [{"role": "user", "content": "hello"}],
+                    llm.GROQ_MODEL,
+                )
+
+    def test_get_gemini_response_wraps_provider_error_as_exception(self):
+        mock_gemini = MagicMock()
+        mock_gemini.chat.completions.create.side_effect = RuntimeError("provider down")
+
+        with patch.object(llm, "gemini_client", mock_gemini):
+            with self.assertRaises(llm.LlmProviderError):
+                llm.get_gemini_response(
+                    [{"role": "user", "content": "hello"}],
+                    "gemini-2.5-flash",
+                )
 
 
 if __name__ == "__main__":

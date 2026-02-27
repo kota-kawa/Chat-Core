@@ -63,3 +63,28 @@ def get_chat_room_messages(chat_room_id):
     finally:
         cursor.close()
         conn.close()
+
+
+def validate_room_owner(
+    room_id: str, user_id: int, forbidden_message: str
+) -> tuple[dict[str, str] | None, int | None]:
+    # 指定ルームの所有者チェックを行い、失敗時はAPI返却形式で返す
+    # Validate room ownership and return API-shaped error on failure.
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        check_q = "SELECT user_id FROM chat_rooms WHERE id = %s"
+        cursor.execute(check_q, (room_id,))
+        result = cursor.fetchone()
+        if not result:
+            return {"error": "該当ルームが存在しません"}, 404
+        if result[0] != user_id:
+            return {"error": forbidden_message}, 403
+        return None, None
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if conn is not None:
+            conn.close()

@@ -1,6 +1,7 @@
 import json
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 from .db import get_db_connection
 
@@ -70,7 +71,7 @@ def default_task_rows() -> list[tuple]:
     return rows
 
 
-def _extract_name(row):
+def _extract_name(row: dict[str, Any] | tuple[Any, ...] | None) -> str | None:
     # dict/tuple どちらの fetch 結果でも name を取り出せるようにする
     # Extract "name" from either dict-based or tuple-based DB rows.
     if row is None:

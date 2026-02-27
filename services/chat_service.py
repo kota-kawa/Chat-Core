@@ -1,7 +1,7 @@
 from .db import get_db_connection
 
 
-def save_message_to_db(chat_room_id, message, sender):
+def save_message_to_db(chat_room_id: str, message: str, sender: str) -> None:
     # チャットメッセージを履歴テーブルへ追加する
     # Insert a chat message into the history table.
     conn = get_db_connection()
@@ -15,7 +15,7 @@ def save_message_to_db(chat_room_id, message, sender):
         conn.close()
 
 
-def create_chat_room_in_db(room_id, user_id, title):
+def create_chat_room_in_db(room_id: str, user_id: int, title: str) -> None:
     # チャットルームのメタ情報を保存する
     # Persist chat room metadata.
     conn = get_db_connection()
@@ -29,7 +29,7 @@ def create_chat_room_in_db(room_id, user_id, title):
         conn.close()
 
 
-def rename_chat_room_in_db(room_id, new_title):
+def rename_chat_room_in_db(room_id: str, new_title: str) -> None:
     # 既存チャットルームのタイトルを更新する
     # Update the title of an existing chat room.
     conn = get_db_connection()
@@ -43,7 +43,7 @@ def rename_chat_room_in_db(room_id, new_title):
         conn.close()
 
 
-def get_chat_room_messages(chat_room_id):
+def get_chat_room_messages(chat_room_id: str) -> list[dict[str, str]]:
     # LLM へ渡す role/content 形式で履歴を整形して返す
     # Return history formatted as role/content messages for LLM calls.
     """GPTへのAPI呼び出しに使う形で取得"""

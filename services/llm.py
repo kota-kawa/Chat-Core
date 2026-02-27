@@ -2,6 +2,7 @@
 
 import logging
 import os
+
 from openai import OpenAI
 
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
@@ -31,6 +32,7 @@ gemini_client = (
     else None
 )
 logger = logging.getLogger(__name__)
+ConversationMessages = list[dict[str, str]]
 
 
 class LlmServiceError(RuntimeError):
@@ -57,7 +59,9 @@ class LlmInvalidModelError(LlmServiceError):
     pass
 
 
-def get_groq_response(conversation_messages, model_name):
+def get_groq_response(
+    conversation_messages: ConversationMessages, model_name: str
+) -> str | None:
     # Groq 向けクライアントを使ってチャット補完を実行する
     # Run chat completion through the Groq client.
     """Groq API呼び出し (via OpenAI client)"""
@@ -76,7 +80,9 @@ def get_groq_response(conversation_messages, model_name):
         raise LlmProviderError("Groq API call failed.") from exc
 
 
-def get_gemini_response(conversation_messages, model_name):
+def get_gemini_response(
+    conversation_messages: ConversationMessages, model_name: str
+) -> str | None:
     # Gemini 向けクライアントを使ってチャット補完を実行する
     # Run chat completion through the Gemini client.
     """Google Gemini API呼び出し (via OpenAI client)"""
@@ -95,7 +101,9 @@ def get_gemini_response(conversation_messages, model_name):
         raise LlmProviderError("Google Gemini API call failed.") from exc
 
 
-def get_llm_response(conversation_messages, model_name):
+def get_llm_response(
+    conversation_messages: ConversationMessages, model_name: str
+) -> str | None:
     # 指定モデル名でプロバイダを振り分け、不正モデルは例外として扱う
     # Route provider by model name and raise on invalid models.
     if model_name in VALID_GEMINI_MODELS:

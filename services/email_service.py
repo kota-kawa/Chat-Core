@@ -25,7 +25,7 @@ def _load_email_credentials() -> tuple[str, str]:
     return send_address, send_password
 
 
-def send_email(to_address, subject, body_text):
+def send_email(to_address: str, subject: str, body_text: str) -> None:
     # Gmail SMTP を使ってテキストメールを送信する
     # Send a plain-text email through Gmail SMTP.
     """指定アドレスにメール送信"""

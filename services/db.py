@@ -1,6 +1,8 @@
 import atexit
 import os
 import threading
+from types import TracebackType
+from typing import Any
 
 # テスト環境では psycopg2 が未導入の場合があるため遅延フォールバックする
 # Allow graceful fallback when psycopg2 is unavailable in test environments.
@@ -16,8 +18,11 @@ except ModuleNotFoundError:  # pragma: no cover - optional for test envs
 
 
 _pool_lock = threading.Lock()
-_connection_pool = None
-_connection_pool_key = None
+DbConfig = dict[str, str | int]
+PoolKey = tuple[tuple[str, ...], str, str, str, int, int, int]
+
+_connection_pool: Any | None = None
+_connection_pool_key: PoolKey | None = None
 
 
 class _ConnectionProxy:
@@ -25,16 +30,16 @@ class _ConnectionProxy:
     # Lightweight wrapper that prevents reuse after returning to the pool.
     """Pooled connection wrapper with dictionary=True cursor support."""
 
-    def __init__(self, connection, connection_pool):
+    def __init__(self, connection: Any, connection_pool: Any) -> None:
         self._connection = connection
         self._connection_pool = connection_pool
         self._returned = False
 
-    def _ensure_open(self):
+    def _ensure_open(self) -> None:
         if self._returned or self._connection is None:
             raise RuntimeError("Connection already returned to pool.")
 
-    def cursor(self, *args, **kwargs):
+    def cursor(self, *args: Any, **kwargs: Any) -> Any:
         self._ensure_open()
         dictionary = kwargs.pop("dictionary", False)
         if dictionary:
@@ -45,7 +50,7 @@ class _ConnectionProxy:
             kwargs["cursor_factory"] = extras.RealDictCursor
         return self._connection.cursor(*args, **kwargs)
 
-    def close(self):
+    def close(self) -> None:
         if self._returned or self._connection is None:
             return
 
@@ -72,26 +77,31 @@ class _ConnectionProxy:
             except Exception:
                 pass
 
-    def __enter__(self):
+    def __enter__(self) -> "_ConnectionProxy":
         self._ensure_open()
         return self
 
-    def __exit__(self, exc_type, exc, tb):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> bool:
         self.close()
         return False
 
-    def __del__(self):  # pragma: no cover - GC timing is nondeterministic
+    def __del__(self) -> None:  # pragma: no cover - GC timing is nondeterministic
         try:
             self.close()
         except Exception:
             pass
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         self._ensure_open()
         return getattr(self._connection, name)
 
 
-def _get_env(name, fallback_name, default):
+def _get_env(name: str, fallback_name: str, default: str | None) -> str | None:
     # 新旧環境変数を順番に見て互換性を維持する
     # Resolve value from primary and legacy env vars for backward compatibility.
     value = os.environ.get(name)
@@ -103,7 +113,7 @@ def _get_env(name, fallback_name, default):
     return default
 
 
-def _get_db_hosts():
+def _get_db_hosts() -> list[str]:
     env_host = os.environ.get("POSTGRES_HOST") or os.environ.get("MYSQL_HOST")
     if env_host:
         hosts = [host.strip() for host in env_host.split(",") if host.strip()]
@@ -115,7 +125,7 @@ def _get_db_hosts():
     return ["db", "localhost", "127.0.0.1", "host.docker.internal"]
 
 
-def _get_db_config():
+def _get_db_config() -> DbConfig:
     user = _get_env("POSTGRES_USER", "MYSQL_USER", None)
     password = _get_env("POSTGRES_PASSWORD", "MYSQL_PASSWORD", None)
     dbname = _get_env("POSTGRES_DB", "MYSQL_DATABASE", None)
@@ -132,7 +142,7 @@ def _get_db_config():
     }
 
 
-def _get_pool_bounds():
+def _get_pool_bounds() -> tuple[int, int]:
     min_conn = int(os.environ.get("DB_POOL_MIN_CONN", "1"))
     max_conn = int(os.environ.get("DB_POOL_MAX_CONN", "10"))
     if min_conn < 1:
@@ -142,7 +152,9 @@ def _get_pool_bounds():
     return min_conn, max_conn
 
 
-def _build_pool_key(config, hosts, min_conn, max_conn):
+def _build_pool_key(
+    config: DbConfig, hosts: list[str], min_conn: int, max_conn: int
+) -> PoolKey:
     return (
         tuple(hosts),
         config["user"],
@@ -154,7 +166,9 @@ def _build_pool_key(config, hosts, min_conn, max_conn):
     )
 
 
-def _build_connection_pool(config, hosts, min_conn, max_conn):
+def _build_connection_pool(
+    config: DbConfig, hosts: list[str], min_conn: int, max_conn: int
+) -> Any:
     if ThreadedConnectionPool is None:
         raise RuntimeError("psycopg2 ThreadedConnectionPool is required to connect to the database.")
 
@@ -185,7 +199,7 @@ def _build_connection_pool(config, hosts, min_conn, max_conn):
     raise RuntimeError("Database connection pool initialization failed without an exception.")
 
 
-def _get_connection_pool():
+def _get_connection_pool() -> Any:
     global _connection_pool, _connection_pool_key
 
     config = _get_db_config()
@@ -215,7 +229,7 @@ def _get_connection_pool():
     return new_pool
 
 
-def close_db_pool():
+def close_db_pool() -> None:
     # プロセス終了時やシャットダウン時に全コネクションを確実に解放する
     # Ensure all pooled connections are released on shutdown/exit.
     """Close all pooled DB connections."""
@@ -238,7 +252,7 @@ def close_db_pool():
 atexit.register(close_db_pool)
 
 
-def get_db_connection():
+def get_db_connection() -> _ConnectionProxy:
     # プールから 1 接続を貸し出し、close() 時に自動返却されるプロキシを返す
     # Borrow a pooled connection and return a proxy that puts it back on close().
     """PostgreSQL への接続を返す (connection pool backed)."""

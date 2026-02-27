@@ -3,14 +3,17 @@ from __future__ import annotations
 import json
 import secrets
 from http.cookies import SimpleCookie
-from typing import List, Tuple
+from typing import Any
 
 from itsdangerous import BadSignature, URLSafeSerializer
 from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import Headers, MutableHeaders
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from services.cache import get_redis_client
+
+HeaderCollection = list[tuple[bytes, bytes]] | tuple[tuple[bytes, bytes], ...]
 
 
 class PermanentSessionMiddleware:
@@ -18,7 +21,7 @@ class PermanentSessionMiddleware:
     # Delegate to Redis-backed middleware when available, otherwise use SessionMiddleware.
     def __init__(
         self,
-        app,
+        app: ASGIApp,
         *,
         secret_key: str,
         session_cookie: str = "session",
@@ -50,12 +53,12 @@ class PermanentSessionMiddleware:
                 https_only=https_only,
             )
 
-    async def __call__(self, scope, receive, send):
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if not self._use_redis:
             if scope["type"] != "http":
                 return await self.inner(scope, receive, send)
 
-            async def send_wrapper(message):
+            async def send_wrapper(message: Message) -> None:
                 if message["type"] == "http.response.start":
                     session = scope.get("session") or {}
                     is_permanent = session.get("_permanent") is True
@@ -77,7 +80,7 @@ class RedisSessionMiddleware:
     # Store session payload in Redis and keep only signed session_id in the cookie.
     def __init__(
         self,
-        app,
+        app: ASGIApp,
         *,
         secret_key: str,
         session_cookie: str = "session",
@@ -95,7 +98,7 @@ class RedisSessionMiddleware:
         self.serializer = URLSafeSerializer(secret_key, salt="strike.session")
         self.redis = get_redis_client()
 
-    async def __call__(self, scope, receive, send):
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
             return await self.app(scope, receive, send)
 
@@ -110,7 +113,7 @@ class RedisSessionMiddleware:
         scope["session"] = session_data
         scope["session_id"] = session_id
 
-        async def send_wrapper(message):
+        async def send_wrapper(message: Message) -> None:
             if message["type"] == "http.response.start":
                 headers = MutableHeaders(scope=message)
                 # レスポンス直前に session の保存・削除と Cookie 更新を反映する
@@ -120,7 +123,7 @@ class RedisSessionMiddleware:
 
         return await self.app(scope, receive, send_wrapper)
 
-    def _load_session_id(self, scope):
+    def _load_session_id(self, scope: Scope) -> str | None:
         headers = Headers(scope=scope)
         cookie_header = headers.get("cookie")
         if not cookie_header:
@@ -135,7 +138,7 @@ class RedisSessionMiddleware:
         except BadSignature:
             return None
 
-    def _load_session(self, session_id):
+    def _load_session(self, session_id: str) -> dict[str, Any]:
         if self.redis is None:
             return {}
         payload = self.redis.get(self._redis_key(session_id))
@@ -146,7 +149,7 @@ class RedisSessionMiddleware:
         except json.JSONDecodeError:
             return {}
 
-    def _commit_session(self, scope, headers: MutableHeaders) -> None:
+    def _commit_session(self, scope: Scope, headers: MutableHeaders) -> None:
         session = scope.get("session") or {}
         session_id = scope.get("session_id")
 
@@ -168,7 +171,7 @@ class RedisSessionMiddleware:
         cookie_max_age = self.max_age if is_permanent else None
         self._set_cookie(headers, self.serializer.dumps(session_id), cookie_max_age)
 
-    def _save_session(self, session_id: str, session: dict) -> None:
+    def _save_session(self, session_id: str, session: dict[str, Any]) -> None:
         if self.redis is None:
             return
         payload = json.dumps(session, ensure_ascii=False)
@@ -185,7 +188,9 @@ class RedisSessionMiddleware:
     def _redis_key(self, session_id: str) -> str:
         return f"session:{session_id}"
 
-    def _set_cookie(self, headers: MutableHeaders, value: str, max_age=None) -> None:
+    def _set_cookie(
+        self, headers: MutableHeaders, value: str, max_age: int | None = None
+    ) -> None:
         cookie = SimpleCookie()
         cookie[self.session_cookie] = value
         cookie[self.session_cookie]["path"] = self.path
@@ -201,11 +206,11 @@ class RedisSessionMiddleware:
         headers.append("set-cookie", cookie.output(header="").strip())
 
 
-def _strip_cookie_headers(headers, cookie_name: str):
+def _strip_cookie_headers(headers: HeaderCollection, cookie_name: str) -> HeaderCollection:
     # 既存 Set-Cookie を走査し、対象 Cookie の期限属性だけを除去したヘッダを再構築する
     # Rebuild Set-Cookie headers while stripping only expiry attributes for the target cookie.
-    new_headers: List[Tuple[bytes, bytes]] = []
-    set_cookie_headers: List[str] = []
+    new_headers: list[tuple[bytes, bytes]] = []
+    set_cookie_headers: list[str] = []
 
     for key, value in headers:
         if key.lower() == b"set-cookie":

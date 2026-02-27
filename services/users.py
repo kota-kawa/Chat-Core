@@ -1,8 +1,10 @@
+from typing import Any
+
 from .db import get_db_connection
 from .default_tasks import default_task_rows
 
 
-def copy_default_tasks_for_user(user_id):
+def copy_default_tasks_for_user(user_id: int) -> None:
     # 共有タスクをユーザー専用タスクとして重複なく複製する
     # Copy shared default tasks into user-owned rows without duplicates.
     """user_id IS NULL の共通タスクを指定ユーザーに複製"""
@@ -46,7 +48,7 @@ def copy_default_tasks_for_user(user_id):
     conn.close()
 
 
-def get_user_by_email(email):
+def get_user_by_email(email: str) -> dict[str, Any] | None:
     # メールアドレス一致のユーザー1件を返す
     # Fetch a single user by email.
     """メールアドレスでユーザーを取得"""
@@ -60,7 +62,7 @@ def get_user_by_email(email):
         conn.close()
 
 
-def get_user_by_id(user_id):
+def get_user_by_id(user_id: int) -> dict[str, Any] | None:
     # プロフィール表示に必要なユーザー情報を取得する
     # Fetch user fields needed by profile and session endpoints.
     """ユーザーIDでユーザーを取得"""
@@ -82,7 +84,7 @@ def get_user_by_id(user_id):
         conn.close()
 
 
-def create_user(email):
+def create_user(email: str) -> int | None:
     # 未認証ユーザーを作成し、採番された user_id を返す
     # Create an unverified user and return the generated user_id.
     """未認証ユーザーを新規作成"""
@@ -105,7 +107,7 @@ def create_user(email):
         conn.close()
 
 
-def set_user_verified(user_id):
+def set_user_verified(user_id: int) -> None:
     # 認証完了後に is_verified フラグを更新する
     # Mark user as verified after successful verification.
     """ユーザーを認証済みに更新"""

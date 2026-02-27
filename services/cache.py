@@ -1,4 +1,5 @@
 import os
+from typing import Any
 
 try:
     import redis
@@ -6,10 +7,10 @@ except ModuleNotFoundError:  # pragma: no cover - optional for test envs
     redis = None
 
 
-_redis_client = None
+_redis_client: Any | None = None
 
 
-def get_redis_client():
+def get_redis_client() -> Any | None:
     # Redis 依存がない環境では None を返し、呼び出し側がメモリ実装へフォールバックする
     # Return None when Redis dependency is unavailable so callers can fallback to memory.
     if redis is None:

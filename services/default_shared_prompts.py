@@ -1,3 +1,5 @@
+from typing import Any
+
 from .db import get_db_connection
 
 SAMPLE_PROMPT_OWNER_EMAIL = "sample-prompts@chat-core.local"
@@ -66,7 +68,9 @@ DEFAULT_SHARED_PROMPTS = [
 ]
 
 
-def _extract_id(row, key_name="id"):
+def _extract_id(
+    row: dict[str, Any] | tuple[Any, ...] | None, key_name: str = "id"
+) -> Any:
     # DB結果が dict/tuple どちらでもIDを取り出せるようにする
     # Extract ID from DB rows regardless of dict or tuple shape.
     if row is None:
@@ -76,7 +80,7 @@ def _extract_id(row, key_name="id"):
     return row[0]
 
 
-def _ensure_sample_owner(cursor):
+def _ensure_sample_owner(cursor: Any) -> int:
     # サンプル投稿者ユーザーを再利用し、未作成なら作成してIDを返す
     # Reuse sample owner user or create it when missing, then return its ID.
     cursor.execute(
@@ -103,7 +107,7 @@ def _ensure_sample_owner(cursor):
     return owner_id
 
 
-def ensure_default_shared_prompts():
+def ensure_default_shared_prompts() -> int:
     # サンプル投稿者配下に標準公開プロンプトを不足分だけ投入する
     # Seed missing public sample prompts under the sample owner account.
     conn = get_db_connection()

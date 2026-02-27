@@ -10,7 +10,7 @@ from .cache import get_redis_client
 class EphemeralChatStore:
     # 未ログインユーザーの一時チャットを Redis またはメモリで保持するストア
     # Store guest ephemeral chats in Redis when available, otherwise in-memory.
-    def __init__(self, expiration_seconds: int):
+    def __init__(self, expiration_seconds: int) -> None:
         self.expiration_seconds = expiration_seconds
         self._memory = {}
         self._redis = get_redis_client()

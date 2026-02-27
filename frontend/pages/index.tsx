@@ -62,7 +62,7 @@ const bodyMarkup = `
     </form>
   </div>
 
-  <div id="chat-container">
+  <div id="chat-container" style="display: none;">
     <div class="chat-header">
       <div class="header-left">
         <button id="back-to-setup" class="icon-button" title="設定変更">
@@ -219,12 +219,22 @@ const bodyMarkup = `
 
 export default function HomePage() {
   const [domPurifyReady, setDomPurifyReady] = useState(false);
+  const [pageStylesReady, setPageStylesReady] = useState(false);
 
   useEffect(() => {
-    if (domPurifyReady) {
+    const chatStylesheetLoaded = Array.from(document.styleSheets).some((sheet) =>
+      typeof sheet.href === "string" && sheet.href.includes("/static/css/pages/chat/index.css")
+    );
+    if (chatStylesheetLoaded) {
+      setPageStylesReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (domPurifyReady && pageStylesReady) {
       import("../scripts/entries/chat");
     }
-  }, [domPurifyReady]);
+  }, [domPurifyReady, pageStylesReady]);
 
   return (
     <>
@@ -249,9 +259,17 @@ export default function HomePage() {
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
         />
-        <link rel="stylesheet" href="/static/css/pages/chat/index.css" />
+        <link
+          rel="stylesheet"
+          href="/static/css/pages/chat/index.css"
+          onLoad={() => setPageStylesReady(true)}
+          onError={() => setPageStylesReady(true)}
+        />
       </Head>
-      <div dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
+      <div
+        style={{ display: pageStylesReady ? "block" : "none" }}
+        dangerouslySetInnerHTML={{ __html: bodyMarkup }}
+      />
 
       <Script
         src="https://unpkg.com/dompurify@2.4.0/dist/purify.min.js"

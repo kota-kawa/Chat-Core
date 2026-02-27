@@ -14,7 +14,6 @@ GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai"
 # Valid model names
 VALID_GEMINI_MODELS = {
     "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
 }
 VALID_GROQ_MODELS = {GROQ_MODEL}
 

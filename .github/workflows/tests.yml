@@ -145,7 +145,7 @@ jobs:
           script: |
             set -euo pipefail
 
-            cd /var/www/Chat-Core
+            cd /var/www/chatcore-ai
 
             PREV_COMMIT="$(git rev-parse HEAD)"
             rollback() {

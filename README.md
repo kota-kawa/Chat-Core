@@ -1,5 +1,9 @@
 # Strike_Chat
 
+## UI Preview
+
+![UI preview](assets/images/chatcore_screenshot.png)
+
 ## Overview
 Strike_Chat is a FastAPI-based AI chat application with email-based authentication, persistent + ephemeral conversations, and prompt sharing. It integrates with Groq and Google Gemini APIs, uses PostgreSQL for storage, and ships with a Next.js frontend.
 
@@ -43,10 +47,6 @@ docker-compose up --build
 
 - Frontend: `http://localhost:3000`
 - API: `http://localhost:5004`
-
-## UI Preview
-
-![UI preview](assets/images/chatcore_screenshot.png)
 
 ## Database Migrations (Alembic)
 For existing environments, apply incremental DB changes with Alembic:
@@ -146,6 +146,10 @@ Licensed under the Apache License, Version 2.0 - see the [LICENSE](LICENSE) file
 <details>
 <summary>日本語版 (クリックして展開)</summary>
 
+## UI Preview
+
+![UI preview](assets/images/chatcore_screenshot.png)
+
 ## 概要
 Strike_Chat は FastAPI で構築した AI チャットアプリです。メール認証・永続／エフェメラルチャット・プロンプト共有を備え、Groq と Google Gemini API に対応しています。PostgreSQL を採用し、Next.js フロントエンドと連携します。
 
@@ -178,10 +182,6 @@ docker-compose up --build
 
 - フロントエンド: `http://localhost:3000`
 - API: `http://localhost:5004`
-
-## UI Preview
-
-![UI preview](assets/images/chatcore_screenshot.png)
 
 ## データベースマイグレーション（Alembic）
 既存環境への段階的なDB変更は Alembic で適用します。

@@ -4,6 +4,9 @@
   "private": true,
   "license": "Apache-2.0",
   "scripts": {
+    "check:imports": "node scripts/check-import-resolve.cjs",
+    "predev": "npm run check:imports",
+    "prebuild": "npm run check:imports",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

@@ -4,6 +4,14 @@
 
 ![UI preview](assets/images/chatcore_screenshot.png)
 
+<p align="center">
+  <a href="https://youtu.be/TEZsreSRWTw" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.youtube.com/vi/TEZsreSRWTw/maxresdefault.jpg" alt="Watch the demo video" width="720">
+  </a>
+  <br>
+  <sub><b>▶ Watch Demo Video</b></sub>
+</p>
+
 ## Overview
 Strike_Chat is a FastAPI-based AI chat application with email-based authentication, persistent + ephemeral conversations, and prompt sharing. It integrates with Groq and Google Gemini APIs, uses PostgreSQL for storage, and ships with a Next.js frontend.
 
@@ -149,6 +157,14 @@ Licensed under the Apache License, Version 2.0 - see the [LICENSE](LICENSE) file
 ## UI Preview
 
 ![UI preview](assets/images/chatcore_screenshot.png)
+
+<p align="center">
+  <a href="https://youtu.be/TEZsreSRWTw" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.youtube.com/vi/TEZsreSRWTw/maxresdefault.jpg" alt="デモ動画を見る" width="720">
+  </a>
+  <br>
+  <sub><b>▶ デモ動画を見る</b></sub>
+</p>
 
 ## 概要
 Strike_Chat は FastAPI で構築した AI チャットアプリです。メール認証・永続／エフェメラルチャット・プロンプト共有を備え、Groq と Google Gemini API に対応しています。PostgreSQL を採用し、Next.js フロントエンドと連携します。

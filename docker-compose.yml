@@ -17,8 +17,9 @@ services:
       - AUTH_EMAIL_DAILY_SEND_LIMIT=${AUTH_EMAIL_DAILY_SEND_LIMIT:-50}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH}
       - PORT=5004
-      - FRONTEND_URL=http://localhost:3000
+      - FRONTEND_URL=https://chatcore-ai.com
       - POSTGRES_HOST=db
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -29,8 +30,8 @@ services:
       - REDIS_PORT=6379
       - REDIS_DB=0
       # FastAPI のホットリロード用（FASTAPI_ENV は SameSite/secure 切替に使用）
-      - FASTAPI_ENV=development
-      - FASTAPI_DEBUG=1
+      - FASTAPI_ENV=production
+      - FASTAPI_DEBUG=0
     ports:
       - "5004:5004"
     volumes:

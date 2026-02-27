@@ -21,8 +21,11 @@ function loadChatHistory() {
         if (window.displayMessage) window.displayMessage(m.message, m.sender);
       });
 
-      if (window.chatMessages.lastElementChild && window.scrollMessageToTop)
+      if (window.scrollMessageToBottom) {
+        window.scrollMessageToBottom();
+      } else if (window.chatMessages.lastElementChild && window.scrollMessageToTop) {
         window.scrollMessageToTop(window.chatMessages.lastElementChild as HTMLElement);
+      }
 
       localStorage.setItem(
         `chatHistory_${window.currentChatRoomId}`,
@@ -48,8 +51,11 @@ function loadLocalChatHistory() {
     if (window.displayMessage) window.displayMessage(item.text, item.sender);
   });
 
-  if (window.chatMessages.lastElementChild && window.scrollMessageToTop)
+  if (window.scrollMessageToBottom) {
+    window.scrollMessageToBottom();
+  } else if (window.chatMessages.lastElementChild && window.scrollMessageToTop) {
     window.scrollMessageToTop(window.chatMessages.lastElementChild as HTMLElement);
+  }
 }
 
 /* メッセージ1件をローカル保存 */

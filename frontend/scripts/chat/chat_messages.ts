@@ -25,7 +25,11 @@ function renderUserMessage(text: string) {
 
   wrapper.append(copyBtn, msg);
   window.chatMessages.appendChild(wrapper);
-  if (window.scrollMessageToTop) window.scrollMessageToTop(wrapper);
+  if (window.scrollMessageToBottom) {
+    window.scrollMessageToBottom();
+  } else if (window.scrollMessageToTop) {
+    window.scrollMessageToTop(wrapper);
+  }
 
   // ローカル保存は <br> 付き HTML で互換維持
   if (window.saveMessageToLocalStorage) window.saveMessageToLocalStorage(htmlText, "user");
@@ -43,45 +47,48 @@ function animateBotMessage(originalText: string) {
   const copyBtn = window.createCopyBtn ? window.createCopyBtn(() => msg.dataset.fullText || "") : document.createElement("button");
   wrapper.append(copyBtn, msg);
   window.chatMessages.appendChild(wrapper);
-  if (window.scrollMessageToTop) window.scrollMessageToTop(wrapper);
+  if (window.scrollMessageToBottom) {
+    window.scrollMessageToBottom();
+  } else if (window.scrollMessageToTop) {
+    window.scrollMessageToTop(wrapper);
+  }
 
   let raw = "";
   let idx = 0;
-  const chunk = 7;
-  const typingInterval = 100;
-  const formatInterval = 2000;
-  let needsRender = false;
+  const chunk = 12;
+  const typingInterval = 50;
+  const renderInterval = 120;
+  let lastRenderAt = 0;
 
-  const renderMarkdown = () => {
-    if (!needsRender) return;
+  const renderMarkdown = (force = false) => {
+    const now = Date.now();
+    if (!force && now - lastRenderAt < renderInterval) return;
     if (window.renderSanitizedHTML && window.formatLLMOutput) {
       window.renderSanitizedHTML(msg, window.formatLLMOutput(raw));
     } else {
       window.setTextWithLineBreaks?.(msg, raw);
     }
-    needsRender = false;
-  };
+    lastRenderAt = now;
 
-  const formatTimer = setInterval(() => {
-    renderMarkdown();
-  }, formatInterval);
+    if (window.scrollMessageToBottom) {
+      window.scrollMessageToBottom();
+    } else if (window.scrollMessageToTop) {
+      window.scrollMessageToTop(wrapper);
+    }
+  };
 
   const typingTimer = setInterval(() => {
     if (idx >= originalText.length) {
       clearInterval(typingTimer);
-      clearInterval(formatTimer);
-      renderMarkdown();
+      renderMarkdown(true);
 
       if (window.saveMessageToLocalStorage) window.saveMessageToLocalStorage(raw, "bot");
       return;
     }
-    raw += originalText.substr(idx, chunk);
+    raw += originalText.slice(idx, idx + chunk);
     idx += chunk;
     msg.dataset.fullText = raw;
-    needsRender = true;
-
-    // 最初の表示だけは即時に行い、以降は2秒ごとの整形更新に任せる
-    if (idx <= chunk) renderMarkdown();
+    renderMarkdown();
   }, typingInterval);
 }
 
@@ -116,6 +123,11 @@ function displayMessage(text: string, sender: string) {
     wrapper.append(copyBtn, msg);
   }
   window.chatMessages.appendChild(wrapper);
+  if (window.scrollMessageToBottom) {
+    window.scrollMessageToBottom();
+  } else if (window.scrollMessageToTop) {
+    window.scrollMessageToTop(wrapper);
+  }
 }
 
 // ---- window へ公開 ------------------------------

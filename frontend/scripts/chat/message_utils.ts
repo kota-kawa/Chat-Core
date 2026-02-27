@@ -60,13 +60,10 @@ function setTextWithLineBreaks(element: HTMLElement, text: string) {
   });
 }
 
-// 新しいメッセージを表示領域の先頭に配置
-function scrollMessageToTop(element: HTMLElement) {
+// 新しいメッセージを常に表示領域の末尾へ追従
+function scrollMessageToBottom() {
   if (!window.chatMessages) return;
-  const offset = -1050; // px, how far from the bottom the newest message should appear
-  const max = window.chatMessages.scrollHeight - window.chatMessages.clientHeight;
-  const target = Math.min(element.offsetTop, max) - offset;
-  window.chatMessages.scrollTop = Math.max(target, 0);
+  window.chatMessages.scrollTop = window.chatMessages.scrollHeight;
 }
 
 // 汎用コピーアイコン
@@ -86,7 +83,9 @@ function createCopyBtn(getText: () => string) {
 // ---- window へ公開 ------------------------------
 window.renderSanitizedHTML = renderSanitizedHTML;
 window.setTextWithLineBreaks = setTextWithLineBreaks;
-window.scrollMessageToTop = scrollMessageToTop;
+// 既存呼び出し互換のために旧名も残す
+window.scrollMessageToBottom = scrollMessageToBottom;
+window.scrollMessageToTop = scrollMessageToBottom;
 window.createCopyBtn = createCopyBtn;
 
 export {};

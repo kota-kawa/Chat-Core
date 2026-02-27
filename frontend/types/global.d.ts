@@ -34,6 +34,7 @@ declare global {
     renderSanitizedHTML?: (element: HTMLElement, dirtyHtml: string, allowed?: string[]) => void;
     setTextWithLineBreaks?: (element: HTMLElement, text: string) => void;
     scrollMessageToTop?: (element: HTMLElement) => void;
+    scrollMessageToBottom?: () => void;
     createCopyBtn?: (getText: () => string) => HTMLButtonElement;
     renderUserMessage?: (text: string) => void;
     animateBotMessage?: (text: string) => void;

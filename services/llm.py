@@ -5,8 +5,20 @@ import os
 
 from openai import OpenAI
 
+
+def _get_positive_int_env(name: str, default: int) -> int:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return default
+    return value if value > 0 else default
+
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
 GEMINI_DEFAULT_MODEL = os.environ.get("GEMINI_DEFAULT_MODEL", "gemini-2.5-flash")
+LLM_MAX_TOKENS = _get_positive_int_env("LLM_MAX_TOKENS", 4096)
 
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai"
@@ -71,7 +83,7 @@ def get_groq_response(
         response = groq_client.chat.completions.create(
             model=model_name,
             messages=conversation_messages,
-            max_tokens=1024,
+            max_tokens=LLM_MAX_TOKENS,
         )
         return response.choices[0].message.content
     except Exception as exc:
@@ -92,7 +104,7 @@ def get_gemini_response(
         response = gemini_client.chat.completions.create(
             model=model_name,
             messages=conversation_messages,
-            max_tokens=1024,
+            max_tokens=LLM_MAX_TOKENS,
         )
         return response.choices[0].message.content
     except Exception as exc:

@@ -28,7 +28,11 @@ function generateResponse(message: string, aiModel: string) {
   spinnerWrap.appendChild(spinner);
 
   window.chatMessages.appendChild(spinnerWrap);
-  if (window.scrollMessageToTop) window.scrollMessageToTop(spinnerWrap);
+  if (window.scrollMessageToBottom) {
+    window.scrollMessageToBottom();
+  } else if (window.scrollMessageToTop) {
+    window.scrollMessageToTop(spinnerWrap);
+  }
 
   fetch("/api/chat", {
     method: "POST",

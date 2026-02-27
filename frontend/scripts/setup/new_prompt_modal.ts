@@ -28,6 +28,7 @@ function initNewPromptModal() {
   const closeModal = (options: { skipRotation?: boolean; animateRotation?: boolean } = {}) => {
     if (!newPromptModal) return;
     newPromptModal.classList.remove("show");
+    (newPromptModal as HTMLElement).style.display = "none";
 
     if (options.skipRotation) {
       if (openModalBtn) {
@@ -41,11 +42,15 @@ function initNewPromptModal() {
 
   const openModal = (options?: { animateRotation?: boolean }) => {
     if (!newPromptModal) return;
+    (newPromptModal as HTMLElement).style.display = "flex";
     newPromptModal.classList.add("show");
     togglePlusRotation(true, { animate: Boolean(options?.animateRotation) });
   };
 
   // 初期表示では回転アニメーションを発火させない
+  if (newPromptModal) {
+    (newPromptModal as HTMLElement).style.display = "none";
+  }
   if (newPromptModal?.classList.contains("show")) {
     closeModal({ skipRotation: true });
   } else if (openModalBtn) {

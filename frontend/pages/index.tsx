@@ -104,7 +104,7 @@ const bodyMarkup = `
   </div>
 
   <!-- 新規追加：新しいプロンプトモーダル -->
-  <div id="newPromptModal" class="new-prompt-modal">
+  <div id="newPromptModal" class="new-prompt-modal" style="display: none;">
     <div class="new-prompt-modal-content">
       <!-- 閉じるボタン -->
       <span class="new-modal-close-btn" id="newModalCloseBtn">&times;</span>
@@ -218,22 +218,12 @@ const bodyMarkup = `
 
 export default function HomePage() {
   const [domPurifyReady, setDomPurifyReady] = useState(false);
-  const [pageStylesReady, setPageStylesReady] = useState(false);
 
   useEffect(() => {
-    const chatStylesheetLoaded = Array.from(document.styleSheets).some((sheet) =>
-      typeof sheet.href === "string" && sheet.href.includes("/static/css/pages/chat/index.css")
-    );
-    if (chatStylesheetLoaded) {
-      setPageStylesReady(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (domPurifyReady && pageStylesReady) {
+    if (domPurifyReady) {
       import("../scripts/entries/chat");
     }
-  }, [domPurifyReady, pageStylesReady]);
+  }, [domPurifyReady]);
 
   return (
     <>
@@ -258,17 +248,9 @@ export default function HomePage() {
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
         />
-        <link
-          rel="stylesheet"
-          href="/static/css/pages/chat/index.css"
-          onLoad={() => setPageStylesReady(true)}
-          onError={() => setPageStylesReady(true)}
-        />
+        <link rel="stylesheet" href="/static/css/pages/chat/index.css" />
       </Head>
-      <div
-        style={{ display: pageStylesReady ? "block" : "none" }}
-        dangerouslySetInnerHTML={{ __html: bodyMarkup }}
-      />
+      <div dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
 
       <Script
         src="https://unpkg.com/dompurify@2.4.0/dist/purify.min.js"

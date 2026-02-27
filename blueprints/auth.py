@@ -2,6 +2,7 @@ import copy
 import logging
 import os
 from typing import Any
+from urllib.parse import urlsplit, urlunsplit
 
 import requests
 from dotenv import load_dotenv
@@ -68,6 +69,25 @@ GOOGLE_SCOPES = [
 
 auth_bp = APIRouter()
 logger = logging.getLogger(__name__)
+
+
+def _build_google_authorization_response(request: Request, redirect_uri: str) -> str:
+    # Reverse proxy 配下では request.url が http になる場合があるため、
+    # token 交換に使う URL は redirect_uri の scheme/host/path を優先する。
+    # Behind reverse proxies, request.url may appear as http.
+    # Prefer redirect_uri origin/path when building authorization_response.
+    redirect_parts = urlsplit(redirect_uri)
+    if redirect_parts.scheme and redirect_parts.netloc:
+        return urlunsplit(
+            (
+                redirect_parts.scheme,
+                redirect_parts.netloc,
+                redirect_parts.path,
+                request.url.query,
+                "",
+            )
+        )
+    return str(request.url)
 
 
 def _fetch_google_user_info(access_token: str) -> dict[str, Any]:
@@ -169,7 +189,8 @@ async def google_callback(request: Request):
     )
     # コールバックURLから認可コードを交換し、アクセストークンを取得する
     # Exchange callback authorization response for access token.
-    await run_blocking(flow.fetch_token, authorization_response=str(request.url))
+    authorization_response = _build_google_authorization_response(request, redirect_uri)
+    await run_blocking(flow.fetch_token, authorization_response=authorization_response)
     session.pop("google_oauth_state", None)
     session.pop("google_redirect_uri", None)
 

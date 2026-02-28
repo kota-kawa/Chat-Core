@@ -8,7 +8,7 @@ const bodyMarkup = `
 
   <!-- 既存の settings-btn のすぐ下あたりに追加 -->
   <!-- 未ログイン時の認証ボタン -->
-  <div id="auth-buttons" style="position:fixed; top:10px; right:10px; z-index: 2000;">
+  <div id="auth-buttons" style="display:none; position:fixed; top:10px; right:10px; z-index: 2000;">
     <button id="login-btn" class="auth-btn">
       <i class="bi bi-person-circle"></i>
       <span>ログイン / 登録</span>
@@ -44,7 +44,7 @@ const bodyMarkup = `
 
       <div class="task-selection-header">
         <p id="task-selection-text">実行したいタスクを選択（クリックで即実行）</p>
-        <button id="openNewPromptModal" class="circle-button new-prompt-modal-btn" type="button" title="新しいプロンプトを投稿">
+        <button id="openNewPromptModal" class="circle-button new-prompt-modal-btn" type="button" title="新しいプロンプトを投稿" style="display:none;">
           <i class="bi bi-plus-lg"></i>
         </button>
         <!-- タスク編集ボタンは task_manager.js で後から追加され、CSSの order で中央に表示されます -->
@@ -54,7 +54,7 @@ const bodyMarkup = `
 
       <!-- これまでのチャットを見るボタン -->
       <div style="text-align: center; margin-top: 0.2rem;">
-        <button id="access-chat-btn" type="button" class="primary-button">
+        <button id="access-chat-btn" type="button" class="primary-button" style="display:none;">
           <i class="bi bi-chat-left-text"></i> これまでのチャットを見る
         </button>
       </div>
@@ -248,7 +248,7 @@ export default function HomePage() {
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
         />
-        <link rel="stylesheet" href="/static/css/pages/chat/index.css" />
+        <link rel="stylesheet" href="/static/css/pages/chat/index.bundle.css" />
       </Head>
       <div dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
 

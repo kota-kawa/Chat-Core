@@ -90,7 +90,7 @@ export default function PromptManagePage() {
           href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
-        <link rel="stylesheet" href="/prompt_share/static/css/pages/prompt_manage.css" />
+        <link rel="stylesheet" href="/prompt_share/static/css/pages/prompt_manage.bundle.css" />
       </Head>
       <div dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
 

@@ -274,7 +274,7 @@ export default function PromptSharePage() {
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
         />
-        <link rel="stylesheet" href="/prompt_share/static/css/bundle/prompt_share_bundle.css" />
+        <link rel="stylesheet" href="/prompt_share/static/css/pages/prompt_share.bundle.css" />
       </Head>
       <div dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
     </>

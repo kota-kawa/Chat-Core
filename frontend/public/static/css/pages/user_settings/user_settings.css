@@ -197,11 +197,15 @@
 
 
 /* global.css の body スタイルをこのページ専用に上書き */
-.user-settings-body {
+body {
   background: var(--content-bg); /* ページ全体の背景 */
   min-height: 100vh;
   display: block; /* 中央寄せを解除 */
   padding: 0;     /* global.css の padding をリセット */
+}
+
+.user-settings-page {
+  min-height: 100vh;
   font-family: 'Roboto', sans-serif;
 }
 

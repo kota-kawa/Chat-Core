@@ -1,4 +1,4 @@
-# Strike_Chat
+# Chat-Core
 
 ## UI Preview
 
@@ -17,7 +17,7 @@ Click a thumbnail to open the video on YouTube.
 </p>
 
 ## Overview
-Strike_Chat is a FastAPI-based AI chat application with email-based authentication, persistent + ephemeral conversations, and prompt sharing. It integrates with Groq and Google Gemini APIs, uses PostgreSQL for storage, and ships with a Next.js frontend.
+Chat-Core is a FastAPI-based AI chat application with email-based authentication, persistent + ephemeral conversations, and prompt sharing. It integrates with Groq and Google Gemini APIs, uses PostgreSQL for storage, and ships with a Next.js frontend.
 
 ## Key Features
 - **Email-based authentication** with 6‑digit verification codes
@@ -37,7 +37,7 @@ Strike_Chat is a FastAPI-based AI chat application with email-based authenticati
 ```sh
 # 1) Clone the repository
 git clone https://github.com/kota-kawa/Chat-Core.git
-cd Strike_Chat
+cd Chat-Core
 
 # 2) Create a .env file with required environment variables
 # Example:
@@ -130,6 +130,14 @@ flowchart LR
     SV --> EM
 ```
 
+## Design Decisions
+- **Why FastAPI (instead of Flask)**: FastAPI gives async-first request handling, type-driven validation, and automatic OpenAPI docs. This reduces API integration friction and keeps backend contracts explicit.  
+  Trade-off: stricter typing and async patterns add some implementation complexity.
+- **Why Redis for session/state (optional)**: When Redis is available, sessions are stored server-side and shared across instances, which improves horizontal scalability and supports operational controls (e.g., centralized invalidation, quota/ephemeral state handling).  
+  Trade-off: extra infrastructure and operational overhead.
+- **Why PostgreSQL as the primary datastore**: Core entities (users, chats, prompts, admin data) are relational and consistency-sensitive. PostgreSQL provides strong integrity guarantees plus mature indexing/migration workflows.
+- **Why Next.js for frontend**: Next.js supports route-based UI composition and production-ready optimization while allowing incremental migration from legacy static/script assets.
+
 ## Engineering Highlights (for reviewers)
 - **Modular design**: feature-specific blueprints keep routing and templates scoped and maintainable.
 - **Clear separation of concerns**: integrations live in `services/`, keeping HTTP handlers thin and testable.
@@ -175,7 +183,7 @@ Click a thumbnail to open the video on YouTube.
 </p>
 
 ## 概要
-Strike_Chat は FastAPI で構築した AI チャットアプリです。メール認証・永続／エフェメラルチャット・プロンプト共有を備え、Groq と Google Gemini API に対応しています。PostgreSQL を採用し、Next.js フロントエンドと連携します。
+Chat-Core は FastAPI で構築した AI チャットアプリです。メール認証・永続／エフェメラルチャット・プロンプト共有を備え、Groq と Google Gemini API に対応しています。PostgreSQL を採用し、Next.js フロントエンドと連携します。
 
 ## 主な機能
 - **メール認証**（6 桁コード）
@@ -195,7 +203,7 @@ Strike_Chat は FastAPI で構築した AI チャットアプリです。メー�
 ```sh
 # 1) リポジトリを取得
 git clone https://github.com/kota-kawa/Chat-Core.git
-cd Strike_Chat
+cd Chat-Core
 
 # 2) .env に必要な環境変数を設定
 # GROQ_API_KEY=xxxxx など
@@ -275,6 +283,14 @@ flowchart LR
     SV --> LLM
     SV --> EM
 ```
+
+## 技術的な意思決定（Design Decisions）
+- **なぜ FastAPI（Flask ではなく）を選んだか**: 非同期処理、型ヒントベースのバリデーション、自動生成される OpenAPI ドキュメントを活用し、API 連携と仕様の明確化を優先したためです。  
+  トレードオフ: 型定義と async の実装負荷は増えます。
+- **なぜ Redis をセッション/状態管理に使うか（任意）**: Redis 利用時はセッションをサーバー側で一元管理でき、複数インスタンス構成でも共有しやすく、失効制御やクォータ/エフェメラル状態の運用がしやすくなります。  
+  トレードオフ: 追加インフラの運用コストが発生します。
+- **なぜ PostgreSQL を主データストアにしたか**: ユーザー・チャット・プロンプト・管理データは関係性と整合性が重要なため、整合性保証・インデックス・マイグレーションが成熟した PostgreSQL を採用しています。
+- **なぜ Next.js を採用したか**: ルート単位でUIを構成しつつ本番最適化を行え、既存の静的アセット/スクリプト構成から段階的に移行しやすいためです。
 
 ## レビュー観点の強み
 - **機能単位の分割設計**で保守性を高めた構成

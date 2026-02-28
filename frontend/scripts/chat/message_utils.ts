@@ -1,7 +1,7 @@
 // message_utils.ts – 共通メッセージユーティリティ
 // --------------------------------------------------
 
-// DOMPurify など外部ライブラリは先にロードされている想定
+// DOMPurify が利用可能な場合は使用し、未ロード時は安全なテキスト描画にフォールバック
 
 /**
  * HTML をサニタイズして挿入する
@@ -40,11 +40,25 @@ function renderSanitizedHTML(
     "td"
   ]
 ) {
-  const clean = DOMPurify.sanitize(dirtyHtml, {
-    ALLOWED_TAGS: allowed,
-    ALLOWED_ATTR: ["href", "src", "alt", "title", "target"]
-  });
-  element.innerHTML = clean;
+  const purifier = (globalThis as { DOMPurify?: { sanitize?: Function } }).DOMPurify;
+  if (purifier && typeof purifier.sanitize === "function") {
+    const clean = purifier.sanitize(dirtyHtml, {
+      ALLOWED_TAGS: allowed,
+      ALLOWED_ATTR: ["href", "src", "alt", "title", "target"]
+    });
+    element.innerHTML = clean;
+    return;
+  }
+
+  // サニタイザが未ロードの間は、HTMLを解釈せずテキストとして描画する
+  if (allowed.length === 1 && allowed[0] === "br") {
+    setTextWithLineBreaks(element, dirtyHtml.replace(/<br\s*\/?>/gi, "\n"));
+    return;
+  }
+
+  const tmp = document.createElement("div");
+  tmp.innerHTML = dirtyHtml;
+  setTextWithLineBreaks(element, tmp.textContent || "");
 }
 
 /**

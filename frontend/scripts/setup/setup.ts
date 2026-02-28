@@ -43,6 +43,42 @@ function escapeHtml(value: unknown) {
     .replace(/'/g, "&#39;");
 }
 
+function normalizeTask(task: TaskItem | null | undefined) {
+  if (!task) {
+    return {
+      name: "",
+      prompt_template: "",
+      input_examples: "",
+      output_examples: "",
+      is_default: false
+    };
+  }
+
+  return {
+    name: task.name ? String(task.name).trim() : "",
+    prompt_template: task.prompt_template ? String(task.prompt_template) : "",
+    input_examples: task.input_examples ? String(task.input_examples) : "",
+    output_examples: task.output_examples ? String(task.output_examples) : "",
+    is_default: Boolean(task.is_default)
+  };
+}
+
+function createTaskSignature(tasks: TaskItem[]) {
+  if (!Array.isArray(tasks) || tasks.length === 0) return "__empty__";
+  return tasks
+    .map((task) => {
+      const normalized = normalizeTask(task);
+      return [
+        normalized.name,
+        normalized.prompt_template,
+        normalized.input_examples,
+        normalized.output_examples,
+        normalized.is_default ? "1" : "0"
+      ].join("\u001f");
+    })
+    .join("\u001e");
+}
+
 function loadTaskCards() {
   const ioModal = document.getElementById("io-modal");
   const ioModalContent = document.getElementById("io-modal-content");
@@ -67,6 +103,11 @@ function loadTaskCards() {
   const renderTaskCards = (tasks: TaskItem[]) => {
     const container = document.getElementById("task-selection");
     if (!container) return;
+    const signature = createTaskSignature(tasks);
+
+    // 同一内容の再描画は避け、遅延後の「全体再表示」を抑える
+    if (container.dataset.tasksSignature === signature) return;
+    container.dataset.tasksSignature = signature;
 
     // コンテナをクリア
     container.innerHTML = "";

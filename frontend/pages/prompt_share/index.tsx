@@ -251,7 +251,11 @@ const bodyMarkup = `
 
 export default function PromptSharePage() {
   useEffect(() => {
+    document.body.classList.add("prompt-share-page");
     import("../../scripts/entries/prompt_share");
+    return () => {
+      document.body.classList.remove("prompt-share-page");
+    };
   }, []);
 
   return (
@@ -276,7 +280,7 @@ export default function PromptSharePage() {
         />
         <link rel="stylesheet" href="/prompt_share/static/css/pages/prompt_share.bundle.css" />
       </Head>
-      <div dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
+      <div className="prompt-share-page" dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
     </>
   );
 }

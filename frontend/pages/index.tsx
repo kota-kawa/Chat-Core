@@ -119,7 +119,7 @@ const bodyMarkup = `
         <button id="back-to-setup" class="icon-button" title="設定変更">
           <i class="bi bi-arrow-left"></i>
         </button>
-        <span>AI Assistant Pro</span>
+        <span>Chat Core</span>
       </div>
 
       <div class="typing-indicator" id="typing-indicator" style="display: none;">

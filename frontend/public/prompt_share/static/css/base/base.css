@@ -10,18 +10,12 @@
   --ps-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-body.prompt-share-page,
-.prompt-share-page,
-body.prompt-manage-page,
-.prompt-manage-page {
+:where(body.prompt-share-page, .prompt-share-page, body.prompt-manage-page, .prompt-manage-page) {
   margin: 0;
   padding: 0;
 }
 
-body.prompt-share-page *,
-.prompt-share-page *,
-body.prompt-manage-page *,
-.prompt-manage-page * {
+:where(body.prompt-share-page, .prompt-share-page, body.prompt-manage-page, .prompt-manage-page) * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;

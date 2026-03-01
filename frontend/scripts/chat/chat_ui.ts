@@ -4,6 +4,7 @@
 let markedParser: any = null;
 let markedLoadPromise: Promise<void> | null = null;
 let hljs: any = null;
+let markdownEnhancementDisabled = false;
 const dynamicImport = new Function("modulePath", "return import(modulePath);") as (modulePath: string) => Promise<any>;
 
 async function importOptionalModule(modulePath: string) {
@@ -13,6 +14,14 @@ async function importOptionalModule(modulePath: string) {
     console.warn(`Optional module '${modulePath}' could not be loaded.`, error);
     return null;
   }
+}
+
+async function importFirstAvailableModule(modulePaths: string[]) {
+  for (const modulePath of modulePaths) {
+    const loaded = await importOptionalModule(modulePath);
+    if (loaded) return loaded;
+  }
+  return null;
 }
 
 function stripInvisibleCharacters(value: string) {
@@ -262,14 +271,22 @@ function formatMarkdownFallback(markdown: string) {
 
 function ensureMarkedParser() {
   if (markedParser) return Promise.resolve();
+  if (markdownEnhancementDisabled) return Promise.resolve();
   if (markedLoadPromise) return markedLoadPromise;
 
   markedLoadPromise = (async () => {
     try {
-      const markedModule = await importOptionalModule("marked");
-      const hljsModule = await importOptionalModule("highlight.js");
+      // 依存解決に失敗しても UI を壊さないよう、CDN モジュールを優先してベストエフォートで読み込む
+      const markedModule = await importFirstAvailableModule([
+        "https://esm.sh/marked@15.0.12?bundle"
+      ]);
+      const hljsModule = await importFirstAvailableModule([
+        "https://esm.sh/highlight.js@11.11.1?bundle"
+      ]);
       if (!markedModule) {
-        throw new Error("marked module is unavailable");
+        markdownEnhancementDisabled = true;
+        console.warn("Marked runtime module is unavailable. Falling back to lightweight markdown formatter.");
+        return;
       }
 
       const { Marked } = markedModule;
@@ -328,8 +345,8 @@ function ensureMarkedParser() {
       marked.use({ renderer });
       markedParser = marked.parse.bind(marked);
     } catch (error) {
-      console.error("Failed to initialize markdown rendering:", error);
-      throw error;
+      markdownEnhancementDisabled = true;
+      console.warn("Failed to initialize markdown enhancement. Falling back to lightweight formatter.", error);
     } finally {
       markedLoadPromise = null;
     }
@@ -348,7 +365,7 @@ function showChatInterface() {
   window.chatContainer.style.display = "flex";
 
   // Markdown パーサはチャット画面表示時に遅延読み込みする
-  void ensureMarkedParser();
+  if (!markdownEnhancementDisabled) void ensureMarkedParser();
 
   if (!window.currentChatRoomId && localStorage.getItem("currentChatRoomId")) {
     window.currentChatRoomId = localStorage.getItem("currentChatRoomId");
@@ -369,7 +386,7 @@ function hideTypingIndicator() {
 function formatLLMOutput(text: string) {
   const normalized = normalizeLLMTextForDisplay(text);
   if (!markedParser) {
-    void ensureMarkedParser();
+    if (!markdownEnhancementDisabled) void ensureMarkedParser();
     return formatMarkdownFallback(normalized);
   }
 

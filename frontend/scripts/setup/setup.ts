@@ -82,6 +82,7 @@ function createTaskSignature(tasks: TaskItem[]) {
 function loadTaskCards() {
   const ioModal = document.getElementById("io-modal");
   const ioModalContent = document.getElementById("io-modal-content");
+  const taskSelection = document.getElementById("task-selection");
 
   // モーダルを閉じるヘルパ
   function closeIOModal() {
@@ -98,6 +99,39 @@ function loadTaskCards() {
     if (ioModalContent) {
       ioModalContent.addEventListener("click", (e) => e.stopPropagation());
     }
+  }
+
+  const openTaskDetailModal = (card: HTMLElement) => {
+    if (!ioModal || !ioModalContent) return;
+    const safeTask = escapeHtml(card.dataset.task || "");
+    const safePromptTemplate = escapeHtml(card.dataset.prompt_template || "");
+    const safeInputExamples = escapeHtml(card.dataset.input_examples || "");
+    const safeOutputExamples = escapeHtml(card.dataset.output_examples || "");
+    ioModalContent.innerHTML = `
+      <h5 style="margin-bottom:1rem;">タスク詳細</h5>
+      <div style="margin-bottom:.5rem;font-weight:bold;">タスク名</div>
+      <div style="margin-bottom:1rem;">${safeTask}</div>
+      <div style="margin-bottom:.5rem;font-weight:bold;">プロンプトテンプレート</div>
+      <div style="margin-bottom:1rem;">${safePromptTemplate}</div>
+      <div style="margin-bottom:.5rem;font-weight:bold;">入力例</div>
+      <div style="margin-bottom:1rem;">${safeInputExamples}</div>
+      <div style="margin-bottom:.5rem;font-weight:bold;">出力例</div>
+      <div>${safeOutputExamples}</div>`;
+    ioModal.style.display = "block";
+  };
+
+  if (taskSelection && !taskSelection.dataset.detailBound) {
+    taskSelection.dataset.detailBound = "true";
+    taskSelection.addEventListener("click", (e) => {
+      const target = e.target as Element | null;
+      const detailButton = target?.closest(".task-detail-toggle");
+      if (!detailButton) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const card = detailButton.closest(".prompt-card") as HTMLElement | null;
+      if (!card) return;
+      openTaskDetailModal(card);
+    });
   }
 
   const renderTaskCards = (tasks: TaskItem[]) => {
@@ -152,29 +186,8 @@ function loadTaskCards() {
 
       const toggleBtn = document.createElement("button");
       toggleBtn.type = "button";
-      toggleBtn.classList.add("btn", "btn-outline-success", "btn-md");
+      toggleBtn.classList.add("btn", "btn-outline-success", "btn-md", "task-detail-toggle");
       toggleBtn.innerHTML = '<i class="bi bi-caret-down"></i>';
-
-      // ▼クリックで詳細モーダル
-      toggleBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (!ioModal || !ioModalContent) return;
-        const safeTask = escapeHtml(card.dataset.task || "");
-        const safePromptTemplate = escapeHtml(card.dataset.prompt_template || "");
-        const safeInputExamples = escapeHtml(card.dataset.input_examples || "");
-        const safeOutputExamples = escapeHtml(card.dataset.output_examples || "");
-        ioModalContent.innerHTML = `
-          <h5 style="margin-bottom:1rem;">タスク詳細</h5>
-          <div style="margin-bottom:.5rem;font-weight:bold;">タスク名</div>
-          <div style="margin-bottom:1rem;">${safeTask}</div>
-          <div style="margin-bottom:.5rem;font-weight:bold;">プロンプトテンプレート</div>
-          <div style="margin-bottom:1rem;">${safePromptTemplate}</div>
-          <div style="margin-bottom:.5rem;font-weight:bold;">入力例</div>
-          <div style="margin-bottom:1rem;">${safeInputExamples}</div>
-          <div style="margin-bottom:.5rem;font-weight:bold;">出力例</div>
-          <div>${safeOutputExamples}</div>`;
-        ioModal.style.display = "block";
-      });
 
       headerContainer.append(header, toggleBtn);
       card.appendChild(headerContainer);

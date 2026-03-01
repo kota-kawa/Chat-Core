@@ -1,6 +1,60 @@
 import Head from "next/head";
 import Script from "next/script";
 import { useEffect } from "react";
+import defaultTasks from "../data/default_tasks.json";
+
+type DefaultTask = {
+  name?: string;
+  prompt_template?: string;
+  input_examples?: string;
+  output_examples?: string;
+};
+
+function escapeHtml(value: unknown) {
+  const text = value === null || value === undefined ? "" : String(value);
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function createInitialTaskCardsMarkup(tasks: DefaultTask[]) {
+  return tasks
+    .map((task) => {
+      const taskName =
+        typeof task.name === "string" && task.name.trim()
+          ? task.name.trim()
+          : task.name
+            ? String(task.name)
+            : "無題";
+      const taskHeader = taskName.length > 8 ? `${taskName.substring(0, 8)}…` : taskName;
+      const promptTemplate = task.prompt_template || "プロンプトテンプレートはありません";
+      const inputExamples = task.input_examples || "入力例がありません";
+      const outputExamples = task.output_examples || "出力例がありません";
+
+      return `
+        <div class="task-wrapper">
+          <div class="prompt-card"
+            data-task="${escapeHtml(taskName)}"
+            data-prompt_template="${escapeHtml(promptTemplate)}"
+            data-input_examples="${escapeHtml(inputExamples)}"
+            data-output_examples="${escapeHtml(outputExamples)}"
+            data-is_default="true">
+            <div class="header-container">
+              <div class="task-header">${escapeHtml(taskHeader)}</div>
+              <button type="button" class="btn btn-outline-success btn-md task-detail-toggle">
+                <i class="bi bi-caret-down"></i>
+              </button>
+            </div>
+          </div>
+        </div>`;
+    })
+    .join("");
+}
+
+const initialTaskCardsMarkup = createInitialTaskCardsMarkup(defaultTasks as DefaultTask[]);
 
 const bodyMarkup = `
 <!-- 浮遊メニュー -->
@@ -50,7 +104,7 @@ const bodyMarkup = `
         <!-- タスク編集ボタンは task_manager.js で後から追加され、CSSの order で中央に表示されます -->
       </div>
 
-      <div class="task-selection" id="task-selection"></div>
+      <div class="task-selection" id="task-selection">${initialTaskCardsMarkup}</div>
 
       <!-- これまでのチャットを見るボタン -->
       <div style="text-align: center; margin-top: 0.2rem;">

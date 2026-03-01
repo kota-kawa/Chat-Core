@@ -4,6 +4,34 @@
 let markedParser: ((text: string, options?: Record<string, unknown>) => string | Promise<string>) | null = null;
 let markedLoadPromise: Promise<void> | null = null;
 
+function normalizeMarkdownSegmentForDisplay(segment: string) {
+  return segment
+    .replace(/\u00a0/g, " ")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n[ \t\u3000]+\n/g, "\n\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trimEnd();
+}
+
+function normalizeLLMTextForDisplay(rawText: string) {
+  const normalized = rawText.replace(/\r\n?/g, "\n");
+  const codeFencePattern = /```[\s\S]*?```/g;
+  let result = "";
+  let lastIndex = 0;
+
+  for (const match of normalized.matchAll(codeFencePattern)) {
+    const matchStart = match.index ?? 0;
+    const matchText = match[0] || "";
+
+    result += normalizeMarkdownSegmentForDisplay(normalized.slice(lastIndex, matchStart));
+    result += matchText;
+    lastIndex = matchStart + matchText.length;
+  }
+
+  result += normalizeMarkdownSegmentForDisplay(normalized.slice(lastIndex));
+  return result;
+}
+
 function ensureMarkedParser() {
   if (markedParser) return Promise.resolve();
   if (markedLoadPromise) return markedLoadPromise;
@@ -51,7 +79,7 @@ function hideTypingIndicator() {
 
 /* LLM 出力の Markdown を HTML に変換 */
 function formatLLMOutput(text: string) {
-  const normalized = text.replace(/\r\n/g, "\n");
+  const normalized = normalizeLLMTextForDisplay(text);
   if (!markedParser) {
     void ensureMarkedParser();
     return normalized;

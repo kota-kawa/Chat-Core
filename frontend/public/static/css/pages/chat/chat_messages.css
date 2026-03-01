@@ -59,6 +59,120 @@
   border-radius: 18px 18px 18px 8px;
 }
 
+/* Markdown可読性を上げつつ、要素間の余白を詰める */
+.bot-message > * {
+  margin: 0.35rem 0;
+}
+
+.bot-message > :first-child {
+  margin-top: 0;
+}
+
+.bot-message > :last-child {
+  margin-bottom: 0;
+}
+
+.bot-message p {
+  margin: 0.35rem 0;
+}
+
+.bot-message ul,
+.bot-message ol {
+  margin: 0.45rem 0 0.45rem 1.1rem;
+  padding-left: 0.8rem;
+}
+
+.bot-message li + li {
+  margin-top: 0.22rem;
+}
+
+.bot-message h1,
+.bot-message h2,
+.bot-message h3,
+.bot-message h4,
+.bot-message h5,
+.bot-message h6 {
+  margin: 0.65rem 0 0.35rem;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.bot-message h1 {
+  font-size: 1.2rem;
+}
+
+.bot-message h2 {
+  font-size: 1.12rem;
+}
+
+.bot-message h3 {
+  font-size: 1.05rem;
+}
+
+.bot-message blockquote {
+  margin: 0.5rem 0;
+  padding: 0.45rem 0.7rem;
+  border-left: 3px solid rgba(25, 195, 125, 0.55);
+  background: rgba(25, 195, 125, 0.07);
+  border-radius: 0 8px 8px 0;
+  color: #355549;
+}
+
+.bot-message pre {
+  margin: 0.55rem 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  background: #f5f8f7;
+  border: 1px solid rgba(25, 195, 125, 0.2);
+  overflow-x: auto;
+  line-height: 1.5;
+}
+
+.bot-message code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  background: rgba(25, 195, 125, 0.12);
+  padding: 0.1rem 0.35rem;
+  border-radius: 6px;
+  font-size: 0.88em;
+}
+
+.bot-message pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+.bot-message table {
+  border-collapse: collapse;
+  margin: 0.55rem 0;
+  width: 100%;
+  font-size: 0.92rem;
+}
+
+.bot-message th,
+.bot-message td {
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  padding: 0.42rem 0.48rem;
+  text-align: left;
+}
+
+.bot-message th {
+  background: rgba(25, 195, 125, 0.1);
+}
+
+.bot-message hr {
+  border: 0;
+  border-top: 1px solid rgba(15, 23, 42, 0.16);
+  margin: 0.7rem 0;
+}
+
+.bot-message a {
+  color: #0f7d51;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-word;
+}
+
 /* コピーアイコン */
 .copy-btn {
   position: absolute;

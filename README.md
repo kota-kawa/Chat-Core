@@ -1,5 +1,7 @@
 # Chat-Core
 
+**🚀 Live Demo: [https://chatcore-ai.com/](https://chatcore-ai.com/)**
+
 ## UI Preview
 
 ![UI preview](assets/images/chatcore_screenshot.png)
@@ -165,6 +167,8 @@ Licensed under the Apache License, Version 2.0 - see the [LICENSE](LICENSE) file
 
 <details>
 <summary>日本語版 (クリックして展開)</summary>
+
+**🚀 ライブデモ: [https://chatcore-ai.com/](https://chatcore-ai.com/)**
 
 ## UI Preview
 

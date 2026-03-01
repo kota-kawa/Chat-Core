@@ -254,11 +254,11 @@ function ensureMarkedParser() {
   if (markedParser) return Promise.resolve();
   if (markedLoadPromise) return markedLoadPromise;
 
-  markedLoadPromise = Promise.all([
-    import("marked"),
-    import("highlight.js")
-  ])
-    .then(([markedModule, hljsModule]) => {
+  markedLoadPromise = (async () => {
+    try {
+      const markedModule = await import("marked");
+      const hljsModule = await import("highlight.js");
+
       const { Marked } = markedModule;
       hljs = hljsModule.default || hljsModule;
       
@@ -311,13 +311,13 @@ function ensureMarkedParser() {
       const marked = new Marked();
       marked.use({ renderer });
       markedParser = marked.parse.bind(marked);
-    })
-    .catch((error) => {
-      console.error("Failed to load marked parser:", error);
-    })
-    .finally(() => {
+    } catch (error) {
+      console.error("Failed to load marked or highlight.js:", error);
+      throw error;
+    } finally {
       markedLoadPromise = null;
-    });
+    }
+  })();
 
   return markedLoadPromise;
 }

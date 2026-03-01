@@ -84,65 +84,7 @@ const bodyMarkup = `
     <section class="prompts-list">
       <h2 id="selected-category-title">全てのプロンプト</h2>
       <div class="prompt-cards">
-        <!-- プロンプトカードの例 -->
-        <div class="prompt-card" data-category="恋愛">
-          <button class="meatball-menu" type="button" aria-label="その他の操作" aria-haspopup="true" aria-expanded="false">
-            <i class="bi bi-three-dots"></i>
-          </button>
-          <div class="prompt-actions-dropdown" role="menu">
-            <button class="dropdown-item" type="button" role="menuitem">プロンプトリストに保存</button>
-            <button class="dropdown-item" type="button" role="menuitem">ミュート</button>
-            <button class="dropdown-item" type="button" role="menuitem">報告する</button>
-          </div>
-          <h3>告白のアドバイス</h3>
-          <p>好きな人に気持ちを伝える時に使えるプロンプト例。</p>
-          <div class="prompt-meta">
-            <div class="prompt-meta-info">
-              <span>カテゴリ: 恋愛</span>
-              <span>投稿者: ユーザーA</span>
-            </div>
-            <div class="prompt-actions">
-              <button class="prompt-action-btn comment-btn" type="button" aria-label="コメント">
-                <i class="bi bi-chat-dots"></i>
-              </button>
-              <button class="prompt-action-btn like-btn" type="button" aria-label="いいね">
-                <i class="bi bi-heart"></i>
-              </button>
-              <button class="prompt-action-btn bookmark-btn" type="button" aria-label="ブックマーク">
-                <i class="bi bi-bookmark"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="prompt-card" data-category="その他">
-          <button class="meatball-menu" type="button" aria-label="その他の操作" aria-haspopup="true" aria-expanded="false">
-            <i class="bi bi-three-dots"></i>
-          </button>
-          <div class="prompt-actions-dropdown" role="menu">
-            <button class="dropdown-item" type="button" role="menuitem">プロンプトリストに保存</button>
-            <button class="dropdown-item" type="button" role="menuitem">ミュート</button>
-            <button class="dropdown-item" type="button" role="menuitem">報告する</button>
-          </div>
-          <h3>友人へのメッセージ</h3>
-          <p>誕生日や励ましのメッセージなどに使えるプロンプト例。</p>
-          <div class="prompt-meta">
-            <div class="prompt-meta-info">
-              <span>カテゴリ: その他</span>
-              <span>投稿者: ユーザーJ</span>
-            </div>
-            <div class="prompt-actions">
-              <button class="prompt-action-btn comment-btn" type="button" aria-label="コメント">
-                <i class="bi bi-chat-dots"></i>
-              </button>
-              <button class="prompt-action-btn like-btn" type="button" aria-label="いいね">
-                <i class="bi bi-heart"></i>
-              </button>
-              <button class="prompt-action-btn bookmark-btn" type="button" aria-label="ブックマーク">
-                <i class="bi bi-bookmark"></i>
-              </button>
-            </div>
-          </div>
-        </div>
+        <p class="prompt-loading-message">読み込み中...</p>
       </div>
     </section>
   </main>
@@ -252,8 +194,33 @@ const bodyMarkup = `
 export default function PromptSharePage() {
   useEffect(() => {
     document.body.classList.add("prompt-share-page");
-    import("../../scripts/entries/prompt_share");
+    const w = window as Window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    let setupTimerId: number | null = null;
+    let idleId: number | null = null;
+
+    if (typeof w.requestIdleCallback === "function") {
+      idleId = w.requestIdleCallback(
+        () => {
+          void import("../../scripts/entries/prompt_share");
+        },
+        { timeout: 500 }
+      );
+    } else {
+      setupTimerId = window.setTimeout(() => {
+        void import("../../scripts/entries/prompt_share");
+      }, 0);
+    }
+
     return () => {
+      if (idleId !== null && typeof w.cancelIdleCallback === "function") {
+        w.cancelIdleCallback(idleId);
+      }
+      if (setupTimerId !== null) {
+        clearTimeout(setupTimerId);
+      }
       document.body.classList.remove("prompt-share-page");
     };
   }, []);
@@ -266,14 +233,8 @@ export default function PromptSharePage() {
         <title>プロンプト共有 - トップ</title>
         <link rel="icon" type="image/webp" href="/static/favicon.webp" />
         <link rel="icon" type="image/png" href="/static/favicon.png" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
-          rel="stylesheet"
-        />
-        <link
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-          rel="stylesheet"
-        />
+        <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"

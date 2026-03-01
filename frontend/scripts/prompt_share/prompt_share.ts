@@ -12,6 +12,7 @@ type PromptData = {
 };
 
 const AUTH_STATE_CACHE_KEY = "chatcore.auth.loggedIn";
+const PROMPTS_CACHE_KEY = "prompt_share.prompts.v1";
 
 function readCachedAuthState() {
   try {
@@ -29,6 +30,26 @@ function writeCachedAuthState(loggedIn: boolean) {
     localStorage.setItem(AUTH_STATE_CACHE_KEY, loggedIn ? "1" : "0");
   } catch {
     // localStorage が使えない環境では保存をスキップ
+  }
+}
+
+function readPromptCache() {
+  try {
+    const raw = sessionStorage.getItem(PROMPTS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed as PromptData[];
+  } catch {
+    return null;
+  }
+}
+
+function writePromptCache(prompts: PromptData[]) {
+  try {
+    sessionStorage.setItem(PROMPTS_CACHE_KEY, JSON.stringify(prompts));
+  } catch {
+    // sessionStorage が使えない環境では保存をスキップ
   }
 }
 
@@ -70,17 +91,19 @@ function initPromptSharePage(attempt = 0) {
     applyAuthUI(cachedAuthState);
   }
 
-  fetch("/api/current_user")
-    .then((res) => (res.ok ? res.json() : { logged_in: false }))
-    .then((data) => {
-      isLoggedIn = Boolean(data.logged_in);
-      writeCachedAuthState(isLoggedIn);
-      applyAuthUI(isLoggedIn);
-    })
-    .catch((err) => {
-      console.error("Error checking login status:", err);
-      applyAuthUI(false);
-    });
+  window.setTimeout(() => {
+    fetch("/api/current_user")
+      .then((res) => (res.ok ? res.json() : { logged_in: false }))
+      .then((data) => {
+        isLoggedIn = Boolean(data.logged_in);
+        writeCachedAuthState(isLoggedIn);
+        applyAuthUI(isLoggedIn);
+      })
+      .catch((err) => {
+        console.error("Error checking login status:", err);
+        applyAuthUI(false);
+      });
+  }, 0);
 
   function closeAllDropdowns(exceptCard?: HTMLElement | null) {
     const openMenus = document.querySelectorAll<HTMLElement>(".prompt-actions-dropdown.is-open");
@@ -375,6 +398,30 @@ function initPromptSharePage(attempt = 0) {
   // ------------------------------
   // サーバーからプロンプト一覧を取得して表示する関数（Promise を返す）
   // ------------------------------
+  function normalizePromptData(prompt: PromptData): PromptData {
+    return {
+      ...prompt,
+      bookmarked: Boolean(prompt.bookmarked),
+      saved_to_list: Boolean(prompt.saved_to_list)
+    };
+  }
+
+  function renderPromptCards(prompts: PromptData[]) {
+    if (!promptContainer) return;
+
+    promptContainer.innerHTML = "";
+    if (!prompts.length) {
+      promptContainer.innerHTML = "<p>プロンプトが見つかりませんでした。</p>";
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    prompts.forEach((prompt) => {
+      fragment.appendChild(createPromptCardElement(normalizePromptData(prompt)));
+    });
+    promptContainer.appendChild(fragment);
+  }
+
   function loadPrompts() {
     return fetch("/prompt_share/api/prompts")
       .then((response) => {
@@ -384,21 +431,9 @@ function initPromptSharePage(attempt = 0) {
         return response.json();
       })
       .then((data) => {
-        if (!promptContainer) {
-          return;
-        }
-        promptContainer.innerHTML = ""; // 既存のカードをクリア
-
-        if (data.prompts) {
-          data.prompts.forEach((prompt: PromptData) => {
-            prompt.bookmarked = Boolean(prompt.bookmarked);
-            prompt.saved_to_list = Boolean(prompt.saved_to_list);
-            const card = createPromptCardElement(prompt);
-            promptContainer.appendChild(card);
-          });
-        } else {
-          promptContainer.innerHTML = "<p>プロンプトが見つかりませんでした。</p>";
-        }
+        const prompts = Array.isArray(data.prompts) ? data.prompts.map(normalizePromptData) : [];
+        writePromptCache(prompts);
+        renderPromptCards(prompts);
       })
       .catch((err) => {
         console.error("プロンプト取得エラー:", err);
@@ -409,142 +444,12 @@ function initPromptSharePage(attempt = 0) {
       });
   }
 
-  // 初回ロード時にプロンプト一覧を取得
-  loadPrompts();
-
-  // ------------------------------
-  // 静的プロンプトカードのイベントハンドラを追加（テスト用）
-  // ------------------------------
-  function setupStaticCardEvents() {
-    const staticCards = document.querySelectorAll<HTMLElement>(".prompt-card");
-    staticCards.forEach((card) => {
-      if (card.dataset.psBound === "true") {
-        return;
-      }
-      const titleElem = card.querySelector("h3");
-      if (titleElem) {
-        const fullTitle = titleElem.textContent || "";
-        titleElem.dataset.fullTitle = fullTitle;
-        titleElem.textContent = truncateTitle(fullTitle);
-      }
-
-      const contentElem = card.querySelector("p");
-      if (contentElem) {
-        const fullContent = contentElem.textContent || "";
-        contentElem.dataset.fullContent = fullContent;
-        contentElem.textContent = truncateContent(fullContent);
-      }
-
-      const meta = card.querySelector(".prompt-meta");
-      if (meta && !meta.querySelector(".prompt-meta-info")) {
-        const spans = Array.from(meta.querySelectorAll("span"));
-        const metaInfo = document.createElement("div");
-        metaInfo.classList.add("prompt-meta-info");
-        spans.forEach((span) => metaInfo.appendChild(span));
-        meta.innerHTML = "";
-        meta.appendChild(metaInfo);
-      }
-
-      const commentBtn = card.querySelector(".comment-btn");
-      if (commentBtn) {
-        commentBtn.addEventListener("click", function (e) {
-          e.stopPropagation();
-        });
-      }
-
-      const likeBtn = card.querySelector(".like-btn");
-      if (likeBtn) {
-        likeBtn.addEventListener("click", function (e) {
-          e.stopPropagation();
-          likeBtn.classList.toggle("liked");
-          const icon = likeBtn.querySelector("i");
-          if (icon) {
-            icon.classList.toggle("bi-heart");
-            icon.classList.toggle("bi-heart-fill");
-          }
-        });
-      }
-
-      const meatballBtn = card.querySelector(".meatball-menu");
-      const dropdownMenu = card.querySelector(".prompt-actions-dropdown");
-      if (meatballBtn && dropdownMenu) {
-        meatballBtn.addEventListener("click", function (e) {
-          e.stopPropagation();
-          const willOpen = !dropdownMenu.classList.contains("is-open");
-          closeAllDropdowns(card);
-          dropdownMenu.classList.toggle("is-open", willOpen);
-          meatballBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
-          card.classList.toggle("menu-open", willOpen);
-        });
-
-        dropdownMenu.addEventListener("click", (event) => {
-          event.stopPropagation();
-        });
-
-        dropdownMenu.querySelectorAll(".dropdown-item").forEach((item) => {
-          item.addEventListener("click", (event) => {
-            event.stopPropagation();
-            dropdownMenu.classList.remove("is-open");
-            meatballBtn.setAttribute("aria-expanded", "false");
-            card.classList.remove("menu-open");
-          });
-        });
-      }
-
-      const bookmarkBtn = card.querySelector(".bookmark-btn") as HTMLButtonElement | null;
-      if (bookmarkBtn) {
-        bookmarkBtn.addEventListener("click", function (e) {
-          e.stopPropagation();
-          if (!isLoggedIn) {
-            alert("ブックマークするにはログインが必要です。");
-            return;
-          }
-          bookmarkBtn.classList.toggle("bookmarked");
-          bookmarkBtn.innerHTML = bookmarkBtn.classList.contains("bookmarked")
-            ? `<i class="bi bi-bookmark-fill"></i>`
-            : `<i class="bi bi-bookmark"></i>`;
-        });
-        bookmarkBtn.dataset.bound = "true";
-      }
-
-      card.addEventListener("click", function (e) {
-        const target = e.target as Element | null;
-        if (target?.closest(".prompt-action-btn") || target?.closest(".meatball-menu")) {
-          return;
-        }
-
-        // 静的カードのデータを取得
-        const title = titleElem ? titleElem.dataset.fullTitle || titleElem.textContent || "" : "";
-        const content = contentElem ? contentElem.dataset.fullContent || contentElem.textContent || "" : "";
-        const category = card.getAttribute("data-category") || "";
-        const authorSpan = card.querySelector(".prompt-meta span:last-child");
-        const author = authorSpan ? authorSpan.textContent?.replace("投稿者: ", "") || "不明" : "不明";
-
-        // 模擬プロンプトデータを作成
-        const mockPrompt: PromptData = {
-          title: title,
-          content: content,
-          category: category,
-          author: author,
-          input_examples:
-            title === "告白のアドバイス"
-              ? "好きな人に告白したいです。どのように気持ちを伝えればよいでしょうか？"
-              : "",
-          output_examples:
-            title === "告白のアドバイス"
-              ? "素直な気持ちで、相手のことを思いやりながら「あなたと一緒にいるととても幸せです。お付き合いしていただけませんか？」といった誠実な言葉で伝えることをお勧めします。"
-              : ""
-        };
-
-        closeAllDropdowns();
-        showPromptDetailModal(mockPrompt);
-      });
-      card.dataset.psBound = "true";
-    });
+  // キャッシュがあれば先に描画してから、サーバーの最新データで更新する
+  const cachedPrompts = readPromptCache();
+  if (cachedPrompts && cachedPrompts.length > 0) {
+    renderPromptCards(cachedPrompts);
   }
-
-  // 静的カードのイベントをセットアップ
-  setupStaticCardEvents();
+  void loadPrompts();
 
   // ------------------------------
   // 検索機能（サーバー側検索）
@@ -578,12 +483,8 @@ function initPromptSharePage(attempt = 0) {
         return response.json();
       })
       .then((data) => {
-        promptCardsSection.innerHTML = ""; // 既存のカードをクリア
         if (data.prompts && data.prompts.length > 0) {
-          data.prompts.forEach((prompt: PromptData) => {
-            const card = createPromptCardElement(prompt);
-            promptCardsSection.appendChild(card);
-          });
+          renderPromptCards(data.prompts.map(normalizePromptData));
         } else {
           promptCardsSection.innerHTML = "<p>該当するプロンプトが見つかりませんでした。</p>";
         }
@@ -778,53 +679,6 @@ function initPromptSharePage(attempt = 0) {
       }
     });
   }
-
-  // ------------------------------
-  // ブックマーク機能（すでに存在するカードに対しても登録）
-  // ------------------------------
-  const promptCards = document.querySelectorAll<HTMLElement>(".prompt-card");
-  promptCards.forEach((card) => {
-    const meta = card.querySelector(".prompt-meta");
-    if (!meta) {
-      return;
-    }
-
-    if (!meta.querySelector(".prompt-meta-info")) {
-      const spans = Array.from(meta.querySelectorAll("span"));
-      const metaInfo = document.createElement("div");
-      metaInfo.classList.add("prompt-meta-info");
-      spans.forEach((span) => metaInfo.appendChild(span));
-      meta.innerHTML = "";
-      meta.appendChild(metaInfo);
-    }
-
-    let bookmarkBtn = meta.querySelector(".bookmark-btn") as HTMLButtonElement | null;
-    if (!bookmarkBtn) {
-      bookmarkBtn = document.createElement("button");
-      bookmarkBtn.classList.add("bookmark-btn");
-      bookmarkBtn.setAttribute("type", "button");
-      bookmarkBtn.setAttribute("aria-label", "ブックマーク");
-      bookmarkBtn.innerHTML = `<i class="bi bi-bookmark"></i>`;
-      meta.appendChild(bookmarkBtn);
-    }
-
-    if (bookmarkBtn.dataset.bound === "true") {
-      return;
-    }
-
-    bookmarkBtn.addEventListener("click", function (e) {
-      e.stopPropagation();
-      if (!isLoggedIn) {
-        alert("ブックマークするにはログインが必要です。");
-        return;
-      }
-      bookmarkBtn.classList.toggle("bookmarked");
-      bookmarkBtn.innerHTML = bookmarkBtn.classList.contains("bookmarked")
-        ? `<i class="bi bi-bookmark-fill"></i>`
-        : `<i class="bi bi-bookmark"></i>`;
-    });
-    bookmarkBtn.dataset.bound = "true";
-  });
 
   // ------------------------------
   // ガードレールの表示切替処理

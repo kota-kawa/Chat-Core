@@ -2,7 +2,7 @@
 
 body.prompt-share-page,
 .prompt-share-page {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--font-app-sans), "Segoe UI", sans-serif;
   background:
     radial-gradient(1200px 600px at 10% 10%, rgba(249, 115, 22, 0.08), transparent 55%),
     radial-gradient(900px 500px at 90% 15%, rgba(234, 88, 12, 0.06), transparent 50%),
@@ -272,6 +272,17 @@ main {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.2rem;
+}
+
+.prompt-loading-message {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 1.1rem 1.25rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(249, 115, 22, 0.2);
+  color: #8f4b1f;
+  font-weight: 500;
 }
 
 .prompt-card {

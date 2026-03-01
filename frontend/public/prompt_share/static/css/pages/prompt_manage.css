@@ -8,8 +8,8 @@
 body.prompt-manage-page,
 .prompt-manage-page {
   font-family: 'Poppins', sans-serif;
-  background: linear-gradient(120deg, var(--light-bg) 0%, #ffffff 100%);
-  color: var(--text-color);
+  background: linear-gradient(120deg, var(--ps-light-bg) 0%, #ffffff 100%);
+  color: var(--ps-text-color);
   line-height: 1.6;
   margin: 0;
   padding: 0;
@@ -19,8 +19,8 @@ body.prompt-manage-page,
 /* 3. ヘッダー                   */
 /* ─────────────────────────── */
 .main-header {
-  background: var(--accent-color);
-  box-shadow: var(--shadow);
+  background: var(--ps-accent-color);
+  box-shadow: var(--ps-shadow);
   padding: 1.5rem 0;
   text-align: center;
 }
@@ -39,12 +39,12 @@ body.prompt-manage-page,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 2px solid var(--accent-color);
+  border-bottom: 2px solid var(--ps-accent-color);
   padding-bottom: 0.5rem;
   margin-bottom: 2rem;
 }
 .section-title {
-  color: var(--primary-color);
+  color: var(--ps-primary-color);
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0;
@@ -67,11 +67,11 @@ body.prompt-manage-page,
 /* 6. カードデザイン              */
 /* ─────────────────────────── */
 .prompt-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
+  background: var(--ps-card-bg);
+  border: 1px solid var(--ps-border-color);
   border-radius: 8px;
   padding: 1.5rem;
-  box-shadow: var(--shadow);
+  box-shadow: var(--ps-shadow);
   transition: transform 0.3s ease,
               box-shadow 0.3s ease,
               border-color 0.3s ease;
@@ -81,11 +81,11 @@ body.prompt-manage-page,
 .prompt-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  border-color: var(--primary-color);
+  border-color: var(--ps-primary-color);
 }
 .prompt-card h3 {
   margin: 0 0 0.75rem;
-  color: var(--accent-color);
+  color: var(--ps-accent-color);
   font-size: 1.25rem;
   font-weight: 600;
   /* タイトルも長い場合は省略 */
@@ -137,7 +137,7 @@ body.prompt-manage-page,
   cursor: pointer;
 }
 .edit-btn {
-  background: var(--primary-color);
+  background: var(--ps-primary-color);
 }
 .edit-btn:hover {
   background: #c2410c;
@@ -151,7 +151,7 @@ body.prompt-manage-page,
 .btn-primary {
   width: 100%;
   padding: 0.75rem;
-  background: var(--accent-color);
+  background: var(--ps-accent-color);
   color: #fff;
   border: none;
   /* 完全に角をなくして、まるっとした形に */
@@ -176,11 +176,11 @@ body.prompt-manage-page,
 /* ─────────────────────────── */
 .modal-content {
   border-radius: 10px;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border-color);
+  box-shadow: var(--ps-shadow);
+  border: 1px solid var(--ps-border-color);
 }
 .modal-header {
-  background: var(--primary-color);
+  background: var(--ps-primary-color);
   border-bottom: none;
   padding: 1.25rem 1.5rem;
 }
@@ -196,17 +196,17 @@ body.prompt-manage-page,
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: var(--primary-color);
+  color: var(--ps-primary-color);
 }
 .input-field {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--ps-border-color);
   border-radius: 6px;
   transition: border-color 0.2s ease;
 }
 .input-field:focus {
-  border-color: var(--accent-color);
+  border-color: var(--ps-accent-color);
   outline: none;
 }
 

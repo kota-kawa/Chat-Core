@@ -6,8 +6,8 @@ body.prompt-share-page,
   background:
     radial-gradient(1200px 600px at 10% 10%, rgba(249, 115, 22, 0.08), transparent 55%),
     radial-gradient(900px 500px at 90% 15%, rgba(234, 88, 12, 0.06), transparent 50%),
-    linear-gradient(120deg, var(--light-bg) 0%, #ffffff 100%);
-  color: var(--text-color);
+    linear-gradient(120deg, var(--ps-light-bg) 0%, #ffffff 100%);
+  color: var(--ps-text-color);
   line-height: 1.6;
   min-height: 100vh;
   position: relative;
@@ -83,7 +83,7 @@ a {
   color: #fff;
   padding: 2.5rem 1.5rem;
   text-align: center;
-  box-shadow: var(--shadow);
+  box-shadow: var(--ps-shadow);
   position: relative;
   min-height: 320px;  /* ヘッダーの高さを増加 */
   display: flex;
@@ -144,7 +144,7 @@ a {
 }
 
 .search-box button {
-  background: var(--accent-color);
+  background: var(--ps-accent-color);
   color: #fff;
   border: none;
   padding: 0.85rem 1.1rem;
@@ -191,7 +191,7 @@ main {
   text-align: center;
   margin-bottom: 1rem;
   font-weight: 600;
-  color: var(--primary-color);
+  color: var(--ps-primary-color);
   letter-spacing: 0.04em;
 }
 
@@ -224,21 +224,21 @@ main {
 .category-card.active,
 .category-card:hover {
   box-shadow: 0 16px 30px rgba(0, 0, 0, 0.14);
-  border-color: var(--primary-color);
+  border-color: var(--ps-primary-color);
   transform: translateY(-4px);
 }
 
 .category-card i {
   font-size: 2rem;
   margin-bottom: 0.5rem;
-  color: var(--accent-color);
+  color: var(--ps-accent-color);
   transition: transform 0.2s ease;
 }
 
 .category-card span {
   font-size: 0.9rem;
   font-weight: 500;
-  color: var(--text-color);
+  color: var(--ps-text-color);
   transition: color 0.2s ease;
 }
 
@@ -248,7 +248,7 @@ main {
 
 .category-card.active span,
 .category-card:hover span {
-  color: var(--primary-color);
+  color: var(--ps-primary-color);
 }
 
 /* ==================== */
@@ -258,7 +258,7 @@ main {
   text-align: center;
   margin-bottom: 1rem;
   font-weight: 600;
-  color: var(--primary-color);
+  color: var(--ps-primary-color);
   letter-spacing: 0.04em;
 }
 
@@ -310,7 +310,7 @@ main {
 .prompt-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 20px 38px rgba(0, 0, 0, 0.14);
-  border-color: var(--primary-color);
+  border-color: var(--ps-primary-color);
 }
 
 .prompt-card.menu-open {
@@ -320,7 +320,7 @@ main {
 .prompt-card h3 {
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: var(--accent-color);
+  color: var(--ps-accent-color);
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -332,7 +332,7 @@ main {
 
 .prompt-card p {
   margin-bottom: 0;
-  color: var(--text-color);
+  color: var(--ps-text-color);
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -387,7 +387,7 @@ main {
   background: transparent;
   border: none;
   cursor: pointer;
-  color: var(--accent-color);
+  color: var(--ps-accent-color);
   outline: none;
   transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
   display: inline-flex;
@@ -413,13 +413,13 @@ main {
 }
 
 .meatball-menu[aria-expanded="true"] {
-  color: var(--primary-color);
+  color: var(--ps-primary-color);
   background: rgba(83, 167, 243, 0.12);
 }
 
 .meatball-menu:hover,
 .prompt-action-btn:hover {
-  color: var(--primary-color);
+  color: var(--ps-primary-color);
   background: rgba(249, 115, 22, 0.12);
   transform: translateY(-1px);
 }
@@ -430,7 +430,7 @@ main {
   top: 44px;
   right: 8px;
   min-width: 190px;
-  background: var(--card-bg);
+  background: var(--ps-card-bg);
   border: 1px solid rgba(148, 163, 184, 0.25);
   border-radius: 14px;
   box-shadow: 0 18px 32px rgba(15, 23, 42, 0.18);
@@ -452,7 +452,7 @@ main {
   right: 16px;
   width: 14px;
   height: 14px;
-  background: var(--card-bg);
+  background: var(--ps-card-bg);
   border-left: 1px solid rgba(148, 163, 184, 0.25);
   border-top: 1px solid rgba(148, 163, 184, 0.25);
   transform: rotate(45deg);
@@ -472,14 +472,14 @@ main {
   border: none;
   font-size: 0.95rem;
   padding: 0.6rem 1rem;
-  color: var(--accent-color);
+  color: var(--ps-accent-color);
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
 }
 
 .prompt-actions-dropdown .dropdown-item:hover {
   background: rgba(249, 115, 22, 0.12);
-  color: var(--primary-color);
+  color: var(--ps-primary-color);
 }
 
 .bookmark-btn {
@@ -489,7 +489,7 @@ main {
 }
 
 .bookmark-btn.bookmarked {
-  color: var(--primary-color);
+  color: var(--ps-primary-color);
 }
 
 .like-btn.liked {
@@ -522,7 +522,7 @@ main {
 }
 
 .post-modal-content {
-  background: var(--card-bg);
+  background: var(--ps-card-bg);
   padding: 2rem;
   border-radius: 18px;
   max-width: 640px;
@@ -584,7 +584,7 @@ main {
 .form-group label {
   margin-bottom: 0.25rem;
   font-weight: 500;
-  color: var(--primary-color);
+  color: var(--ps-primary-color);
 }
 
 .form-group input[type="text"],
@@ -596,7 +596,7 @@ main {
   border-radius: 12px;
   font-family: inherit;
   font-size: 0.95rem;
-  color: var(--text-color);
+  color: var(--ps-text-color);
   background: #fff;
   transition: border 0.2s ease, box-shadow 0.2s ease;
 }
@@ -604,7 +604,7 @@ main {
 .form-group input[type="text"]:focus,
 .form-group textarea:focus,
 .form-group select:focus {
-  border-color: var(--accent-color);
+  border-color: var(--ps-accent-color);
   box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.18);
   outline: none;
 }
@@ -614,7 +614,7 @@ main {
 /* 投稿ボタン */
 /* ==================== */
 .submit-btn {
-  background: var(--accent-color);
+  background: var(--ps-accent-color);
   color: #fff;
   border: none;
   border-radius: 12px;
@@ -821,7 +821,7 @@ main {
   .form-group input[type="text"]:focus,
   .form-group textarea:focus,
   .form-group select:focus {
-    border-color: var(--accent-color);
+    border-color: var(--ps-accent-color);
     outline: none;
   }
 
@@ -932,11 +932,11 @@ main {
 /* ==================== */
 .guardrail-info {
   background: #f5f7f6;
-  border-left: 4px solid var(--accent-color);
+  border-left: 4px solid var(--ps-accent-color);
   padding: 0.75rem;
   margin-top: 1rem;
   font-size: 0.9rem;
-  color: var(--text-color);
+  color: var(--ps-text-color);
   min-height: auto; /* 値を大きくして高さを増加 */
 }
 

@@ -74,6 +74,107 @@
   background: #ffffff;
 }
 
+#ai-model.model-select-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.model-select {
+  position: relative;
+  width: 100%;
+}
+
+.model-select-trigger {
+  width: 100%;
+  border: 1px solid #dfe9e5;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 0.95rem 2.6rem 0.95rem 1rem;
+  text-align: left;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: #1f2d28;
+  cursor: pointer;
+  transition: border 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  position: relative;
+}
+
+.model-select-trigger::after {
+  content: '';
+  position: absolute;
+  right: 1.05rem;
+  top: 50%;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-right: 2px solid #4f635b;
+  border-bottom: 2px solid #4f635b;
+  transform: translateY(-60%) rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.model-select.is-open .model-select-trigger,
+.model-select-trigger:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(25, 195, 125, 0.2);
+  outline: none;
+  background: #ffffff;
+}
+
+.model-select.is-open .model-select-trigger::after {
+  transform: translateY(-30%) rotate(-135deg);
+}
+
+.model-select-menu {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  left: 0;
+  right: 0;
+  display: none;
+  background: #ffffff;
+  border: 1px solid rgba(25, 195, 125, 0.24);
+  border-radius: 14px;
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.14);
+  padding: 0.35rem;
+  max-height: 230px;
+  overflow-y: auto;
+  z-index: 1200;
+}
+
+.model-select.is-open .model-select-menu {
+  display: block;
+  animation: slideUp 0.2s ease-out;
+}
+
+.model-select-option {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #1f2d28;
+  text-align: left;
+  padding: 0.7rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.model-select-option:hover {
+  background: rgba(25, 195, 125, 0.12);
+}
+
+.model-select-option.is-selected {
+  background: rgba(25, 195, 125, 0.2);
+  color: #0f5132;
+  font-weight: 600;
+}
+
 /* ２列レイアウトの設定（.task-wrapper にサイズ指定） */
 .task-selection {
   position: relative;

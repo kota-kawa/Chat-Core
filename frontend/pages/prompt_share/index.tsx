@@ -230,7 +230,13 @@ export default function PromptSharePage() {
       if (setupTimerId !== null) {
         clearTimeout(setupTimerId);
       }
+      document.documentElement.classList.remove("ps-modal-open");
       document.body.classList.remove("ps-modal-open");
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.width = "";
       document.body.classList.remove("prompt-share-page");
     };
   }, []);

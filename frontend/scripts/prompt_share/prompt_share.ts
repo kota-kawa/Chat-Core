@@ -638,6 +638,7 @@ function initPromptSharePage(attempt = 0) {
   const newPromptIcon = openModalBtn ? openModalBtn.querySelector("i") : null;
   let activeModal: HTMLElement | null = null;
   let previouslyFocusedElement: HTMLElement | null = null;
+  let lockedScrollY = 0;
 
   function getModalFocusableElements(modal: HTMLElement) {
     const selector = [
@@ -672,12 +673,38 @@ function initPromptSharePage(attempt = 0) {
     });
   }
 
+  function lockBackgroundInteraction() {
+    if (document.body.classList.contains("ps-modal-open")) {
+      return;
+    }
+
+    lockedScrollY = window.scrollY || window.pageYOffset || 0;
+    document.documentElement.classList.add("ps-modal-open");
+    document.body.classList.add("ps-modal-open");
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${lockedScrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+  }
+
+  function unlockBackgroundInteraction() {
+    document.documentElement.classList.remove("ps-modal-open");
+    document.body.classList.remove("ps-modal-open");
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
+    document.body.style.width = "";
+    window.scrollTo(0, lockedScrollY);
+  }
+
   function openModal(modal: HTMLElement, preferredElement?: HTMLElement | null) {
     previouslyFocusedElement = document.activeElement as HTMLElement | null;
     activeModal = modal;
     modal.classList.add("show");
     modal.setAttribute("aria-hidden", "false");
-    document.body.classList.add("ps-modal-open");
+    lockBackgroundInteraction();
     focusModal(modal, preferredElement);
   }
 
@@ -698,7 +725,7 @@ function initPromptSharePage(attempt = 0) {
 
     const hasVisibleModal = Boolean(document.querySelector(".post-modal.show"));
     if (!hasVisibleModal) {
-      document.body.classList.remove("ps-modal-open");
+      unlockBackgroundInteraction();
       if (previouslyFocusedElement) {
         previouslyFocusedElement.focus();
       }

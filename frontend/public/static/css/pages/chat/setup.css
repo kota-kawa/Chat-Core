@@ -89,6 +89,11 @@
   display: flex;
 }
 
+/* 初期描画時のフラッシュ防止: 折りたたみ時は 7 件目以降を隠す */
+.task-selection.tasks-collapsed:not(.tasks-expanded) .task-wrapper:nth-child(n + 7) {
+  display: none;
+}
+
 /* カード本体のスタイル */
 .prompt-card {
   background: #ffffff;

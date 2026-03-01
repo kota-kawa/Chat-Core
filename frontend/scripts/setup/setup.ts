@@ -333,37 +333,51 @@ function handleTaskCardClick(e: Event) {
 
 // ▼ 4. 「もっと見る」ボタン生成 ----------------------------------------------------
 function initToggleTasks() {
-  const container = document.querySelector(".task-selection");
+  const container = document.querySelector<HTMLElement>(".task-selection");
   if (!container) return;
   const oldBtn = document.getElementById("toggle-tasks-btn");
   if (oldBtn) oldBtn.remove();
 
-  const cards = document.querySelectorAll<HTMLElement>(".task-selection .prompt-card");
-  if (cards.length > 6) {
-    // 7枚目以降を非表示
-    [...cards].slice(6).forEach((c) => (c.style.display = "none"));
+  const cards = [...container.querySelectorAll<HTMLElement>(".prompt-card")];
 
-    // ボタン生成
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.id = "toggle-tasks-btn";
-    btn.className = "primary-button";
-    btn.style.width = "100%";
-    btn.style.marginTop = "0.1rem";
-    btn.innerHTML = '<i class="bi bi-chevron-down"></i> もっと見る';
+  // 以前の inline 指定が残っていても CSS クラス制御を優先する
+  cards.forEach((card) => {
+    if (card.style.display) card.style.removeProperty("display");
+  });
 
-    let expanded = false;
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      expanded = !expanded;
-      [...cards].slice(6).forEach((c) => (c.style.display = expanded ? "flex" : "none"));
-      btn.innerHTML = expanded ? '<i class="bi bi-chevron-up"></i> 閉じる' : '<i class="bi bi-chevron-down"></i> もっと見る';
-    });
+  container.classList.remove("tasks-expanded");
 
-    // ボタンをリストの末尾に追加
-    const selectionContainer = window.taskSelection || container;
-    selectionContainer.appendChild(btn);
+  if (cards.length <= 6) {
+    container.classList.remove("tasks-collapsed");
+    return;
   }
+
+  container.classList.add("tasks-collapsed");
+
+  // ボタン生成
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.id = "toggle-tasks-btn";
+  btn.className = "primary-button";
+  btn.style.width = "100%";
+  btn.style.marginTop = "0.1rem";
+
+  let expanded = false;
+  const applyExpandedState = () => {
+    container.classList.toggle("tasks-expanded", expanded);
+    btn.innerHTML = expanded ? '<i class="bi bi-chevron-up"></i> 閉じる' : '<i class="bi bi-chevron-down"></i> もっと見る';
+  };
+
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    expanded = !expanded;
+    applyExpandedState();
+  });
+  applyExpandedState();
+
+  // ボタンをリストの末尾に追加
+  const selectionContainer = window.taskSelection || container;
+  selectionContainer.appendChild(btn);
 }
 
 // ---- グローバル公開 -------------------------------------------------------------

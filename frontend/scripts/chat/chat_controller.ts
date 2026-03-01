@@ -16,6 +16,8 @@ function sendMessage() {
 /* サーバー POST → Bot 応答を描画 */
 function generateResponse(message: string, aiModel: string) {
   if (!window.chatMessages) return;
+  // marked の遅延読み込みを先行して開始し、初回描画の崩れを減らす
+  window.formatLLMOutput?.("");
   // ユーザーメッセージを即描画
   window.renderUserMessage?.(message);
 

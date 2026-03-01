@@ -9,6 +9,94 @@
  * @param dirtyHtml サニタイズ前 HTML
  * @param allowed   許可タグ（省略時はデフォルト）
  */
+function compactBotMessageHtml(html: string) {
+  return html
+    .replace(/[\u200B-\u200D\u2060\uFEFF]/g, "")
+    .replace(/(?:<br\s*\/?>\s*){3,}/gi, "<br><br>")
+    .replace(/<p>(?:\s|&nbsp;|&#160;|&#xA0;|&#8203;|&#x200b;|<br\s*\/?>)*<\/p>/gi, "")
+    .replace(/(<\/(?:p|ul|ol|pre|blockquote|table|h[1-6])>\s*)(?:<br\s*\/?>\s*)+/gi, "$1")
+    .replace(/(?:<br\s*\/?>\s*)+(<(?:p|ul|ol|pre|blockquote|table|h[1-6]|hr)\b)/gi, "$1")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function isSafeUrl(value: string) {
+  const v = value.trim();
+  if (!v) return false;
+  return /^(https?:|mailto:|tel:|\/|#)/i.test(v);
+}
+
+function sanitizeHtmlWithoutPurifier(
+  dirtyHtml: string,
+  allowedTags: string[],
+  allowedAttrs: string[]
+) {
+  const allowedTagSet = new Set(allowedTags.map((t) => t.toLowerCase()));
+  const allowedAttrSet = new Set(allowedAttrs.map((a) => a.toLowerCase()));
+
+  const template = document.createElement("template");
+  template.innerHTML = dirtyHtml;
+
+  const sanitizeNode = (node: Node): Node | DocumentFragment | null => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return document.createTextNode(node.textContent || "");
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      return null;
+    }
+
+    const element = node as HTMLElement;
+    const tag = element.tagName.toLowerCase();
+
+    // 非許可タグは中身だけ展開して残す
+    if (!allowedTagSet.has(tag)) {
+      const fragment = document.createDocumentFragment();
+      Array.from(element.childNodes).forEach((child) => {
+        const cleanedChild = sanitizeNode(child);
+        if (cleanedChild) fragment.appendChild(cleanedChild);
+      });
+      return fragment;
+    }
+
+    const clean = document.createElement(tag);
+    Array.from(element.attributes).forEach((attr) => {
+      const name = attr.name.toLowerCase();
+      const value = attr.value;
+      if (!allowedAttrSet.has(name)) return;
+
+      if ((name === "href" || name === "src") && !isSafeUrl(value)) {
+        return;
+      }
+
+      if (name === "target") {
+        if (value === "_blank") {
+          clean.setAttribute("target", "_blank");
+          clean.setAttribute("rel", "noopener noreferrer");
+        }
+        return;
+      }
+
+      clean.setAttribute(name, value);
+    });
+
+    Array.from(element.childNodes).forEach((child) => {
+      const cleanedChild = sanitizeNode(child);
+      if (cleanedChild) clean.appendChild(cleanedChild);
+    });
+
+    return clean;
+  };
+
+  const root = document.createElement("div");
+  Array.from(template.content.childNodes).forEach((child) => {
+    const cleaned = sanitizeNode(child);
+    if (cleaned) root.appendChild(cleaned);
+  });
+
+  return root.innerHTML;
+}
+
 function renderSanitizedHTML(
   element: HTMLElement,
   dirtyHtml: string,
@@ -40,25 +128,31 @@ function renderSanitizedHTML(
     "td"
   ]
 ) {
+  const isBotMessage = element.classList.contains("bot-message");
   const purifier = (globalThis as { DOMPurify?: { sanitize?: Function } }).DOMPurify;
   if (purifier && typeof purifier.sanitize === "function") {
-    const clean = purifier.sanitize(dirtyHtml, {
+    let clean = purifier.sanitize(dirtyHtml, {
       ALLOWED_TAGS: allowed,
       ALLOWED_ATTR: ["href", "src", "alt", "title", "target"]
     });
+    if (isBotMessage) {
+      clean = compactBotMessageHtml(clean);
+    }
     element.innerHTML = clean;
     return;
   }
 
-  // サニタイザが未ロードの間は、HTMLを解釈せずテキストとして描画する
+  // サニタイザが未ロードでも許可タグだけを残すフォールバックサニタイズを適用する
   if (allowed.length === 1 && allowed[0] === "br") {
     setTextWithLineBreaks(element, dirtyHtml.replace(/<br\s*\/?>/gi, "\n"));
     return;
   }
 
-  const tmp = document.createElement("div");
-  tmp.innerHTML = dirtyHtml;
-  setTextWithLineBreaks(element, tmp.textContent || "");
+  let clean = sanitizeHtmlWithoutPurifier(dirtyHtml, allowed, ["href", "src", "alt", "title", "target"]);
+  if (isBotMessage) {
+    clean = compactBotMessageHtml(clean);
+  }
+  element.innerHTML = clean;
 }
 
 /**

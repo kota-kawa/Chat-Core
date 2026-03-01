@@ -25,6 +25,8 @@ type TaskItem = {
   is_default?: boolean;
 };
 
+let isTaskLaunchInProgress = false;
+
 // ▼ 1. タスクカード生成・詳細表示 -------------------------------------------------
 function getFallbackTasks() {
   return (defaultTasks as TaskItem[]).map((task) => ({
@@ -258,6 +260,9 @@ function showSetupForm() {
   const setupContainer = document.getElementById("setup-container");
   const setupInfoElement = document.getElementById("setup-info") as HTMLTextAreaElement | null;
 
+  // セットアップ画面に戻ったら、次のタスク選択を許可する
+  isTaskLaunchInProgress = false;
+
   if (chatContainer) chatContainer.style.display = "none";
   if (setupContainer) setupContainer.style.display = "block";
   if (setupInfoElement) setupInfoElement.value = "";
@@ -282,10 +287,13 @@ function initSetupTaskCards() {
 
 function handleTaskCardClick(e: Event) {
   if (window.isEditingOrder) return; // 並び替え中は無視
+  if (isTaskLaunchInProgress) return; // 多重送信防止
 
   const target = e.target as Element | null;
   const card = target?.closest(".prompt-card") as HTMLElement | null;
   if (!card) return;
+
+  isTaskLaunchInProgress = true;
 
   const setupInfoElement = document.getElementById("setup-info") as HTMLTextAreaElement | null;
   const aiModelSelect = document.getElementById("ai-model") as HTMLSelectElement | null;
@@ -325,8 +333,12 @@ function handleTaskCardClick(e: Event) {
         // ③ Bot 応答生成
         if (typeof window.generateResponse === "function") window.generateResponse(firstMsg, aiModel);
       })
-      .catch((err) => alert("チャットルーム作成に失敗: " + err));
+      .catch((err) => {
+        isTaskLaunchInProgress = false;
+        alert("チャットルーム作成に失敗: " + err);
+      });
   } else {
+    isTaskLaunchInProgress = false;
     console.error("createNewChatRoom is not defined");
   }
 }

@@ -22,16 +22,19 @@
 /* メッセージラッパ */
 .message-wrapper {
   position: relative;
-  margin-bottom: 1rem;
-  max-width: 78%;
+  margin-bottom: 1.5rem;
+  max-width: 85%;
 }
 
 .user-message-wrapper {
   margin-left: auto;
+  max-width: 80%;
 }
 
 .bot-message-wrapper {
   margin-right: auto;
+  max-width: 92%;
+  width: 92%;
 }
 
 /* バブル */
@@ -39,32 +42,37 @@
 .bot-message {
   line-height: 1.6;
   font-size: 0.95rem;
-  padding: 0.9rem 1.05rem;
+  padding: 1rem 1.25rem;
   border-radius: 18px;
   max-width: 100%;
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
 .user-message {
-  background: linear-gradient(135deg, #19c37d 0%, #16a367 100%);
-  color: #fff;
+  background: #f4f4f4;
+  color: #333;
   animation: floatUp 0.5s ease-out;
-  border-radius: 18px 18px 8px 18px;
+  border-radius: 20px;
+  border: 1px solid #e5e5e5;
+  box-shadow: none;
 }
 
 .bot-message {
-  background: #ffffff;
+  background: transparent;
   color: var(--text-dark);
-  border: 1px solid rgba(25, 195, 125, 0.12);
-  border-radius: 18px 18px 18px 8px;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
   overflow-wrap: anywhere;
   word-break: break-word;
   text-wrap: pretty;
+  width: 100%;
+  padding: 0; /* Remove padding for bot messages to feel more like a document */
 }
 
 /* Markdown可読性を上げつつ、要素間の余白を詰める */
 .bot-message > * {
-  margin: 0.35rem 0;
+  margin: 0.75rem 0;
 }
 
 .bot-message > :first-child {
@@ -76,7 +84,7 @@
 }
 
 .bot-message p {
-  margin: 0.35rem 0;
+  margin: 0.75rem 0;
 }
 
 .bot-message p + p,
@@ -84,17 +92,17 @@
 .bot-message ol + p,
 .bot-message p + ul,
 .bot-message p + ol {
-  margin-top: 0.45rem;
+  margin-top: 0.85rem;
 }
 
 .bot-message ul,
 .bot-message ol {
-  margin: 0.45rem 0 0.45rem 1.1rem;
+  margin: 0.75rem 0 0.75rem 1.1rem;
   padding-left: 0.8rem;
 }
 
 .bot-message li + li {
-  margin-top: 0.22rem;
+  margin-top: 0.35rem;
 }
 
 .bot-message h1,
@@ -103,38 +111,87 @@
 .bot-message h4,
 .bot-message h5,
 .bot-message h6 {
-  margin: 0.65rem 0 0.35rem;
+  margin: 1.25rem 0 0.65rem;
   line-height: 1.4;
   font-weight: 700;
 }
 
 .bot-message h1 {
-  font-size: 1.2rem;
+  font-size: 1.5rem;
+  border-bottom: 1px solid rgba(25, 195, 125, 0.2);
+  padding-bottom: 0.3rem;
 }
 
 .bot-message h2 {
-  font-size: 1.12rem;
+  font-size: 1.35rem;
 }
 
 .bot-message h3 {
-  font-size: 1.05rem;
+  font-size: 1.2rem;
 }
 
 .bot-message blockquote {
-  margin: 0.5rem 0;
-  padding: 0.45rem 0.7rem;
-  border-left: 3px solid rgba(25, 195, 125, 0.55);
+  margin: 0.75rem 0;
+  padding: 0.6rem 1rem;
+  border-left: 4px solid rgba(25, 195, 125, 0.55);
   background: rgba(25, 195, 125, 0.07);
   border-radius: 0 8px 8px 0;
   color: #355549;
+  font-style: italic;
+}
+
+/* Code Block Container (ChatGPT-like) */
+.code-block-container {
+  margin: 1rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #282c34; /* Atom One Dark background */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #343a40;
+  padding: 0.4rem 0.8rem;
+  color: #d1d5db;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.code-block-lang {
+  font-weight: 600;
+}
+
+.code-block-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: transparent;
+  border: none;
+  color: #d1d5db;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.code-block-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.code-block-copy-btn i {
+  font-size: 0.85rem;
 }
 
 .bot-message pre {
-  margin: 0.55rem 0;
-  padding: 0.7rem 0.85rem;
-  border-radius: 10px;
-  background: #f5f8f7;
-  border: 1px solid rgba(25, 195, 125, 0.2);
+  margin: 0;
+  padding: 1rem;
+  background: transparent !important; /* Inherit from container */
+  border: none;
   overflow-x: auto;
   line-height: 1.5;
 }
@@ -142,16 +199,57 @@
 .bot-message code {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   background: rgba(25, 195, 125, 0.12);
-  padding: 0.1rem 0.35rem;
-  border-radius: 6px;
-  font-size: 0.88em;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  font-size: 0.9em;
+  color: #e06c75; /* Inline code color for light mode fallback */
 }
 
 .bot-message pre code {
   background: transparent;
   padding: 0;
   border-radius: 0;
+  color: #abb2bf; /* Atom One Dark default text color */
+  font-size: 0.85rem;
 }
+
+/* Atom One Dark Theme for highlight.js */
+.hljs-comment,
+.hljs-quote { color: #5c6370; font-style: italic; }
+.hljs-doctag,
+.hljs-keyword,
+.hljs-formula { color: #c678dd; }
+.hljs-section,
+.hljs-name,
+.hljs-selector-tag,
+.hljs-deletion,
+.hljs-subst { color: #e06c75; }
+.hljs-literal { color: #56b6c2; }
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-attribute,
+.hljs-meta .hljs-string { color: #98c379; }
+.hljs-attr,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-type,
+.hljs-selector-class,
+.hljs-selector-attr,
+.hljs-template-tag,
+.hljs-number { color: #d19a66; }
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link,
+.hljs-meta,
+.hljs-selector-id,
+.hljs-title { color: #61afef; }
+.hljs-built_in,
+.hljs-title.class_,
+.hljs-class .hljs-title { color: #e6c07b; }
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: bold; }
+.hljs-link { text-decoration: underline; }
 
 .bot-message table {
   border-collapse: collapse;

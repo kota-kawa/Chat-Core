@@ -1,8 +1,9 @@
 // chat_ui.ts  – チャット画面 UI 共通ユーティリティ
 // --------------------------------------------------
 
-let markedParser: ((text: string, options?: Record<string, unknown>) => string | Promise<string>) | null = null;
+let markedParser: any = null;
 let markedLoadPromise: Promise<void> | null = null;
+let hljs: any = null;
 
 function stripInvisibleCharacters(value: string) {
   return value.replace(/[\u200B-\u200D\u2060\uFEFF]/g, "");
@@ -253,9 +254,63 @@ function ensureMarkedParser() {
   if (markedParser) return Promise.resolve();
   if (markedLoadPromise) return markedLoadPromise;
 
-  markedLoadPromise = import("marked")
-    .then((module) => {
-      markedParser = module.marked.parse.bind(module.marked);
+  markedLoadPromise = Promise.all([
+    import("marked"),
+    import("highlight.js")
+  ])
+    .then(([markedModule, hljsModule]) => {
+      const { Marked } = markedModule;
+      hljs = hljsModule.default || hljsModule;
+      
+      const renderer = {
+        code(token: any) {
+          const text = token.text || "";
+          const lang = token.lang || "plaintext";
+          const language = lang.split(" ")[0] || "plaintext";
+          
+          let highlighted = text;
+          try {
+            if (hljs.getLanguage(language)) {
+              highlighted = hljs.highlight(text, { language }).value;
+            } else {
+              highlighted = hljs.highlightAuto(text).value;
+            }
+          } catch (e) {
+            console.error("Highlight error:", e);
+          }
+
+          return `
+            <div class="code-block-container">
+              <div class="code-block-header">
+                <span class="code-block-lang">${language}</span>
+                <button class="code-block-copy-btn" onclick="
+                  const code = this.closest('.code-block-container').querySelector('code').innerText;
+                  navigator.clipboard.writeText(code).then(() => {
+                    const icon = this.querySelector('i');
+                    if (icon) {
+                      icon.classList.replace('bi-clipboard', 'bi-check-lg');
+                      setTimeout(() => icon.classList.replace('bi-check-lg', 'bi-clipboard'), 2000);
+                    }
+                    const textSpan = this.querySelector('span');
+                    if (textSpan) {
+                      const oldText = textSpan.innerText;
+                      textSpan.innerText = 'Copied!';
+                      setTimeout(() => textSpan.innerText = oldText, 2000);
+                    }
+                  });
+                ">
+                  <i class="bi bi-clipboard"></i>
+                  <span>Copy code</span>
+                </button>
+              </div>
+              <pre><code class="hljs language-${language}">${highlighted}</code></pre>
+            </div>`;
+        }
+      };
+
+      const marked = new Marked();
+      marked.use({ renderer });
+      markedParser = marked.parse.bind(marked);
     })
     .catch((error) => {
       console.error("Failed to load marked parser:", error);

@@ -611,11 +611,10 @@ function initPromptSharePage(attempt = 0) {
             if (guardrailFields) {
               guardrailFields.style.display = "none";
             }
-            const postModal = document.getElementById("postModal");
-            if (postModal) {
-              postModal.classList.remove("show");
+            const postModalElement = document.getElementById("postModal") as HTMLElement | null;
+            if (postModalElement) {
+              closeModal(postModalElement, { rotateTrigger: true });
             }
-            triggerNewPromptIconRotation();
             // 最新のプロンプト一覧を再読み込み
             loadPrompts();
           }
@@ -631,9 +630,122 @@ function initPromptSharePage(attempt = 0) {
   // 投稿モーダルの表示・非表示
   // ------------------------------
   const openModalBtn = document.getElementById("openPostModal");
-  const postModal = document.getElementById("postModal");
-  const closeModalBtn = document.querySelector(".close-btn");
+  const postModal = document.getElementById("postModal") as HTMLElement | null;
+  const closeModalBtn = document.querySelector("#postModal .close-btn") as HTMLButtonElement | null;
+  const promptDetailModal = document.getElementById("promptDetailModal") as HTMLElement | null;
+  const closePromptDetailModalBtn = document.getElementById("closePromptDetailModal") as HTMLButtonElement | null;
+  const postModalTitleInput = document.getElementById("prompt-title") as HTMLInputElement | null;
   const newPromptIcon = openModalBtn ? openModalBtn.querySelector("i") : null;
+  let activeModal: HTMLElement | null = null;
+  let previouslyFocusedElement: HTMLElement | null = null;
+
+  function getModalFocusableElements(modal: HTMLElement) {
+    const selector = [
+      "a[href]",
+      "area[href]",
+      "button:not([disabled])",
+      "input:not([disabled])",
+      "select:not([disabled])",
+      "textarea:not([disabled])",
+      "[tabindex]:not([tabindex='-1'])"
+    ].join(", ");
+
+    return Array.from(modal.querySelectorAll<HTMLElement>(selector)).filter((element) => {
+      const style = window.getComputedStyle(element);
+      return style.display !== "none" && style.visibility !== "hidden";
+    });
+  }
+
+  function focusModal(modal: HTMLElement, preferredElement?: HTMLElement | null) {
+    const fallbackTarget =
+      modal.querySelector<HTMLElement>(".post-modal-content") || (modal as HTMLElement);
+    const focusableElements = getModalFocusableElements(modal);
+    const target =
+      (preferredElement && getModalFocusableElements(modal).includes(preferredElement)
+        ? preferredElement
+        : null) ||
+      focusableElements[0] ||
+      fallbackTarget;
+
+    window.requestAnimationFrame(() => {
+      target.focus();
+    });
+  }
+
+  function openModal(modal: HTMLElement, preferredElement?: HTMLElement | null) {
+    previouslyFocusedElement = document.activeElement as HTMLElement | null;
+    activeModal = modal;
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("ps-modal-open");
+    focusModal(modal, preferredElement);
+  }
+
+  function closeModal(modal: HTMLElement, options?: { rotateTrigger?: boolean }) {
+    if (!modal.classList.contains("show")) {
+      return;
+    }
+
+    modal.classList.remove("show");
+    modal.setAttribute("aria-hidden", "true");
+    if (options?.rotateTrigger) {
+      triggerNewPromptIconRotation();
+    }
+
+    if (activeModal === modal) {
+      activeModal = null;
+    }
+
+    const hasVisibleModal = Boolean(document.querySelector(".post-modal.show"));
+    if (!hasVisibleModal) {
+      document.body.classList.remove("ps-modal-open");
+      if (previouslyFocusedElement) {
+        previouslyFocusedElement.focus();
+      }
+      previouslyFocusedElement = null;
+    }
+  }
+
+  function handleModalKeydown(event: KeyboardEvent) {
+    if (!activeModal || !activeModal.classList.contains("show")) {
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeModal(activeModal, { rotateTrigger: activeModal === postModal });
+      return;
+    }
+
+    if (event.key !== "Tab") {
+      return;
+    }
+
+    const focusableElements = getModalFocusableElements(activeModal);
+    if (focusableElements.length === 0) {
+      event.preventDefault();
+      const fallback = activeModal.querySelector<HTMLElement>(".post-modal-content");
+      fallback?.focus();
+      return;
+    }
+
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements[focusableElements.length - 1];
+    const currentElement = document.activeElement as HTMLElement | null;
+
+    if (event.shiftKey) {
+      if (!currentElement || currentElement === firstFocusable || !activeModal.contains(currentElement)) {
+        event.preventDefault();
+        lastFocusable.focus();
+      }
+      return;
+    }
+
+    if (!currentElement || currentElement === lastFocusable || !activeModal.contains(currentElement)) {
+      event.preventDefault();
+      firstFocusable.focus();
+    }
+  }
 
   const triggerNewPromptIconRotation = () => {
     if (!newPromptIcon) {
@@ -650,6 +762,11 @@ function initPromptSharePage(attempt = 0) {
     });
   }
 
+  if (document.body && document.body.dataset.psModalKeydownListener !== "true") {
+    document.body.dataset.psModalKeydownListener = "true";
+    document.addEventListener("keydown", handleModalKeydown);
+  }
+
   if (openModalBtn && postModal) {
     openModalBtn.addEventListener("click", function () {
       if (!isLoggedIn) {
@@ -659,23 +776,21 @@ function initPromptSharePage(attempt = 0) {
 
       triggerNewPromptIconRotation();
 
-      postModal.classList.add("show");
+      openModal(postModal, postModalTitleInput);
     });
   }
 
   if (closeModalBtn && postModal) {
     closeModalBtn.addEventListener("click", function () {
-      postModal.classList.remove("show");
-      triggerNewPromptIconRotation();
+      closeModal(postModal, { rotateTrigger: true });
     });
   }
 
-  if (postModal && postModal.dataset.psWindowListener !== "true") {
-    postModal.dataset.psWindowListener = "true";
-    window.addEventListener("click", function (event) {
+  if (postModal && postModal.dataset.psBackdropListener !== "true") {
+    postModal.dataset.psBackdropListener = "true";
+    postModal.addEventListener("click", function (event) {
       if (event.target === postModal) {
-        postModal.classList.remove("show");
-        triggerNewPromptIconRotation();
+        closeModal(postModal, { rotateTrigger: true });
       }
     });
   }
@@ -730,17 +845,13 @@ function initPromptSharePage(attempt = 0) {
     }
 
     // モーダルを表示
-    modal.classList.add("show");
+    openModal(modal, closePromptDetailModalBtn);
   }
-
-  // モーダルを閉じる機能
-  const promptDetailModal = document.getElementById("promptDetailModal");
-  const closePromptDetailModalBtn = document.getElementById("closePromptDetailModal");
 
   // 閉じるボタンでモーダルを閉じる
   if (closePromptDetailModalBtn && promptDetailModal) {
     closePromptDetailModalBtn.addEventListener("click", function () {
-      promptDetailModal.classList.remove("show");
+      closeModal(promptDetailModal);
     });
   }
 
@@ -748,7 +859,7 @@ function initPromptSharePage(attempt = 0) {
   if (promptDetailModal) {
     promptDetailModal.addEventListener("click", function (e) {
       if (e.target === promptDetailModal) {
-        promptDetailModal.classList.remove("show");
+        closeModal(promptDetailModal);
       }
     });
   }

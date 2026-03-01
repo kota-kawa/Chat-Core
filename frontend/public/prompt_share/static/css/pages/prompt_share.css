@@ -13,6 +13,10 @@ body.prompt-share-page,
   position: relative;
 }
 
+body.prompt-share-page.ps-modal-open {
+  overflow: hidden;
+}
+
 body.prompt-share-page::before,
 .prompt-share-page::before {
   content: "";
@@ -79,7 +83,7 @@ a {
 
 /* ヘッダー */
 .prompts-header {
-  background: url('prompt_share.jpg') no-repeat center center/cover;
+  background: url('prompt_share.webp') no-repeat center center/cover;
   color: #fff;
   padding: 2.5rem 1.5rem;
   text-align: center;
@@ -577,12 +581,14 @@ main {
   top: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.45);
+  background:
+    radial-gradient(circle at top right, rgba(25, 195, 125, 0.22), transparent 45%),
+    rgba(15, 23, 42, 0.56);
   align-items: center;
   justify-content: center;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.24s ease, visibility 0.24s ease;
   backdrop-filter: blur(6px);
 }
 
@@ -592,20 +598,47 @@ main {
 }
 
 .post-modal-content {
-  background: var(--ps-card-bg);
-  padding: 2rem;
-  border-radius: 18px;
-  max-width: 640px;
-  width: 90%;
+  background: linear-gradient(160deg, #ffffff 0%, #f8fffb 100%);
+  padding: 1.9rem 1.8rem;
+  border-radius: 22px;
+  max-width: 660px;
+  width: min(92%, 660px);
   position: relative;
-  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.28);
   /* 固定サイズ・スクロール対応 */
   max-height: 90vh;
   overflow-y: auto;
   overflow-x: hidden;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  border: 1px solid rgba(25, 195, 125, 0.2);
+  border: 1px solid rgba(25, 195, 125, 0.22);
+  transform: translateY(14px) scale(0.98);
+  opacity: 0;
+  transition: transform 0.26s ease, opacity 0.26s ease;
+}
+
+.post-modal.show .post-modal-content {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.post-modal-content--composer {
+  background:
+    radial-gradient(620px 220px at 100% 0%, rgba(34, 197, 94, 0.13), transparent 72%),
+    linear-gradient(160deg, #ffffff 0%, #f8fffb 100%);
+}
+
+.post-modal-content--composer::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    rgba(25, 195, 125, 0),
+    rgba(25, 195, 125, 0.72),
+    rgba(25, 195, 125, 0)
+  );
 }
 
 .close-btn {
@@ -620,7 +653,22 @@ main {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: #14532d;
+  background: rgba(255, 255, 255, 0.88);
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.close-btn:hover {
+  background: rgba(25, 195, 125, 0.14);
+  border-color: rgba(25, 195, 125, 0.45);
+  color: #166534;
+  transform: scale(1.04);
+}
+
+.close-btn:focus-visible {
+  outline: 3px solid rgba(25, 195, 125, 0.34);
+  outline-offset: 2px;
 }
 
 /* モーダル内のテキストコンテンツのスタイル */
@@ -651,6 +699,17 @@ main {
   gap: 1rem;
 }
 
+.post-modal-content--composer h2 {
+  margin: 0 0 0.3rem;
+  color: #14532d;
+}
+
+.post-modal-lead {
+  margin: 0 0 1.1rem;
+  color: #166534;
+  font-size: 0.92rem;
+}
+
 .form-group label {
   margin-bottom: 0.25rem;
   font-weight: 500;
@@ -679,6 +738,27 @@ main {
   outline: none;
 }
 
+.post-modal-content--composer .form-group input[type="text"],
+.post-modal-content--composer .form-group textarea,
+.post-modal-content--composer .form-group select {
+  border-radius: 14px;
+  border-color: rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.post-modal-content--composer .form-group textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.post-modal-content--composer #guardrail-fields {
+  margin-top: 0.25rem;
+  padding: 0.9rem;
+  border-radius: 14px;
+  border: 1px dashed rgba(25, 195, 125, 0.36);
+  background: rgba(240, 253, 244, 0.85);
+}
+
 
 /* ==================== */
 /* 投稿ボタン */
@@ -702,6 +782,19 @@ main {
 .submit-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 16px 30px rgba(0, 0, 0, 0.22);
+}
+
+.post-modal-content--composer .submit-btn {
+  width: 100%;
+  justify-content: center;
+  border-radius: 14px;
+  padding: 0.85rem 1.2rem;
+  background: linear-gradient(135deg, #19c37d, #0f766e);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.22);
+}
+
+.post-modal-content--composer .submit-btn:hover {
+  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.28);
 }
 
 /* ==================== */

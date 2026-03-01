@@ -98,10 +98,11 @@ const bodyMarkup = `
   </main>
 
   <!-- 投稿モーダル -->
-  <div id="postModal" class="post-modal">
-    <div class="post-modal-content">
-      <span class="close-btn">&times;</span>
-      <h2>新しいプロンプトを投稿</h2>
+  <div id="postModal" class="post-modal" role="dialog" aria-modal="true" aria-labelledby="postModalTitle" aria-hidden="true">
+    <div class="post-modal-content post-modal-content--composer" tabindex="-1">
+      <button type="button" class="close-btn" aria-label="投稿モーダルを閉じる">&times;</button>
+      <h2 id="postModalTitle">新しいプロンプトを投稿</h2>
+      <p class="post-modal-lead">みんなの役に立つプロンプトを、分かりやすく共有しましょう。</p>
       <form class="post-form" id="postForm">
 
         <div class="form-group">
@@ -160,9 +161,9 @@ const bodyMarkup = `
   </div>
 
   <!-- プロンプト詳細モーダル -->
-  <div id="promptDetailModal" class="post-modal">
-    <div class="post-modal-content">
-      <span class="close-btn" id="closePromptDetailModal">&times;</span>
+  <div id="promptDetailModal" class="post-modal" role="dialog" aria-modal="true" aria-labelledby="modalPromptTitle" aria-hidden="true">
+    <div class="post-modal-content" tabindex="-1">
+      <button type="button" class="close-btn" id="closePromptDetailModal" aria-label="詳細モーダルを閉じる">&times;</button>
       <h2 id="modalPromptTitle">プロンプト詳細</h2>
       <div class="modal-content-body">
         <div class="form-group">
@@ -229,6 +230,7 @@ export default function PromptSharePage() {
       if (setupTimerId !== null) {
         clearTimeout(setupTimerId);
       }
+      document.body.classList.remove("ps-modal-open");
       document.body.classList.remove("prompt-share-page");
     };
   }, []);

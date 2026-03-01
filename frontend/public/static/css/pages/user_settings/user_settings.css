@@ -197,7 +197,8 @@
 
 
 /* global.css の body スタイルをこのページ専用に上書き */
-body {
+body.settings-page,
+.user-settings-page {
   background: var(--content-bg); /* ページ全体の背景 */
   min-height: 100vh;
   display: block; /* 中央寄せを解除 */
@@ -205,7 +206,6 @@ body {
 }
 
 .user-settings-page {
-  min-height: 100vh;
   font-family: 'Roboto', sans-serif;
 }
 

@@ -65,6 +65,13 @@ export default function PromptManagePage() {
   const [bootstrapReady, setBootstrapReady] = useState(false);
 
   useEffect(() => {
+    document.body.classList.add("prompt-manage-page");
+    return () => {
+      document.body.classList.remove("prompt-manage-page");
+    };
+  }, []);
+
+  useEffect(() => {
     if (bootstrapReady) {
       import("../../scripts/entries/prompt_manage");
     }
@@ -92,7 +99,7 @@ export default function PromptManagePage() {
         />
         <link rel="stylesheet" href="/prompt_share/static/css/pages/prompt_manage.bundle.css" />
       </Head>
-      <div dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
+      <div className="prompt-manage-page" dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
 
       <Script
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"

@@ -218,6 +218,13 @@ export default function UserSettingsPage() {
   const [bootstrapReady, setBootstrapReady] = useState(false);
 
   useEffect(() => {
+    document.body.classList.add("settings-page");
+    return () => {
+      document.body.classList.remove("settings-page");
+    };
+  }, []);
+
+  useEffect(() => {
     if (bootstrapReady) {
       import("../scripts/entries/settings");
     }

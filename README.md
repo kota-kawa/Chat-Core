@@ -11,8 +11,8 @@
 Click a thumbnail to open the video on YouTube.
 
 <p align="center">
-  <a href="https://youtu.be/-sLCnm8gLes" target="_blank" rel="noopener noreferrer">
-    <img src="https://img.youtube.com/vi/-sLCnm8gLes/maxresdefault.jpg" alt="Watch the demo video" width="720">
+  <a href="https://youtu.be/tdPZJdZfeQ0" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.youtube.com/vi/tdPZJdZfeQ0/maxresdefault.jpg" alt="Watch the demo video" width="720">
   </a>
   <br>
   <sub><b>▶ Watch Demo Video</b></sub>
@@ -179,8 +179,8 @@ Licensed under the Apache License, Version 2.0 - see the [LICENSE](LICENSE) file
 Click a thumbnail to open the video on YouTube.
 
 <p align="center">
-  <a href="https://youtu.be/-sLCnm8gLes" target="_blank" rel="noopener noreferrer">
-    <img src="https://img.youtube.com/vi/-sLCnm8gLes/maxresdefault.jpg" alt="デモ動画を見る" width="720">
+  <a href="https://youtu.be/tdPZJdZfeQ0" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.youtube.com/vi/tdPZJdZfeQ0/maxresdefault.jpg" alt="デモ動画を見る" width="720">
   </a>
   <br>
   <sub><b>▶ デモ動画を見る</b></sub>

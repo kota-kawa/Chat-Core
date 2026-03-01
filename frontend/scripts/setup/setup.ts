@@ -79,6 +79,20 @@ function createTaskSignature(tasks: TaskItem[]) {
     .join("\u001e");
 }
 
+function hydrateSSRTaskCards() {
+  const container = document.getElementById("task-selection");
+  if (!container || container.dataset.tasksSignature) return;
+
+  const hasSSRTaskCards = container.querySelector(".task-wrapper .prompt-card") !== null;
+  if (!hasSSRTaskCards) return;
+
+  // SSR で描画済みのデフォルトカードを初期状態として採用し、初回再描画を避ける
+  container.dataset.tasksSignature = createTaskSignature(getFallbackTasks());
+  initSetupTaskCards();
+  initToggleTasks();
+  if (typeof window.initTaskOrderEditing === "function") window.initTaskOrderEditing();
+}
+
 function loadTaskCards() {
   const ioModal = document.getElementById("io-modal");
   const ioModalContent = document.getElementById("io-modal-content");
@@ -209,6 +223,8 @@ function loadTaskCards() {
     }
     renderTaskCards(tasks);
   };
+
+  hydrateSSRTaskCards();
 
   // 初期ロード時: まずはフォールバックを表示しておく
   renderTaskCards(getFallbackTasks());

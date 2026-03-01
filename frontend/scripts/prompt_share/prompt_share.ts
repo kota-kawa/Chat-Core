@@ -11,6 +11,27 @@ type PromptData = {
   created_at?: string;
 };
 
+const AUTH_STATE_CACHE_KEY = "chatcore.auth.loggedIn";
+
+function readCachedAuthState() {
+  try {
+    const cached = localStorage.getItem(AUTH_STATE_CACHE_KEY);
+    if (cached === "1") return true;
+    if (cached === "0") return false;
+  } catch {
+    // localStorage が使えない環境ではキャッシュを無視
+  }
+  return null;
+}
+
+function writeCachedAuthState(loggedIn: boolean) {
+  try {
+    localStorage.setItem(AUTH_STATE_CACHE_KEY, loggedIn ? "1" : "0");
+  } catch {
+    // localStorage が使えない環境では保存をスキップ
+  }
+}
+
 function initPromptSharePage(attempt = 0) {
   const promptContainer = document.querySelector(".prompt-cards") as HTMLElement | null;
   if (!promptContainer) {
@@ -29,24 +50,36 @@ function initPromptSharePage(attempt = 0) {
   const authButtons = document.getElementById("auth-buttons");
   let isLoggedIn = false; // ログイン状態を保持
 
+  const applyAuthUI = (loggedIn: boolean) => {
+    if (loggedIn) {
+      if (authButtons) authButtons.style.display = "none";
+      if (userIcon) userIcon.style.display = "";
+      return;
+    }
+
+    if (authButtons) authButtons.style.display = "";
+    if (userIcon) userIcon.style.display = "none";
+    const loginBtn = document.getElementById("login-btn");
+    if (loginBtn) loginBtn.onclick = () => (window.location.href = "/login");
+  };
+
+  // 前回状態を先に反映してポップインを抑える
+  const cachedAuthState = readCachedAuthState();
+  if (cachedAuthState !== null) {
+    isLoggedIn = cachedAuthState;
+    applyAuthUI(cachedAuthState);
+  }
+
   fetch("/api/current_user")
     .then((res) => (res.ok ? res.json() : { logged_in: false }))
     .then((data) => {
       isLoggedIn = Boolean(data.logged_in);
-      if (data.logged_in) {
-        if (authButtons) authButtons.style.display = "none";
-        if (userIcon) userIcon.style.display = "";
-      } else {
-        if (authButtons) authButtons.style.display = "";
-        if (userIcon) userIcon.style.display = "none";
-        const loginBtn = document.getElementById("login-btn");
-        if (loginBtn) loginBtn.onclick = () => (window.location.href = "/login");
-      }
+      writeCachedAuthState(isLoggedIn);
+      applyAuthUI(isLoggedIn);
     })
     .catch((err) => {
       console.error("Error checking login status:", err);
-      if (authButtons) authButtons.style.display = "";
-      if (userIcon) userIcon.style.display = "none";
+      applyAuthUI(false);
     });
 
   function closeAllDropdowns(exceptCard?: HTMLElement | null) {

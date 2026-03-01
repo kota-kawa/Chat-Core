@@ -226,7 +226,7 @@ const initSettingsPage = () => {
         promptList.innerHTML = "";
         const prompts = Array.isArray(data.prompts) ? data.prompts : [];
         if (prompts.length > 0) {
-          prompts.forEach((rawPrompt) => {
+          prompts.forEach((rawPrompt: unknown) => {
             const prompt = toPromptRecord(rawPrompt);
             const card = document.createElement("div");
             card.classList.add("prompt-card");
@@ -326,7 +326,7 @@ const initSettingsPage = () => {
 
         promptListEntriesEl.innerHTML = "";
         const entries = Array.isArray(data.prompts) ? data.prompts : [];
-        entries.forEach((rawEntry) => {
+        entries.forEach((rawEntry: unknown) => {
           const entry = toPromptListEntry(rawEntry);
           const card = document.createElement("div");
           card.classList.add("prompt-card");

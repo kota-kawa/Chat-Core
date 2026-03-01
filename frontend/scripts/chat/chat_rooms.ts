@@ -15,13 +15,14 @@ function loadChatRooms() {
         console.error("get_chat_rooms:", data.error);
         return;
       }
-      if (!window.chatRoomListEl) return;
+      const chatRoomListEl = window.chatRoomListEl;
+      if (!chatRoomListEl) return;
       const rooms: ChatRoom[] = Array.isArray(data.rooms) ? data.rooms : [];
-      window.chatRoomListEl.innerHTML = "";
+      chatRoomListEl.innerHTML = "";
 
       rooms.forEach((room) => {
         const card = createRoomCard(room);
-        window.chatRoomListEl.appendChild(card);
+        chatRoomListEl.appendChild(card);
       });
     })
     .catch((err) => console.error("ルーム一覧取得失敗:", err));

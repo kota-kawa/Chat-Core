@@ -302,7 +302,7 @@ function toggleUserMenu() {
       const btn = document.getElementById("settings-btn");
       const target = e.target as Node | null;
       if (!target) return;
-      if (!menu?.contains(target) && (!btn || !btn.contains(target))) {
+      if (menu && !menu.contains(target) && (!btn || !btn.contains(target))) {
         menu.style.display = "none";
       }
     });

@@ -70,7 +70,7 @@ const initPromptManage = () => {
         promptList.innerHTML = "";
         const prompts = Array.isArray(data.prompts) ? data.prompts : [];
         if (prompts.length > 0) {
-          prompts.forEach((rawPrompt) => {
+          prompts.forEach((rawPrompt: unknown) => {
             const prompt = toPromptRecord(rawPrompt);
             const card = document.createElement("div");
             card.classList.add("prompt-card");
@@ -156,7 +156,7 @@ const initPromptManage = () => {
     editButtons.forEach((btn) => {
       btn.addEventListener("click", function () {
         const promptId = this.getAttribute("data-id");
-        const card = this.closest(".prompt-card");
+        const card = this.closest(".prompt-card") as HTMLElement | null;
         if (!card || !promptId) return;
         const titleElem = card.querySelector("h3");
         const contentElem = card.querySelector("p");

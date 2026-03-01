@@ -4,6 +4,16 @@
 let markedParser: any = null;
 let markedLoadPromise: Promise<void> | null = null;
 let hljs: any = null;
+const dynamicImport = new Function("modulePath", "return import(modulePath);") as (modulePath: string) => Promise<any>;
+
+async function importOptionalModule(modulePath: string) {
+  try {
+    return await dynamicImport(modulePath);
+  } catch (error) {
+    console.warn(`Optional module '${modulePath}' could not be loaded.`, error);
+    return null;
+  }
+}
 
 function stripInvisibleCharacters(value: string) {
   return value.replace(/[\u200B-\u200D\u2060\uFEFF]/g, "");
@@ -256,11 +266,14 @@ function ensureMarkedParser() {
 
   markedLoadPromise = (async () => {
     try {
-      const markedModule = await import("marked");
-      const hljsModule = await import("highlight.js");
+      const markedModule = await importOptionalModule("marked");
+      const hljsModule = await importOptionalModule("highlight.js");
+      if (!markedModule) {
+        throw new Error("marked module is unavailable");
+      }
 
       const { Marked } = markedModule;
-      hljs = hljsModule.default || hljsModule;
+      hljs = hljsModule?.default || hljsModule || null;
       
       const renderer = {
         code(token: any) {
@@ -270,13 +283,16 @@ function ensureMarkedParser() {
           
           let highlighted = text;
           try {
-            if (hljs.getLanguage(language)) {
+            if (hljs?.getLanguage?.(language)) {
               highlighted = hljs.highlight(text, { language }).value;
-            } else {
+            } else if (hljs?.highlightAuto) {
               highlighted = hljs.highlightAuto(text).value;
+            } else {
+              highlighted = escapeHtml(text);
             }
           } catch (e) {
             console.error("Highlight error:", e);
+            highlighted = escapeHtml(text);
           }
 
           return `
@@ -312,7 +328,7 @@ function ensureMarkedParser() {
       marked.use({ renderer });
       markedParser = marked.parse.bind(marked);
     } catch (error) {
-      console.error("Failed to load marked or highlight.js:", error);
+      console.error("Failed to initialize markdown rendering:", error);
       throw error;
     } finally {
       markedLoadPromise = null;

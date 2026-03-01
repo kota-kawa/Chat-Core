@@ -7,10 +7,13 @@ const initPromptSearch = () => {
   if (!searchInput || !promptCardsSection || !selectedCategoryTitle) {
     return;
   }
+  const searchInputEl = searchInput;
+  const promptCardsSectionEl = promptCardsSection;
+  const selectedCategoryTitleEl = selectedCategoryTitle;
 
   // オリジナルの状態を保持しておく（検索クエリが空の場合に復元）
-  const originalCardsHTML = promptCardsSection.innerHTML;
-  const originalHeaderText = selectedCategoryTitle.textContent || "";
+  const originalCardsHTML = promptCardsSectionEl.innerHTML;
+  const originalHeaderText = selectedCategoryTitleEl.textContent || "";
 
   const TITLE_CHAR_LIMIT = 17;
   const CONTENT_CHAR_LIMIT = 160;
@@ -63,17 +66,17 @@ const initPromptSearch = () => {
   };
 
   function searchPromptsServer() {
-    const query = searchInput.value.trim();
+    const query = searchInputEl.value.trim();
 
     // クエリが空の場合は、オリジナルのカードとヘッダーを復元
     if (!query) {
-      promptCardsSection.innerHTML = originalCardsHTML;
-      selectedCategoryTitle.textContent = originalHeaderText;
+      promptCardsSectionEl.innerHTML = originalCardsHTML;
+      selectedCategoryTitleEl.textContent = originalHeaderText;
       return;
     }
 
     // ヘッダーを更新して検索結果を上部に表示
-    selectedCategoryTitle.textContent = `検索結果: 「${query}」`;
+    selectedCategoryTitleEl.textContent = `検索結果: 「${query}」`;
 
     fetch(`/search/prompts?q=${encodeURIComponent(query)}`)
       .then((response) => {
@@ -84,10 +87,10 @@ const initPromptSearch = () => {
       })
       .then((data) => {
         // .prompt-cards 内をクリアして検索結果を表示
-        promptCardsSection.innerHTML = "";
+        promptCardsSectionEl.innerHTML = "";
         const prompts = Array.isArray(data.prompts) ? data.prompts : [];
         if (prompts.length > 0) {
-          prompts.forEach((rawPrompt) => {
+          prompts.forEach((rawPrompt: unknown) => {
             const prompt = toPromptSearchRecord(rawPrompt);
             const card = document.createElement("div");
             card.classList.add("prompt-card");
@@ -109,21 +112,21 @@ const initPromptSearch = () => {
             `;
             card.dataset.fullTitle = prompt.title;
             card.dataset.fullContent = prompt.content;
-            promptCardsSection.appendChild(card);
+            promptCardsSectionEl.appendChild(card);
           });
         } else {
-          promptCardsSection.innerHTML = "<p>該当するプロンプトが見つかりませんでした。</p>";
+          promptCardsSectionEl.innerHTML = "<p>該当するプロンプトが見つかりませんでした。</p>";
         }
       })
       .catch((err) => {
         console.error("検索エラー:", err);
         const message = err instanceof Error ? err.message : String(err);
-        promptCardsSection.innerHTML = `<p>エラーが発生しました: ${escapeHtml(message)}</p>`;
+        promptCardsSectionEl.innerHTML = `<p>エラーが発生しました: ${escapeHtml(message)}</p>`;
       });
   }
 
   searchButton?.addEventListener("click", searchPromptsServer);
-  searchInput.addEventListener("keydown", function (event) {
+  searchInputEl.addEventListener("keydown", function (event) {
     if (event.key === "Enter") {
       event.preventDefault();
       searchPromptsServer();

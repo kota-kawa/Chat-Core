@@ -328,7 +328,7 @@ function toggleTaskOrderEditing() {
         if (outputExamplesEl) outputExamplesEl.value = targetCard.getAttribute("data-output_examples") || "";
 
         // カスタムモーダルを表示
-        showModal(modalEl);
+        showModal(document.getElementById("taskEditModal"));
       });
 
       // 編集ボタン用ツールチップ

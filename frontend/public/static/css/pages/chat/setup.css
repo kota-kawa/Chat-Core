@@ -180,14 +180,15 @@
   position: relative;
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
   gap: 1rem;
-  min-height: 100px;
+  min-height: 0;
 }
 
 .task-selection .task-wrapper {
   flex: 0 0 calc(50% - 0.5rem);
   max-width: calc(50% - 0.5rem);
-  display: flex;
+  display: block;
 }
 
 /* 初期描画時のフラッシュ防止: 折りたたみ時は 7 件目以降を隠す */
@@ -198,7 +199,7 @@
 /* カード本体のスタイル */
 .prompt-card {
   background: #ffffff;
-  padding: 0.5rem 0.75rem;
+  padding: 0.3rem 0.55rem !important;
   border-radius: 16px;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
@@ -207,8 +208,8 @@
   text-align: center;
   position: relative;
   overflow: visible;
-  min-height: 48px;
-  font-size: 1rem;
+  min-height: 34px !important;
+  font-size: 0.88rem;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
 }
 
@@ -249,19 +250,20 @@
 .task-header {
   flex: 1;
   min-width: 0;
-  font-size: 0.9rem;
-  line-height: 1.3;
+  font-size: 0.82rem;
+  line-height: 1.1;
   text-align: left;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   overflow: hidden;
 }
 
 .task-detail-toggle {
-  width: 30px;
-  height: 30px;
-  padding: 0;
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  padding: 0 !important;
+  line-height: 1 !important;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
@@ -270,7 +272,7 @@
 }
 
 .task-detail-toggle i {
-  font-size: 0.9rem;
+  font-size: 0.7rem;
 }
 
 /* モーダルの全体（背景部分含む） */
@@ -336,7 +338,7 @@
 
   .prompt-card {
     font-size: 0.95rem;
-    min-height: 52px;
+    min-height: 36px !important;
   }
 }
 
@@ -356,10 +358,10 @@
 
   .prompt-card {
     height: auto;
-    min-height: 52px;
+    min-height: 36px !important;
     max-height: none;
-    font-size: 0.95rem;
-    padding: 0.55rem 0.75rem;
+    font-size: 0.88rem;
+    padding: 0.32rem 0.55rem !important;
     overflow: hidden;
   }
 

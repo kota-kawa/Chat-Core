@@ -6,6 +6,7 @@ from services.default_tasks import (
     default_task_rows,
     ensure_default_tasks_seeded,
 )
+from tests.helpers.db_helpers import TransactionTrackingConnection
 
 
 class FakeCursor:
@@ -33,26 +34,6 @@ class FakeCursor:
         result = self._fetchall_result
         self._fetchall_result = []
         return result
-
-    def close(self):
-        self.closed = True
-
-
-class FakeConnection:
-    def __init__(self, cursor):
-        self._cursor = cursor
-        self.committed = False
-        self.rolled_back = False
-        self.closed = False
-
-    def cursor(self):
-        return self._cursor
-
-    def commit(self):
-        self.committed = True
-
-    def rollback(self):
-        self.rolled_back = True
 
     def close(self):
         self.closed = True
@@ -89,7 +70,7 @@ class DefaultTasksTestCase(unittest.TestCase):
 
     def test_seed_inserts_missing_default_tasks(self):
         fake_cursor = FakeCursor(existing_names=[])
-        fake_conn = FakeConnection(fake_cursor)
+        fake_conn = TransactionTrackingConnection(fake_cursor)
 
         with patch("services.default_tasks.get_db_connection", return_value=fake_conn), patch(
             "services.default_tasks.load_default_tasks", return_value=SAMPLE_TASKS
@@ -106,7 +87,7 @@ class DefaultTasksTestCase(unittest.TestCase):
     def test_seed_skips_when_default_tasks_already_exist(self):
         existing_names = {task["name"] for task in SAMPLE_TASKS}
         fake_cursor = FakeCursor(existing_names=existing_names)
-        fake_conn = FakeConnection(fake_cursor)
+        fake_conn = TransactionTrackingConnection(fake_cursor)
 
         with patch("services.default_tasks.get_db_connection", return_value=fake_conn), patch(
             "services.default_tasks.load_default_tasks", return_value=SAMPLE_TASKS

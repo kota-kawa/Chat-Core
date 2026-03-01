@@ -1,29 +1,17 @@
 import unittest
 
-from starlette.requests import Request
-
 from blueprints.auth import _build_google_authorization_response
+from tests.helpers.request_helpers import build_request
 
 
-def make_request(*, scheme: str, host: str, path: str, query_string: bytes) -> Request:
-    scope = {
-        "type": "http",
-        "asgi": {"spec_version": "2.3", "version": "3.0"},
-        "http_version": "1.1",
-        "method": "GET",
-        "scheme": scheme,
-        "path": path,
-        "raw_path": path.encode("utf-8"),
-        "query_string": query_string,
-        "headers": [(b"host", host.encode("utf-8"))],
-        "client": ("testclient", 50000),
-        "server": ("testserver", 80),
-    }
-
-    async def receive():
-        return {"type": "http.request", "body": b"", "more_body": False}
-
-    return Request(scope, receive)
+def make_request(*, scheme: str, host: str, path: str, query_string: bytes):
+    return build_request(
+        method="GET",
+        scheme=scheme,
+        host_header=host,
+        path=path,
+        query_string=query_string,
+    )
 
 
 class GoogleOAuthCallbackUrlTestCase(unittest.TestCase):

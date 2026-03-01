@@ -3,38 +3,19 @@ import json
 import unittest
 from unittest.mock import patch
 
-from starlette.requests import Request
-
 from blueprints.admin import views as admin_views
 from services.security import hash_password
+from tests.helpers.request_helpers import build_request
 
 
 def make_request(method="GET", path="/admin/api/dashboard", json_body=None, session=None, query_string=b""):
-    body = b""
-    headers = []
-    if json_body is not None:
-        body = json.dumps(json_body).encode("utf-8")
-        headers = [(b"content-type", b"application/json")]
-
-    scope = {
-        "type": "http",
-        "asgi": {"spec_version": "2.3", "version": "3.0"},
-        "http_version": "1.1",
-        "method": method,
-        "scheme": "http",
-        "path": path,
-        "raw_path": path.encode("utf-8"),
-        "query_string": query_string,
-        "headers": headers,
-        "client": ("testclient", 50000),
-        "server": ("testserver", 80),
-        "session": session or {},
-    }
-
-    async def receive():
-        return {"type": "http.request", "body": body, "more_body": False}
-
-    return Request(scope, receive)
+    return build_request(
+        method=method,
+        path=path,
+        json_body=json_body,
+        session=session,
+        query_string=query_string,
+    )
 
 
 class AdminApiTestCase(unittest.TestCase):

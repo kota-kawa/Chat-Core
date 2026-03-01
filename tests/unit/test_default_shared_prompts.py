@@ -5,6 +5,7 @@ from services.default_shared_prompts import (
     DEFAULT_SHARED_PROMPTS,
     ensure_default_shared_prompts,
 )
+from tests.helpers.db_helpers import TransactionTrackingConnection
 
 
 class FakeCursor:
@@ -52,30 +53,10 @@ class FakeCursor:
         self.closed = True
 
 
-class FakeConnection:
-    def __init__(self, cursor):
-        self._cursor = cursor
-        self.committed = False
-        self.rolled_back = False
-        self.closed = False
-
-    def cursor(self):
-        return self._cursor
-
-    def commit(self):
-        self.committed = True
-
-    def rollback(self):
-        self.rolled_back = True
-
-    def close(self):
-        self.closed = True
-
-
 class DefaultSharedPromptsTestCase(unittest.TestCase):
     def test_inserts_samples_when_they_are_missing(self):
         fake_cursor = FakeCursor()
-        fake_conn = FakeConnection(fake_cursor)
+        fake_conn = TransactionTrackingConnection(fake_cursor)
 
         with patch("services.default_shared_prompts.get_db_connection", return_value=fake_conn):
             inserted = ensure_default_shared_prompts()
@@ -91,7 +72,7 @@ class DefaultSharedPromptsTestCase(unittest.TestCase):
     def test_skips_when_all_samples_already_exist(self):
         existing_titles = {prompt["title"] for prompt in DEFAULT_SHARED_PROMPTS}
         fake_cursor = FakeCursor(owner_id=999, existing_prompt_titles=existing_titles)
-        fake_conn = FakeConnection(fake_cursor)
+        fake_conn = TransactionTrackingConnection(fake_cursor)
 
         with patch("services.default_shared_prompts.get_db_connection", return_value=fake_conn):
             inserted = ensure_default_shared_prompts()

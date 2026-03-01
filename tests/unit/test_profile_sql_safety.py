@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch
 
 from blueprints.chat.profile import _update_user_profile
+from tests.helpers.db_helpers import TransactionTrackingConnection
 
 
 class FakeCursor:
@@ -19,24 +20,9 @@ class FakeCursor:
         self.closed = True
 
 
-class FakeConnection:
+class FakeConnection(TransactionTrackingConnection):
     def __init__(self, fail_on_execute=False):
-        self._cursor = FakeCursor(fail_on_execute=fail_on_execute)
-        self.committed = False
-        self.rolled_back = False
-        self.closed = False
-
-    def cursor(self):
-        return self._cursor
-
-    def commit(self):
-        self.committed = True
-
-    def rollback(self):
-        self.rolled_back = True
-
-    def close(self):
-        self.closed = True
+        super().__init__(FakeCursor(fail_on_execute=fail_on_execute))
 
 
 class ProfileSQLSafetyTestCase(unittest.TestCase):

@@ -18,6 +18,27 @@
  *   - 「設定」「ログアウト」メニューを動的生成・表示・非表示
  */
 
+const AUTH_STATE_CACHE_KEY = "chatcore.auth.loggedIn";
+
+function readCachedAuthState() {
+  try {
+    const cached = localStorage.getItem(AUTH_STATE_CACHE_KEY);
+    if (cached === "1") return true;
+    if (cached === "0") return false;
+  } catch {
+    // localStorage が使えない環境ではキャッシュを無視
+  }
+  return null;
+}
+
+function writeCachedAuthState(loggedIn: boolean) {
+  try {
+    localStorage.setItem(AUTH_STATE_CACHE_KEY, loggedIn ? "1" : "0");
+  } catch {
+    // localStorage が使えない環境では保存をスキップ
+  }
+}
+
 function notifyAuthState(loggedIn: boolean) {
   window.loggedIn = loggedIn;
   document.dispatchEvent(
@@ -82,11 +103,19 @@ function initApp() {
     }
   };
 
+  // 前回の認証状態を先に反映し、初期表示のポップインを抑える
+  const cachedAuthState = readCachedAuthState();
+  if (cachedAuthState !== null) {
+    notifyAuthState(cachedAuthState);
+    applyAuthUI(cachedAuthState);
+  }
+
   // ▼ログイン状態確認とUI制御
   fetch("/api/current_user")
     .then((res) => res.json())
     .then((data) => {
       const loggedIn = Boolean(data.logged_in);
+      writeCachedAuthState(loggedIn);
       notifyAuthState(loggedIn);
       applyAuthUI(loggedIn);
     })

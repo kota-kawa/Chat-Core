@@ -25,7 +25,8 @@ declare global {
     showSetupForm?: () => void;
     initToggleTasks?: () => void;
     initSetupTaskCards?: () => void;
-    loadTaskCards?: () => void;
+    loadTaskCards?: (options?: { forceRefresh?: boolean }) => void;
+    invalidateTasksCache?: () => void;
     initTaskOrderEditing?: () => void;
     showChatInterface?: () => void;
     showTypingIndicator?: () => void;

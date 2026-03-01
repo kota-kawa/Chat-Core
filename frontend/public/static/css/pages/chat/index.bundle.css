@@ -15,7 +15,7 @@
 }
 
 .chat-page-shell {
-  font-family: 'IBM Plex Sans', 'Roboto', sans-serif;
+  font-family: var(--font-app-sans), sans-serif;
   min-height: 100vh;
   display: flex;
   justify-content: center;

@@ -5,7 +5,7 @@
  *   - ログイン状態を /api/current_user で確認し、設定ボタンを「ログイン／ユーザーアイコン」に切替
  *   - localStorage から前回の currentChatRoomId を復元
  *   - タスクカードと「もっと見る」ボタンの初期化 (initToggleTasks / initSetupTaskCards)
- *   - 最初はセットアップ画面を表示し、チャットルーム一覧をロード
+ *   - 最初はセットアップ画面を表示
  *   - 復帰時にチャット履歴をロード（ローカル＋サーバー）
  *
  * ■ UI 操作のイベント登録
@@ -19,6 +19,8 @@
  */
 
 const AUTH_STATE_CACHE_KEY = "chatcore.auth.loggedIn";
+const AUTH_STATE_CACHE_AT_KEY = "chatcore.auth.cachedAt";
+const AUTH_STATE_CACHE_TTL_MS = 30_000;
 
 function readCachedAuthState() {
   try {
@@ -31,9 +33,22 @@ function readCachedAuthState() {
   return null;
 }
 
+function isCachedAuthStateFresh() {
+  try {
+    const cachedAtRaw = localStorage.getItem(AUTH_STATE_CACHE_AT_KEY);
+    if (!cachedAtRaw) return false;
+    const cachedAt = Number(cachedAtRaw);
+    if (!Number.isFinite(cachedAt)) return false;
+    return Date.now() - cachedAt <= AUTH_STATE_CACHE_TTL_MS;
+  } catch {
+    return false;
+  }
+}
+
 function writeCachedAuthState(loggedIn: boolean) {
   try {
     localStorage.setItem(AUTH_STATE_CACHE_KEY, loggedIn ? "1" : "0");
+    localStorage.setItem(AUTH_STATE_CACHE_AT_KEY, String(Date.now()));
   } catch {
     // localStorage が使えない環境では保存をスキップ
   }
@@ -110,20 +125,22 @@ function initApp() {
     applyAuthUI(cachedAuthState);
   }
 
-  // ▼ログイン状態確認とUI制御
-  fetch("/api/current_user")
-    .then((res) => res.json())
-    .then((data) => {
-      const loggedIn = Boolean(data.logged_in);
-      writeCachedAuthState(loggedIn);
-      notifyAuthState(loggedIn);
-      applyAuthUI(loggedIn);
-    })
-    .catch((err) => {
-      console.error("Error checking login status:", err);
-      notifyAuthState(false);
-      applyAuthUI(false);
-    });
+  // ▼ログイン状態確認とUI制御（短時間はキャッシュを優先）
+  if (!isCachedAuthStateFresh()) {
+    fetch("/api/current_user")
+      .then((res) => res.json())
+      .then((data) => {
+        const loggedIn = Boolean(data.logged_in);
+        writeCachedAuthState(loggedIn);
+        notifyAuthState(loggedIn);
+        applyAuthUI(loggedIn);
+      })
+      .catch((err) => {
+        console.error("Error checking login status:", err);
+        notifyAuthState(false);
+        applyAuthUI(false);
+      });
+  }
 
   // ▼ローカルに保存されていれば現在のチャットルームを復元
   if (localStorage.getItem("currentChatRoomId")) {
@@ -136,7 +153,6 @@ function initApp() {
 
   // 初期表示はセットアップ
   callShowSetupForm();
-  if (typeof window.loadChatRooms === "function") window.loadChatRooms();
 
   // 新規チャット
   if (newChatBtn) {

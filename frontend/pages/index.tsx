@@ -1,5 +1,4 @@
 import Head from "next/head";
-import Script from "next/script";
 import { useEffect } from "react";
 import defaultTasks from "../data/default_tasks.json";
 
@@ -289,12 +288,6 @@ export default function HomePage() {
         <link rel="icon" type="image/webp" href="/static/favicon.webp" />
         <link rel="icon" type="image/png" href="/static/favicon.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=IBM+Plex+Sans:wght@400;700&display=swap"
-          rel="stylesheet"
-        />
         <link
           href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
           rel="stylesheet"
@@ -305,11 +298,6 @@ export default function HomePage() {
         />
       </Head>
       <div className="chat-page-shell" dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
-
-      <Script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-        strategy="afterInteractive"
-      />
     </>
   );
 }

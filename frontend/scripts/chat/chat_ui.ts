@@ -1,6 +1,26 @@
 // chat_ui.ts  – チャット画面 UI 共通ユーティリティ
 // --------------------------------------------------
-import { marked } from "marked";
+
+let markedParser: ((text: string, options?: Record<string, unknown>) => string | Promise<string>) | null = null;
+let markedLoadPromise: Promise<void> | null = null;
+
+function ensureMarkedParser() {
+  if (markedParser) return Promise.resolve();
+  if (markedLoadPromise) return markedLoadPromise;
+
+  markedLoadPromise = import("marked")
+    .then((module) => {
+      markedParser = module.marked.parse.bind(module.marked);
+    })
+    .catch((error) => {
+      console.error("Failed to load marked parser:", error);
+    })
+    .finally(() => {
+      markedLoadPromise = null;
+    });
+
+  return markedLoadPromise;
+}
 
 // グローバル初期化
 window.currentChatRoomId = window.currentChatRoomId || null;
@@ -10,6 +30,10 @@ function showChatInterface() {
   if (!window.setupContainer || !window.chatContainer) return;
   window.setupContainer.style.display = "none";
   window.chatContainer.style.display = "flex";
+
+  // Markdown パーサはチャット画面表示時に遅延読み込みする
+  void ensureMarkedParser();
+
   if (!window.currentChatRoomId && localStorage.getItem("currentChatRoomId")) {
     window.currentChatRoomId = localStorage.getItem("currentChatRoomId");
   }
@@ -28,12 +52,17 @@ function hideTypingIndicator() {
 /* LLM 出力の Markdown を HTML に変換 */
 function formatLLMOutput(text: string) {
   const normalized = text.replace(/\r\n/g, "\n");
-  const parsed = marked.parse(normalized, {
+  if (!markedParser) {
+    void ensureMarkedParser();
+    return normalized;
+  }
+
+  const parsed = markedParser(normalized, {
     async: false,
     gfm: true,
     breaks: true
   });
-  return typeof parsed === "string" ? parsed : "";
+  return typeof parsed === "string" ? parsed : normalized;
 }
 
 /*  サイドバートグル処理  */

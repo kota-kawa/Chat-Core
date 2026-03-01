@@ -1,15 +1,6 @@
 /* index.css
-   Entry point for the chat page. Imports base styles, shared components,
-   and page-specific modules. */
-@import url('../../base/base.css');
-@import url('../../components/sidebar.css');
-@import url('../../components/new_prompt_modal.css');
-@import url('setup.css');
-@import url('chat_layout.css');
-@import url('chat_messages.css');
-@import url('chat_input.css');
-@import url('tasks_order/tasks_order.css');
-@import url('tasks_order/task-edit-modal.css');
+   Chat page root-level tokens and shell styles.
+   Import ordering is controlled by frontend/styles/chat-entry.css. */
 
 :root {
   --surface: rgba(255, 255, 255, 0.92);
@@ -20,8 +11,13 @@
   --shadow-soft: 0 12px 24px rgba(0, 0, 0, 0.12);
 }
 
-body {
+.chat-page-shell {
   font-family: 'IBM Plex Sans', 'Roboto', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
   background:
     radial-gradient(1200px 600px at 10% 10%, rgba(25, 195, 125, 0.08), transparent 55%),
     radial-gradient(900px 480px at 90% 15%, rgba(25, 195, 125, 0.06), transparent 50%),
@@ -29,7 +25,7 @@ body {
   position: relative;
 }
 
-body::before {
+.chat-page-shell::before {
   content: '';
   position: fixed;
   inset: 0;
@@ -38,8 +34,8 @@ body::before {
   z-index: 0;
 }
 
-#setup-container,
-#chat-container {
+.chat-page-shell #setup-container,
+.chat-page-shell #chat-container {
   position: relative;
   z-index: 1;
 }

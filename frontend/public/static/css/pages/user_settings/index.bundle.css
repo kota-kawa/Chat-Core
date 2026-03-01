@@ -20,31 +20,6 @@
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 /* END inlined: public/static/css/base/variables.css */
-/* BEGIN inlined: public/static/css/base/global.css */
-/* global.css
-   Base reset and body layout. Responsive rules are in responsive.css.
-*/
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family:  'Roboto', sans-serif;
-}
-
-html {
-  overflow-x: hidden;
-}
-
-body {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow-x: hidden;
-  padding: 1rem;
-}
-/* END inlined: public/static/css/base/global.css */
 /* BEGIN inlined: public/static/css/base/animations.css */
 /* animations.css
    チャットUIやボタン用のアニメーション @keyframes 定義
@@ -324,7 +299,7 @@ body {
 }
 
 @media (max-width: 576px) {
-  body {
+  body.chat-page {
     display: block;
     padding: 0;
   }
@@ -337,6 +312,21 @@ body {
 }
 /* END inlined: public/static/css/base/responsive.css */
 /* END inlined: public/static/css/base/base.css */
+/* BEGIN inlined: public/static/css/base/global.css */
+/* global.css
+   Base reset only. Page layout styles should live in each page stylesheet.
+*/
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family:  'Roboto', sans-serif;
+}
+
+html {
+  overflow-x: hidden;
+}
+/* END inlined: public/static/css/base/global.css */
 /* BEGIN inlined: public/static/css/pages/user_settings/user_settings.css */
 /* user_settings.css
    Styles specific to the user settings page. Base styles are imported via
@@ -537,15 +527,14 @@ body {
 
 
 /* global.css の body スタイルをこのページ専用に上書き */
-body {
+body.settings-page,
+.user-settings-page {
   background: var(--content-bg); /* ページ全体の背景 */
   min-height: 100vh;
   display: block; /* 中央寄せを解除 */
   padding: 0;     /* global.css の padding をリセット */
 }
-
 .user-settings-page {
-  min-height: 100vh;
   font-family: 'Roboto', sans-serif;
 }
 

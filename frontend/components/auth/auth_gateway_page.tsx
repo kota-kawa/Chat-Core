@@ -107,6 +107,13 @@ export default function AuthGatewayPage({ initialMode }: AuthGatewayPageProps) {
   };
 
   useEffect(() => {
+    document.body.classList.add("auth-page");
+    return () => {
+      document.body.classList.remove("auth-page");
+    };
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
 
     const checkLoginState = async () => {
@@ -237,109 +244,111 @@ export default function AuthGatewayPage({ initialMode }: AuthGatewayPageProps) {
         />
       </Head>
 
-      <div className="chat-background" />
+      <div className="auth-page-root">
+        <div className="chat-background" />
 
-      <div className="auth-container">
-        {sendingCode ? (
-          <div className="spinner-overlay" role="status" aria-live="polite" aria-label="送信中">
-            <div className="spinner-ring" />
+        <div className="auth-container">
+          {sendingCode ? (
+            <div className="spinner-overlay" role="status" aria-live="polite" aria-label="送信中">
+              <div className="spinner-ring" />
+            </div>
+          ) : null}
+
+          <div className="bot-icon" id="iconDisplay">{icon}</div>
+          <h1 className="title" id="authTitle">{config.title}</h1>
+
+          <div className="auth-toggle">
+            <button
+              type="button"
+              className={`toggle-btn ${mode === "login" ? "active" : ""}`}
+              onClick={() => resetFormForMode("login")}
+            >
+              ログイン
+            </button>
+            <button
+              type="button"
+              className={`toggle-btn ${mode === "register" ? "active" : ""}`}
+              onClick={() => resetFormForMode("register")}
+            >
+              登録
+            </button>
           </div>
-        ) : null}
 
-        <div className="bot-icon" id="iconDisplay">{icon}</div>
-        <h1 className="title" id="authTitle">{config.title}</h1>
+          <div id="error-message" className="error-message" role="alert">{errorMessage}</div>
 
-        <div className="auth-toggle">
-          <button
-            type="button"
-            className={`toggle-btn ${mode === "login" ? "active" : ""}`}
-            onClick={() => resetFormForMode("login")}
-          >
-            ログイン
-          </button>
-          <button
-            type="button"
-            className={`toggle-btn ${mode === "register" ? "active" : ""}`}
-            onClick={() => resetFormForMode("register")}
-          >
-            登録
-          </button>
+          <div id="email-section" className={step === "email" ? "" : "hidden"}>
+            <label htmlFor="email" className="email-label">メールアドレス:</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              className="email-input"
+              placeholder="example@mail.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              autoComplete="email"
+            />
+            <button
+              id="sendCodeBtn"
+              type="button"
+              className="submit-btn"
+              onClick={handleSendCode}
+              disabled={sendingCode}
+            >
+              {config.sendLabel}
+            </button>
+          </div>
+
+          <div id="code-section" className={step === "code" ? "" : "hidden"}>
+            <label htmlFor="authCode" className="email-label">認証コード:</label>
+            <input
+              type="text"
+              id="authCode"
+              name="authCode"
+              required
+              className="email-input"
+              placeholder="認証コードを入力"
+              value={authCode}
+              onChange={(event) => setAuthCode(event.target.value)}
+              autoComplete="one-time-code"
+            />
+            <button
+              id="verifyCodeBtn"
+              type="button"
+              className="submit-btn"
+              onClick={handleVerifyCode}
+              disabled={verifyingCode}
+            >
+              {config.verifyLabel}
+            </button>
+          </div>
+
+          <div className="google-container">
+            <button
+              type="button"
+              className="google-btn"
+              id="googleAuthBtn"
+              onClick={() => {
+                window.location.href = "/google-login";
+              }}
+            >
+              <i className="bi bi-google" /> <span id="googleBtnText">{config.googleLabel}</span>
+            </button>
+          </div>
         </div>
 
-        <div id="error-message" className="error-message" role="alert">{errorMessage}</div>
-
-        <div id="email-section" className={step === "email" ? "" : "hidden"}>
-          <label htmlFor="email" className="email-label">メールアドレス:</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            required
-            className="email-input"
-            placeholder="example@mail.com"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            autoComplete="email"
-          />
-          <button
-            id="sendCodeBtn"
-            type="button"
-            className="submit-btn"
-            onClick={handleSendCode}
-            disabled={sendingCode}
-          >
-            {config.sendLabel}
-          </button>
-        </div>
-
-        <div id="code-section" className={step === "code" ? "" : "hidden"}>
-          <label htmlFor="authCode" className="email-label">認証コード:</label>
-          <input
-            type="text"
-            id="authCode"
-            name="authCode"
-            required
-            className="email-input"
-            placeholder="認証コードを入力"
-            value={authCode}
-            onChange={(event) => setAuthCode(event.target.value)}
-            autoComplete="one-time-code"
-          />
-          <button
-            id="verifyCodeBtn"
-            type="button"
-            className="submit-btn"
-            onClick={handleVerifyCode}
-            disabled={verifyingCode}
-          >
-            {config.verifyLabel}
-          </button>
-        </div>
-
-        <div className="google-container">
-          <button
-            type="button"
-            className="google-btn"
-            id="googleAuthBtn"
-            onClick={() => {
-              window.location.href = "/google-login";
-            }}
-          >
-            <i className="bi bi-google" /> <span id="googleBtnText">{config.googleLabel}</span>
-          </button>
-        </div>
-      </div>
-
-      <div
-        id="messageModal"
-        className={`modal ${modalMessage ? "is-open" : ""} ${isModalClosing ? "hide-animation" : ""}`}
-        onClick={hideModal}
-      >
-        <div className="modal-content" onClick={(event) => event.stopPropagation()}>
-          <button className="close" type="button" onClick={hideModal} aria-label="閉じる">
-            &times;
-          </button>
-          <p id="modalMessage">{modalMessage}</p>
+        <div
+          id="messageModal"
+          className={`modal ${modalMessage ? "is-open" : ""} ${isModalClosing ? "hide-animation" : ""}`}
+          onClick={hideModal}
+        >
+          <div className="modal-content" onClick={(event) => event.stopPropagation()}>
+            <button className="close" type="button" onClick={hideModal} aria-label="閉じる">
+              &times;
+            </button>
+            <p id="modalMessage">{modalMessage}</p>
+          </div>
         </div>
       </div>
 
@@ -359,12 +368,14 @@ export default function AuthGatewayPage({ initialMode }: AuthGatewayPageProps) {
           box-sizing: border-box;
         }
 
-        body {
+        body.auth-page,
+        .auth-page-root {
           margin: 0;
           padding: 0;
           font-family: "Outfit", "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Segoe UI", sans-serif;
           background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
           min-height: 100vh;
+          width: 100%;
           display: flex;
           justify-content: center;
           align-items: center;

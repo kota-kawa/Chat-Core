@@ -25,7 +25,8 @@
 /* ─────────────────────────── */
 /* 2. ベーススタイル               */
 /* ─────────────────────────── */
-body {
+body.prompt-manage-page,
+.prompt-manage-page {
   font-family: 'Poppins', sans-serif;
   background: linear-gradient(120deg, var(--light-bg) 0%, #ffffff 100%);
   color: var(--text-color);

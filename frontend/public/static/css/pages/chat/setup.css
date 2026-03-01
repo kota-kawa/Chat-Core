@@ -198,7 +198,7 @@
 /* カード本体のスタイル */
 .prompt-card {
   background: #ffffff;
-  padding: 0.65rem 0.85rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 16px;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
@@ -207,7 +207,7 @@
   text-align: center;
   position: relative;
   overflow: visible;
-  min-height: 52px;
+  min-height: 48px;
   font-size: 1rem;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
 }
@@ -242,7 +242,35 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.45rem;
   width: 100%;
+}
+
+.task-header {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  text-align: left;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.task-detail-toggle {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.task-detail-toggle i {
+  font-size: 0.9rem;
 }
 
 /* モーダルの全体（背景部分含む） */
@@ -308,7 +336,7 @@
 
   .prompt-card {
     font-size: 0.95rem;
-    min-height: 56px;
+    min-height: 52px;
   }
 }
 
@@ -327,17 +355,12 @@
   }
 
   .prompt-card {
-    height: 100px;
-    min-height: 100px;
-    max-height: 100px;
-    font-size: 1.05rem;
-    padding: 1rem;
+    height: auto;
+    min-height: 52px;
+    max-height: none;
+    font-size: 0.95rem;
+    padding: 0.55rem 0.75rem;
     overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .io-container {

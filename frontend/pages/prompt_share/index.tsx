@@ -32,57 +32,65 @@ const bodyMarkup = `
 
   <main>
     <!-- カテゴリ選択セクション -->
-    <section class="categories">
-      <h2>カテゴリ一覧</h2>
+    <section class="categories" aria-labelledby="categories-title">
+      <div class="section-header">
+        <p class="section-kicker">Browse</p>
+        <h2 id="categories-title">カテゴリ一覧</h2>
+        <p class="section-description">気になるテーマを選ぶと、プロンプトを絞り込めます。</p>
+      </div>
       <div class="category-list">
-        <div class="category-card active" data-category="all">
+        <button type="button" class="category-card active" data-category="all">
           <i class="bi bi-grid"></i>
           <span>全て</span>
-        </div>
-        <div class="category-card" data-category="恋愛">
+        </button>
+        <button type="button" class="category-card" data-category="恋愛">
           <i class="bi bi-heart-fill"></i>
           <span>恋愛</span>
-        </div>
-        <div class="category-card" data-category="勉強">
+        </button>
+        <button type="button" class="category-card" data-category="勉強">
           <i class="bi bi-book"></i>
           <span>勉強</span>
-        </div>
-        <div class="category-card" data-category="趣味">
+        </button>
+        <button type="button" class="category-card" data-category="趣味">
           <i class="bi bi-camera"></i>
           <span>趣味</span>
-        </div>
-        <div class="category-card" data-category="仕事">
+        </button>
+        <button type="button" class="category-card" data-category="仕事">
           <i class="bi bi-briefcase"></i>
           <span>仕事</span>
-        </div>
-        <div class="category-card" data-category="その他">
+        </button>
+        <button type="button" class="category-card" data-category="その他">
           <i class="bi bi-stars"></i>
           <span>その他</span>
-        </div>
-        <div class="category-card" data-category="スポーツ">
+        </button>
+        <button type="button" class="category-card" data-category="スポーツ">
           <i class="bi bi-trophy"></i>
           <span>スポーツ</span>
-        </div>
-        <div class="category-card" data-category="音楽">
+        </button>
+        <button type="button" class="category-card" data-category="音楽">
           <i class="bi bi-music-note"></i>
           <span>音楽</span>
-        </div>
-        <div class="category-card" data-category="旅行">
+        </button>
+        <button type="button" class="category-card" data-category="旅行">
           <i class="bi bi-geo-alt"></i>
           <span>旅行</span>
-        </div>
-        <div class="category-card" data-category="グルメ">
+        </button>
+        <button type="button" class="category-card" data-category="グルメ">
           <i class="bi bi-shop"></i>
           <span>グルメ</span>
-        </div>
+        </button>
       </div>
     </section>
 
     <div id="promptResults"></div>
 
     <!-- プロンプト一覧セクション -->
-    <section class="prompts-list">
-      <h2 id="selected-category-title">全てのプロンプト</h2>
+    <section class="prompts-list" aria-labelledby="selected-category-title">
+      <div class="section-header prompts-list-header">
+        <p class="section-kicker">Prompt Feed</p>
+        <h2 id="selected-category-title">全てのプロンプト</h2>
+        <p class="section-description">カードをクリックすると詳細を確認できます。</p>
+      </div>
       <div class="prompt-cards">
         <p class="prompt-loading-message">読み込み中...</p>
       </div>

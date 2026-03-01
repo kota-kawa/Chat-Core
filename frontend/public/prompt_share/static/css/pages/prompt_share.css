@@ -177,81 +177,125 @@ main {
 /* ==================== */
 /* カテゴリセクション */
 /* ==================== */
-.categories {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 18px;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
-  padding: 1.75rem;
-  margin-bottom: 2rem;
-  border: 1px solid rgba(249, 115, 22, 0.18);
-  backdrop-filter: blur(10px);
+.section-header {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 1.2rem;
+  width: 100%;
 }
 
-.categories h2 {
+.section-kicker {
+  font-size: 0.74rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #9a5f2d;
+  font-weight: 700;
+}
+
+.section-description {
+  font-size: 0.92rem;
+  color: #7a4d2c;
   text-align: center;
+  max-width: 60ch;
+}
+
+.categories,
+.prompts-list {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 22px;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.12);
+  padding: clamp(1rem, 1.2vw + 0.85rem, 1.85rem);
+  border: 1px solid rgba(249, 115, 22, 0.17);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.categories {
   margin-bottom: 1.5rem;
+}
+
+.categories::before,
+.prompts-list::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(249, 115, 22, 0), rgba(249, 115, 22, 0.65), rgba(249, 115, 22, 0));
+  pointer-events: none;
+}
+
+.categories h2,
+.prompts-list h2 {
+  text-align: center;
   font-weight: 600;
   color: var(--ps-primary-color);
   letter-spacing: 0.04em;
-  width: 100%;
+  line-height: 1.35;
 }
 
 .category-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 0.85rem;
   width: 100%;
-  max-width: 1000px;
 }
 
 .category-card {
+  appearance: none;
+  border: 1px solid rgba(249, 115, 22, 0.2);
   background: #ffffff;
-  border: 1px solid rgba(249, 115, 22, 0.15);
   border-radius: 14px;
-  padding: 1rem;
-  text-align: center;
+  padding: 0.85rem 0.6rem;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease, background 0.2s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 120px;
-  height: 120px;
+  gap: 0.35rem;
+  min-height: 102px;
+  width: 100%;
   position: relative;
-  overflow: hidden;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
 }
 
 .category-card.active,
 .category-card:hover {
-  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.16);
   border-color: var(--ps-primary-color);
-  transform: translateY(-4px);
+  transform: translateY(-3px);
+  background: linear-gradient(150deg, #fff8f1 0%, #ffffff 80%);
+}
+
+.category-card:focus-visible {
+  outline: 3px solid rgba(249, 115, 22, 0.35);
+  outline-offset: 2px;
 }
 
 .category-card i {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.55rem;
   color: var(--ps-accent-color);
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .category-card span {
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.35;
   color: var(--ps-text-color);
   transition: color 0.2s ease;
+  word-break: break-word;
 }
 
 .category-card:hover i {
   transform: scale(1.1);
 }
 
+.category-card.active i,
 .category-card.active span,
 .category-card:hover span {
   color: var(--ps-primary-color);
@@ -263,33 +307,30 @@ main {
 .prompts-list {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
+  gap: 0.75rem;
   width: 100%;
 }
 
-.prompts-list h2 {
-  text-align: center;
-  margin-bottom: 1.5rem;
-  font-weight: 600;
-  color: var(--ps-primary-color);
-  letter-spacing: 0.04em;
-  width: 100%;
+.prompts-list-header {
+  margin-bottom: 0.4rem;
 }
 
 #promptResults {
-  margin: 1.5rem 0;
+  margin: 1.1rem 0 1.3rem;
   width: 100%;
 }
 
 .prompt-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 1.5rem;
-  justify-content: center;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.1rem;
+  justify-content: stretch;
   width: 100%;
 }
 
-.prompt-loading-message {
+.prompt-loading-message,
+.prompt-cards > p {
   grid-column: 1 / -1;
   margin: 0;
   padding: 1.1rem 1.25rem;
@@ -302,18 +343,18 @@ main {
 
 .prompt-card {
   background: #ffffff;
-  border: 1px solid rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.14);
   border-radius: 16px;
-  padding: 1.2rem;
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
+  padding: 2.5rem 1.1rem 1rem;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease, background 0.2s ease;
   cursor: pointer;
   position: relative;
-  max-height: 260px;
+  min-height: 240px;
   overflow: visible;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.65rem;
 }
 
 @media (max-width: 768px) {
@@ -324,8 +365,9 @@ main {
 
 .prompt-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 38px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.16);
   border-color: var(--ps-primary-color);
+  background: linear-gradient(180deg, #ffffff 0%, #fffcfa 100%);
 }
 
 .prompt-card.menu-open {
@@ -333,8 +375,10 @@ main {
 }
 
 .prompt-card h3 {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.15rem;
   font-weight: 600;
+  font-size: 1.06rem;
+  line-height: 1.45;
   color: var(--ps-accent-color);
   overflow: hidden;
   display: -webkit-box;
@@ -351,19 +395,24 @@ main {
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   word-break: break-word;
   overflow-wrap: anywhere;
+  line-height: 1.55;
+}
+
+.prompt-card__content {
+  min-height: 4.6em;
 }
 
 .prompt-meta {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.65rem;
-  color: #555;
+  gap: 0.55rem;
+  color: #5c6066;
   margin-top: auto;
   width: 100%;
 }
@@ -372,13 +421,17 @@ main {
   display: flex;
   width: 100%;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.4rem;
   align-items: flex-start;
   flex-wrap: wrap;
 }
 
 .prompt-meta span {
   word-break: break-word;
+  background: #fff7ed;
+  border: 1px solid rgba(249, 115, 22, 0.16);
+  border-radius: 999px;
+  padding: 0.24rem 0.65rem;
 }
 
 .prompt-meta span:last-child {
@@ -392,6 +445,8 @@ main {
   width: 100%;
   align-items: center;
   gap: 0.25rem;
+  padding-top: 0.2rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
 }
 
 /* ==================== */
@@ -711,31 +766,35 @@ main {
 
   /* Category section improvements */
   .categories {
-    padding: 1rem;
-    margin-bottom: 1.5rem;
+    padding: 1rem 0.9rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .section-header {
+    gap: 0.25rem;
+    margin-bottom: 0.95rem;
+  }
+
+  .section-description {
+    font-size: 0.86rem;
   }
 
   .category-list {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.75rem;
-    width: 100%;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    gap: 0.65rem;
   }
 
   .category-card {
-    padding: 0.75rem 0.5rem;
-    width: 100px;
-    height: 100px;
+    padding: 0.7rem 0.45rem;
+    min-height: 92px;
   }
 
   .category-card i {
-    font-size: 1.5rem;
-    margin-bottom: 0.25rem;
+    font-size: 1.35rem;
   }
 
   .category-card span {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
 
   /* Floating action button adjustments */
@@ -754,13 +813,14 @@ main {
   /* Prompt cards full width on mobile */
   .prompt-card {
     flex: 1 1 100%;
-    padding: 1rem;
+    min-height: 220px;
+    padding: 2.3rem 0.95rem 0.9rem;
     margin-bottom: 0.5rem;
   }
 
   .prompt-card h3 {
-    font-size: 1.1rem;
-    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    margin-bottom: 0.2rem;
   }
 
   .prompt-card p {
@@ -890,25 +950,25 @@ main {
   }
 
   .categories {
-    padding: 0.75rem;
+    padding: 0.75rem 0.65rem;
   }
 
   .category-list {
-    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-    gap: 0.5rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
   }
 
   .category-card {
-    padding: 0.5rem 0.25rem;
-    min-height: 70px;
+    padding: 0.55rem 0.2rem;
+    min-height: 74px;
   }
 
   .category-card i {
-    font-size: 1.25rem;
+    font-size: 1.05rem;
   }
 
   .category-card span {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
   }
 
   .new-prompt-btn {
@@ -924,8 +984,8 @@ main {
   }
 
   .prompt-card {
-    padding: 0.875rem;
-    padding-bottom: 3rem;
+    min-height: 205px;
+    padding: 2.15rem 0.8rem 0.85rem;
   }
 
   .post-modal-content {

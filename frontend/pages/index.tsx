@@ -74,8 +74,7 @@ const bodyMarkup = `
 
   <div id="setup-container">
     <form class="setup-form" id="setup-form">
-      <h2 style="text-align: center; margin-bottom: 1.5rem;">AI Assistant
-        セットアップ</h2>
+      <h2 style="text-align: center; margin-bottom: 1.5rem;">Chat Core</h2>
       <div class="form-group">
         <label class="form-label">現在の状況・作業環境（入力なしでもOK）</label>
         <textarea id="setup-info" rows="4" placeholder="例：大学生、リモートワーク中　／　自宅のデスク、周囲は静か"></textarea>

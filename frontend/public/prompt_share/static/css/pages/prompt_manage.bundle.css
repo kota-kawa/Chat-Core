@@ -3,7 +3,10 @@
 
 /* BEGIN inlined: public/prompt_share/static/css/base/base.css */
 /* Shared variables and resets for prompt share pages */
-:root {
+body.prompt-share-page,
+.prompt-share-page,
+body.prompt-manage-page,
+.prompt-manage-page {
   --primary-color: #f97316;
   --accent-color: #ea580c;
   --text-color: #333;
@@ -12,9 +15,14 @@
   --card-bg: #ffffff;
   --border-color: #dddddd;
   --shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  margin: 0;
+  padding: 0;
 }
 
-* {
+body.prompt-share-page *,
+.prompt-share-page *,
+body.prompt-manage-page *,
+.prompt-manage-page * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;

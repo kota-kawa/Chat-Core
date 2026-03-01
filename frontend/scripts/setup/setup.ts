@@ -27,6 +27,69 @@ type TaskItem = {
 
 let isTaskLaunchInProgress = false;
 
+const AUTH_STATE_CACHE_KEY = "chatcore.auth.loggedIn";
+const TASKS_CACHE_KEY_PREFIX = "chatcore.tasks.";
+const TASKS_CACHE_TTL_MS = 30_000;
+
+type TaskCachePayload = {
+  cachedAt: number;
+  tasks: TaskItem[];
+};
+
+type LoadTaskCardsOptions = {
+  forceRefresh?: boolean;
+};
+
+function getTasksCacheKey() {
+  let scope = "guest";
+  try {
+    if (localStorage.getItem(AUTH_STATE_CACHE_KEY) === "1") {
+      scope = "auth";
+    }
+  } catch {
+    // localStorage が使えない環境では guest スコープを使用
+  }
+  return `${TASKS_CACHE_KEY_PREFIX}${scope}`;
+}
+
+function readCachedTasks() {
+  try {
+    const raw = localStorage.getItem(getTasksCacheKey());
+    if (!raw) return null;
+    const payload = JSON.parse(raw) as TaskCachePayload;
+    if (!payload || !Array.isArray(payload.tasks) || typeof payload.cachedAt !== "number") {
+      return null;
+    }
+    if (Date.now() - payload.cachedAt > TASKS_CACHE_TTL_MS) {
+      return null;
+    }
+    return payload.tasks;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedTasks(tasks: TaskItem[]) {
+  try {
+    const payload: TaskCachePayload = {
+      cachedAt: Date.now(),
+      tasks
+    };
+    localStorage.setItem(getTasksCacheKey(), JSON.stringify(payload));
+  } catch {
+    // localStorage が使えない環境では保存をスキップ
+  }
+}
+
+function invalidateTasksCache() {
+  try {
+    localStorage.removeItem(`${TASKS_CACHE_KEY_PREFIX}guest`);
+    localStorage.removeItem(`${TASKS_CACHE_KEY_PREFIX}auth`);
+  } catch {
+    // localStorage が使えない環境では削除をスキップ
+  }
+}
+
 // ▼ 1. タスクカード生成・詳細表示 -------------------------------------------------
 function getFallbackTasks() {
   return (defaultTasks as TaskItem[]).map((task) => ({
@@ -191,7 +254,8 @@ function initAiModelSelect() {
   syncFromSelect();
 }
 
-function loadTaskCards() {
+function loadTaskCards(options: LoadTaskCardsOptions = {}) {
+  const forceRefresh = Boolean(options.forceRefresh);
   const ioModal = document.getElementById("io-modal");
   const ioModalContent = document.getElementById("io-modal-content");
   const taskSelection = document.getElementById("task-selection");
@@ -324,6 +388,14 @@ function loadTaskCards() {
 
   hydrateSSRTaskCards();
 
+  if (!forceRefresh) {
+    const cachedTasks = readCachedTasks();
+    if (Array.isArray(cachedTasks) && cachedTasks.length > 0) {
+      applyTasks(cachedTasks);
+      return;
+    }
+  }
+
   // 初期ロード時: まずはフォールバックを表示しておく
   renderTaskCards(getFallbackTasks());
 
@@ -341,6 +413,9 @@ function loadTaskCards() {
     })
     .then((data) => {
       const tasks: TaskItem[] = Array.isArray(data?.tasks) ? data.tasks : [];
+      if (tasks.length > 0) {
+        writeCachedTasks(tasks);
+      }
       applyTasks(tasks);
     })
     .catch((err) => {
@@ -497,5 +572,6 @@ window.showSetupForm = showSetupForm;
 window.initToggleTasks = initToggleTasks;
 window.initSetupTaskCards = initSetupTaskCards;
 window.loadTaskCards = loadTaskCards;
+window.invalidateTasksCache = invalidateTasksCache;
 
 export {};

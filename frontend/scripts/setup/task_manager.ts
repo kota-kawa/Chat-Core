@@ -108,6 +108,7 @@ const initTaskManager = () => {
         card.dataset.prompt_template = promptTemplate;
         card.dataset.input_examples = inputExamples;
         card.dataset.output_examples = outputExamples;
+        if (window.invalidateTasksCache) window.invalidateTasksCache();
 
         // 6. タイトルを書き換え
         updateTaskTitle(card, taskName);
@@ -245,6 +246,7 @@ function toggleTaskOrderEditing() {
               if (wrapper) {
                 wrapper.remove();
               }
+              if (window.invalidateTasksCache) window.invalidateTasksCache();
               // 並び順の更新は非同期で行うので、ここでページ再読み込みは行わずにDOM上を更新
               saveTaskOrder();
             })
@@ -543,6 +545,8 @@ function saveTaskOrder() {
     .then((data) => {
       if (data.error) {
         alert("並び順の保存に失敗: " + data.error);
+      } else if (window.invalidateTasksCache) {
+        window.invalidateTasksCache();
       }
     })
     .catch((err) => {

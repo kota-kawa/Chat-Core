@@ -139,9 +139,10 @@ function initNewPromptModal() {
             newPostForm.reset();
             if (guardrailFields) guardrailFields.style.display = "none";
             closeModal();
+            if (window.invalidateTasksCache) window.invalidateTasksCache();
 
             // ここでタスク一覧を更新する
-            if (window.loadTaskCards) window.loadTaskCards();
+            if (window.loadTaskCards) window.loadTaskCards({ forceRefresh: true });
           } else {
             alert("エラー: " + result.error);
           }

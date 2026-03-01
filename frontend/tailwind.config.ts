@@ -5,7 +5,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Manrope"', '"Noto Sans JP"', "ui-sans-serif", "system-ui"]
+        sans: ["var(--font-app-sans)", "ui-sans-serif", "system-ui"]
       }
     }
   },

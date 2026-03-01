@@ -198,7 +198,7 @@
 /* カード本体のスタイル */
 .prompt-card {
   background: #ffffff;
-  padding: 1.1rem 1rem;
+  padding: 0.65rem 0.85rem;
   border-radius: 16px;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
@@ -207,8 +207,8 @@
   text-align: center;
   position: relative;
   overflow: visible;
-  min-height: 72px;
-  font-size: 1.05rem;
+  min-height: 52px;
+  font-size: 1rem;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
 }
 
@@ -307,8 +307,8 @@
   }
 
   .prompt-card {
-    font-size: 1rem;
-    min-height: 80px;
+    font-size: 0.95rem;
+    min-height: 56px;
   }
 }
 

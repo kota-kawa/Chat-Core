@@ -28,7 +28,7 @@ function createInitialTaskCardsMarkup(tasks: DefaultTask[]) {
           : task.name
             ? String(task.name)
             : "無題";
-      const taskHeader = taskName.length > 8 ? `${taskName.substring(0, 8)}…` : taskName;
+      const taskHeader = taskName;
       const promptTemplate = task.prompt_template || "プロンプトテンプレートはありません";
       const inputExamples = task.input_examples || "入力例がありません";
       const outputExamples = task.output_examples || "出力例がありません";

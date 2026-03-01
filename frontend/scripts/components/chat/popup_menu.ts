@@ -104,7 +104,7 @@ chatTemplate.innerHTML = `
       background: linear-gradient(135deg, #2ecc71, #27ae60);
     }
     .btn--comment {
-      background: linear-gradient(135deg, #f1c40f, #f39c12);
+      background: linear-gradient(135deg, #11998e, #38ef7d);
     }
 
     .actions-menu .btn {

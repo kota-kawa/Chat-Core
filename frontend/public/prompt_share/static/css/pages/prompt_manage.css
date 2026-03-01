@@ -140,7 +140,7 @@ body.prompt-manage-page,
   background: var(--ps-primary-color);
 }
 .edit-btn:hover {
-  background: #c2410c;
+  background: #0f766e;
 }
 .delete-btn {
   background: #e74c3c;

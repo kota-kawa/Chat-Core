@@ -124,6 +124,10 @@ export default function MemoPage({ memos, saved }: MemoPageProps) {
         <title>メモを保存</title>
         <link rel="icon" type="image/webp" href="/static/favicon.webp" />
         <link rel="icon" type="image/png" href="/static/favicon.png" />
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+        />
       </Head>
 
       <div className="relative min-h-screen overflow-hidden bg-violet-50">
@@ -132,24 +136,14 @@ export default function MemoPage({ memos, saved }: MemoPageProps) {
         <div className="pointer-events-none absolute -top-24 right-[-10rem] h-80 w-80 rounded-full bg-violet-200/50 blur-3xl"></div>
         <div className="pointer-events-none absolute top-40 -left-24 h-96 w-96 rounded-full bg-fuchsia-200/50 blur-3xl"></div>
 
-        <div id="auth-buttons" className="fixed right-6 top-6 z-50 hidden">
-          <button
-            id="login-btn"
-            className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 shadow-lg shadow-violet-200/60 backdrop-blur transition hover:-translate-y-0.5 hover:shadow-violet-300/70"
-          >
-            <svg
-              aria-hidden="true"
-              className="h-4 w-4 text-violet-600"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v3h20v-3c0-3.33-6.67-5-10-5z" />
-            </svg>
-            ログイン
+        <div id="auth-buttons" style={{ display: "none", position: "fixed", top: "10px", right: "10px", zIndex: 2000 }}>
+          <button id="login-btn" className="auth-btn">
+            <i className="bi bi-person-circle"></i>
+            <span>ログイン / 登録</span>
           </button>
         </div>
 
-        <user-icon id="userIcon" className="hidden"></user-icon>
+        <user-icon id="userIcon" style={{ display: "none" }}></user-icon>
 
         <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-10 px-6 py-12 lg:py-16">
           <header className="rounded-3xl border border-white/70 bg-white/80 p-8 shadow-2xl shadow-violet-100/60 backdrop-blur">

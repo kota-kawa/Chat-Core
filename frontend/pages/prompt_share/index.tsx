@@ -6,10 +6,10 @@ const bodyMarkup = `
   <action-menu></action-menu>
 
   <!-- 未ログイン時の認証ボタン -->
-  <div id="auth-buttons" style="display:none; position:absolute; top:10px; right:10px;  z-index: 999;">
+  <div id="auth-buttons" style="display:none; position:fixed; top:10px; right:10px; z-index: 2000;">
     <button id="login-btn" class="auth-btn">
       <i class="bi bi-person-circle"></i>
-      <span>ログイン</span>
+      <span>ログイン / 登録</span>
     </button>
   </div>
 

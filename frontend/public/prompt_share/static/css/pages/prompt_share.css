@@ -1,7 +1,6 @@
 @import url('../base/base.css');
 
-body.prompt-share-page,
-.prompt-share-page {
+body {
   font-family: 'Poppins', sans-serif;
   background:
     radial-gradient(1200px 600px at 10% 10%, rgba(249, 115, 22, 0.08), transparent 55%),
@@ -13,8 +12,7 @@ body.prompt-share-page,
   position: relative;
 }
 
-body.prompt-share-page::before,
-.prompt-share-page::before {
+body::before {
   content: "";
   position: fixed;
   inset: 0;

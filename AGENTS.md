@@ -6,13 +6,13 @@
 - `services/` holds shared integrations (DB, LLM, email, user helpers).
 - `templates/` and `static/` are global HTML/CSS/JS assets; blueprint-specific assets live under each blueprint’s `templates/` and `static/` folders.
 - `db/init.sql` defines the initial PostgreSQL schema.
-- `tests/` contains unit tests (currently `unittest`).
+- `tests/` contains `unit/` and `integration/` suites (`unittest`) plus shared helpers under `tests/helpers/`.
 
 ## Build, Test, and Development Commands
 - `docker-compose up --build` builds and runs the full stack (FastAPI + PostgreSQL) via Docker.
 - `pip install -r requirements.txt` installs Python dependencies for local dev.
 - `python app.py` starts the FastAPI app locally (ensure required env vars are set).
-- `python -m unittest` runs the test suite; target a file with `python -m unittest tests.test_edit_default_task`.
+- `python -m unittest` runs the test suite; target a file with `python -m unittest tests.unit.test_edit_default_task`.
 
 ## Coding Style & Naming Conventions
 - Python: 4-space indentation, `snake_case` for functions/variables, `CapWords` for classes.
@@ -21,7 +21,7 @@
 - No formatter is enforced; keep changes consistent with surrounding code.
 
 ## Testing Guidelines
-- Framework: `unittest` (see `tests/test_edit_default_task.py`).
+- Framework: `unittest` (see `tests/unit/test_edit_default_task.py`).
 - Naming: place tests in `tests/` and prefix files with `test_`.
 - Focus on request/response behavior for FastAPI routes and mock external services/DB connections.
 

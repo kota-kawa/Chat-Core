@@ -2,28 +2,20 @@ import unittest
 from datetime import datetime
 from unittest.mock import patch
 
-from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
-from starlette.middleware.sessions import SessionMiddleware
 
 from blueprints.auth import auth_bp
 from blueprints.memo import memo_bp
+from tests.helpers.app_helpers import build_session_test_app
 
 
-def build_test_app() -> FastAPI:
-    app = FastAPI()
-    app.add_middleware(SessionMiddleware, secret_key="endpoint-test-secret")
-    app.include_router(auth_bp)
-    app.include_router(memo_bp)
-
-    @app.post("/_test/session")
-    async def set_test_session(request: Request):
-        payload = await request.json()
-        for key, value in payload.items():
-            request.session[key] = value
-        return {"status": "ok"}
-
-    return app
+def build_test_app():
+    return build_session_test_app(
+        auth_bp,
+        memo_bp,
+        secret_key="endpoint-test-secret",
+        include_test_session_route=True,
+    )
 
 
 class EndpointRoutesTestCase(unittest.TestCase):

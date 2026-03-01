@@ -3,11 +3,10 @@ import json
 import unittest
 from unittest.mock import Mock, patch
 
-from starlette.requests import Request
-
 from blueprints.auth import api_send_login_code
 from blueprints.prompt_share.prompt_manage_api import get_my_prompts
 from services.web import DEFAULT_INTERNAL_ERROR_MESSAGE, log_and_internal_server_error
+from tests.helpers.request_helpers import build_request
 
 
 def make_request(
@@ -17,26 +16,12 @@ def make_request(
     session=None,
     json_body=None,
 ):
-    body = json.dumps(json_body or {}).encode("utf-8")
-    scope = {
-        "type": "http",
-        "asgi": {"spec_version": "2.3", "version": "3.0"},
-        "http_version": "1.1",
-        "method": method,
-        "scheme": "http",
-        "path": path,
-        "raw_path": path.encode("utf-8"),
-        "query_string": b"",
-        "headers": [(b"content-type", b"application/json")],
-        "client": ("testclient", 50000),
-        "server": ("testserver", 80),
-        "session": session or {},
-    }
-
-    async def receive():
-        return {"type": "http.request", "body": body, "more_body": False}
-
-    return Request(scope, receive)
+    return build_request(
+        method=method,
+        path=path,
+        session=session,
+        json_body=json_body or {},
+    )
 
 
 class ErrorHandlingTestCase(unittest.TestCase):

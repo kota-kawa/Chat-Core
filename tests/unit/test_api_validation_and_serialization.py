@@ -4,13 +4,12 @@ import unittest
 from datetime import datetime
 from unittest.mock import patch
 
-from starlette.requests import Request
-
 from blueprints.auth import api_send_login_code
 from blueprints.chat.messages import chat
 from blueprints.chat.tasks import update_tasks_order
 from blueprints.prompt_share.prompt_manage_api import get_my_prompts
 from services.llm import LlmInvalidModelError
+from tests.helpers.request_helpers import build_request
 
 
 def make_request(
@@ -21,39 +20,13 @@ def make_request(
     json_body=None,
     raw_body: bytes | None = None,
 ):
-    if json_body is not None and raw_body is not None:
-        raise ValueError("json_body and raw_body are mutually exclusive")
-
-    if json_body is not None:
-        body = json.dumps(json_body).encode("utf-8")
-    else:
-        body = raw_body or b""
-
-    headers = [(b"content-type", b"application/json")]
-    scope = {
-        "type": "http",
-        "asgi": {"spec_version": "2.3", "version": "3.0"},
-        "http_version": "1.1",
-        "method": method,
-        "scheme": "http",
-        "path": path,
-        "raw_path": path.encode("utf-8"),
-        "query_string": b"",
-        "headers": headers,
-        "client": ("testclient", 50000),
-        "server": ("testserver", 80),
-        "session": session or {},
-    }
-
-    async def receive():
-        nonlocal body
-        if body is None:
-            return {"type": "http.request", "body": b"", "more_body": False}
-        current = body
-        body = None
-        return {"type": "http.request", "body": current, "more_body": False}
-
-    return Request(scope, receive)
+    return build_request(
+        method=method,
+        path=path,
+        session=session,
+        json_body=json_body,
+        raw_body=raw_body,
+    )
 
 
 class ApiValidationAndSerializationTestCase(unittest.TestCase):

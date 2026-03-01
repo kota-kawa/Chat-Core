@@ -104,7 +104,7 @@ const bodyMarkup = `
         <!-- タスク編集ボタンは task_manager.js で後から追加され、CSSの order で中央に表示されます -->
       </div>
 
-      <div class="task-selection" id="task-selection">${initialTaskCardsMarkup}</div>
+      <div class="task-selection tasks-collapsed" id="task-selection">${initialTaskCardsMarkup}</div>
 
       <!-- これまでのチャットを見るボタン -->
       <div style="text-align: center; margin-top: 0.2rem;">

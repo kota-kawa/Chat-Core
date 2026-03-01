@@ -218,7 +218,12 @@ const bodyMarkup = `
 
 export default function HomePage() {
   useEffect(() => {
+    document.body.classList.add("chat-page");
     import("../scripts/entries/chat");
+    return () => {
+      document.body.classList.remove("chat-page");
+      document.body.classList.remove("sidebar-visible");
+    };
   }, []);
 
   return (
@@ -244,9 +249,8 @@ export default function HomePage() {
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
         />
-        <link rel="stylesheet" href="/static/css/pages/chat/index.bundle.css" />
       </Head>
-      <div dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
+      <div className="chat-page-shell" dangerouslySetInnerHTML={{ __html: bodyMarkup }} />
 
       <Script
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"

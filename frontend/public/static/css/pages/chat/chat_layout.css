@@ -113,7 +113,7 @@
     left: 0;
   }
 
-  body.sidebar-visible::after {
+  body.chat-page.sidebar-visible::after {
     content: '';
     position: fixed;
     inset: 0;

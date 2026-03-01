@@ -1,5 +1,5 @@
 /* global.css
-   Base reset and body layout. Responsive rules are in responsive.css.
+   Base reset only. Page layout styles should live in each page stylesheet.
 */
 * {
   margin: 0;
@@ -12,13 +12,3 @@ html {
   overflow-x: hidden;
 }
 
-body {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow-x: hidden;
-  padding: 1rem;
-}
-

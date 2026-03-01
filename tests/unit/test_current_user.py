@@ -3,31 +3,12 @@ import json
 import unittest
 from unittest.mock import patch
 
-from starlette.requests import Request
-
 from blueprints.auth import api_current_user
+from tests.helpers.request_helpers import build_request
 
 
 def make_request(session=None):
-    scope = {
-        "type": "http",
-        "asgi": {"spec_version": "2.3", "version": "3.0"},
-        "http_version": "1.1",
-        "method": "GET",
-        "scheme": "http",
-        "path": "/api/current_user",
-        "raw_path": b"/api/current_user",
-        "query_string": b"",
-        "headers": [],
-        "client": ("testclient", 50000),
-        "server": ("testserver", 80),
-        "session": session or {},
-    }
-
-    async def receive():
-        return {"type": "http.request", "body": b"", "more_body": False}
-
-    return Request(scope, receive)
+    return build_request(method="GET", path="/api/current_user", session=session)
 
 
 class CurrentUserTestCase(unittest.TestCase):

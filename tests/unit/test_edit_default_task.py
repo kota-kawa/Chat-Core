@@ -3,9 +3,8 @@ import json
 import unittest
 from unittest.mock import patch
 
-from starlette.requests import Request
-
 from blueprints.chat.tasks import edit_task
+from tests.helpers.request_helpers import build_request
 
 
 class FakeCursor:
@@ -48,31 +47,12 @@ class FakeConnection:
 
 
 def make_request(json_body, session=None):
-    body = json.dumps(json_body).encode("utf-8")
-    scope = {
-        "type": "http",
-        "asgi": {"spec_version": "2.3", "version": "3.0"},
-        "http_version": "1.1",
-        "method": "POST",
-        "scheme": "http",
-        "path": "/api/edit_task",
-        "raw_path": b"/api/edit_task",
-        "query_string": b"",
-        "headers": [(b"content-type", b"application/json")],
-        "client": ("testclient", 50000),
-        "server": ("testserver", 80),
-        "session": session or {},
-    }
-
-    async def receive():
-        nonlocal body
-        if body is None:
-            return {"type": "http.request", "body": b"", "more_body": False}
-        data = body
-        body = None
-        return {"type": "http.request", "body": data, "more_body": False}
-
-    return Request(scope, receive)
+    return build_request(
+        method="POST",
+        path="/api/edit_task",
+        json_body=json_body,
+        session=session,
+    )
 
 
 class EditDefaultTaskTestCase(unittest.TestCase):

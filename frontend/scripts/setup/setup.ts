@@ -358,7 +358,7 @@ function loadTaskCards(options: LoadTaskCardsOptions = {}) {
 
       const header = document.createElement("div");
       header.className = "task-header";
-      header.textContent = taskName.length > 8 ? taskName.substring(0, 8) + "…" : taskName;
+      header.textContent = taskName;
 
       const toggleBtn = document.createElement("button");
       toggleBtn.type = "button";

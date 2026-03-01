@@ -1,7 +1,7 @@
 // Task title updater
 
 function updateTaskTitle(card: HTMLElement, newTitle: string) {
-  const truncatedTitle = newTitle.length > 8 ? newTitle.substring(0, 8) + "…" : newTitle;
+  const truncatedTitle = newTitle;
 
   // 既存のヘッダーがある場合はテキストだけを更新
   const header = card.querySelector<HTMLElement>(".task-header");

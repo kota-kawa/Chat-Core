@@ -1,4 +1,5 @@
 import Head from "next/head";
+import { Outfit } from "next/font/google";
 import { useEffect, useRef, useState, type MutableRefObject } from "react";
 
 type AuthMode = "login" | "register";
@@ -44,6 +45,12 @@ const MODE_CONFIG: Record<AuthMode, ModeConfig> = {
 const REDIRECT_DELAY_MS = 2000;
 const MODAL_AUTO_CLOSE_MS = 2000;
 const MODAL_CLOSE_ANIMATION_MS = 500;
+
+const authHeadingFont = Outfit({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap"
+});
 
 type AuthGatewayPageProps = {
   initialMode: AuthMode;
@@ -130,11 +137,13 @@ export default function AuthGatewayPage({ initialMode }: AuthGatewayPageProps) {
         console.error("Error checking login state:", error);
       }
     };
-
-    void checkLoginState();
+    const checkTimerId = window.setTimeout(() => {
+      void checkLoginState();
+    }, 0);
 
     return () => {
       cancelled = true;
+      clearTimeout(checkTimerId);
       clearTimer(modalAutoCloseTimerRef);
       clearTimer(modalCloseAnimationTimerRef);
       clearTimer(redirectTimerRef);
@@ -229,19 +238,9 @@ export default function AuthGatewayPage({ initialMode }: AuthGatewayPageProps) {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>AIチャット 認証</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap"
-        />
         <link rel="icon" type="image/webp" href="/static/favicon.webp" />
         <link rel="icon" type="image/png" href="/static/favicon.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png" />
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
-        />
       </Head>
 
       <div className="auth-page-root">
@@ -333,7 +332,32 @@ export default function AuthGatewayPage({ initialMode }: AuthGatewayPageProps) {
                 window.location.href = "/google-login";
               }}
             >
-              <i className="bi bi-google" /> <span id="googleBtnText">{config.googleLabel}</span>
+              <svg
+                className="google-icon"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  fill="#EA4335"
+                  d="M12 10.2v3.9h5.5c-.2 1.2-.9 2.2-1.9 3v2.5h3.1c1.8-1.6 2.8-4.1 2.8-7 0-.7-.1-1.5-.2-2.2H12z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 22c2.7 0 5-0.9 6.6-2.4l-3.1-2.5c-.9.6-2 .9-3.4.9-2.6 0-4.8-1.7-5.6-4.1H3.3v2.6C4.9 19.8 8.2 22 12 22z"
+                />
+                <path
+                  fill="#4A90E2"
+                  d="M6.4 13.9c-.2-.6-.3-1.2-.3-1.9s.1-1.3.3-1.9V7.5H3.3C2.5 9 2 10.5 2 12s.5 3 1.3 4.5l3.1-2.6z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M12 6.1c1.5 0 2.8.5 3.9 1.5l2.9-2.9C17 2.9 14.7 2 12 2 8.2 2 4.9 4.2 3.3 7.5l3.1 2.6c.8-2.4 3-4 5.6-4z"
+                />
+              </svg>
+              <span id="googleBtnText">{config.googleLabel}</span>
             </button>
           </div>
         </div>
@@ -372,9 +396,10 @@ export default function AuthGatewayPage({ initialMode }: AuthGatewayPageProps) {
         .auth-page-root {
           margin: 0;
           padding: 0;
-          font-family: "Outfit", "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Segoe UI", sans-serif;
+          font-family: ${authHeadingFont.style.fontFamily}, var(--font-app-sans), "Segoe UI", sans-serif;
           background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
           min-height: 100vh;
+          min-height: 100dvh;
           width: 100%;
           display: flex;
           justify-content: center;
@@ -382,6 +407,13 @@ export default function AuthGatewayPage({ initialMode }: AuthGatewayPageProps) {
           color: var(--text);
           overflow: hidden;
           position: relative;
+        }
+
+        .auth-page-root {
+          width: 100vw;
+          min-height: 100vh;
+          min-height: 100dvh;
+          isolation: isolate;
         }
 
         .auth-container {
@@ -536,6 +568,11 @@ export default function AuthGatewayPage({ initialMode }: AuthGatewayPageProps) {
           margin: 18px auto 0;
         }
 
+        .google-icon {
+          flex: 0 0 auto;
+          display: block;
+        }
+
         .google-btn:hover {
           transform: translateY(-1px);
           box-shadow: 0 16px 28px rgba(0, 0, 0, 0.25);
@@ -570,14 +607,18 @@ export default function AuthGatewayPage({ initialMode }: AuthGatewayPageProps) {
         }
 
         .chat-background {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: url("/static/img.jpg") no-repeat center center / cover;
+          position: fixed;
+          inset: 0;
+          width: 100vw;
+          height: 100vh;
+          height: 100dvh;
+          background-image: url("/static/img.jpg");
+          background-repeat: no-repeat;
+          background-position: center center;
+          background-size: cover;
           opacity: 0.22;
           z-index: 0;
+          pointer-events: none;
         }
 
         .chat-background::after {

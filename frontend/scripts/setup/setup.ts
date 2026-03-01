@@ -387,6 +387,9 @@ function handleTaskCardClick(e: Event) {
   if (isTaskLaunchInProgress) return; // 多重送信防止
 
   const target = e.target as Element | null;
+  // 詳細ボタン（▼）経由のクリックではチャット送信しない
+  if (target?.closest(".task-detail-toggle")) return;
+
   const card = target?.closest(".prompt-card") as HTMLElement | null;
   if (!card) return;
 

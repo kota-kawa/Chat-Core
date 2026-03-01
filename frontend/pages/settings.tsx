@@ -45,7 +45,7 @@ const bodyMarkup = `
 <div class="mb-4">
   <button
     type="button"
-    class="settings-btn"
+    class="settings-back-btn"
     onclick="history.back()"
     title="戻る"
   >
@@ -69,7 +69,7 @@ const bodyMarkup = `
                 />
                 <button
                   type="button"
-                  class="icon-button change-avatar-btn"
+                  class="change-avatar-btn"
                   id="changeAvatarBtn"
                   title="画像を変更"
                 >
@@ -251,6 +251,47 @@ export default function UserSettingsPage() {
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
           rel="stylesheet"
         />
+        <style>{`
+          .user-settings-page {
+            min-height: 100vh;
+            background: #f4f7f6;
+          }
+          .user-settings-layout {
+            display: flex;
+            min-height: 100vh;
+          }
+          .settings-sidebar {
+            width: 260px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+          }
+          .settings-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+          }
+          .settings-section {
+            display: none;
+          }
+          .settings-section.active {
+            display: block;
+          }
+          @media (max-width: 768px) {
+            .user-settings-layout {
+              flex-direction: column;
+            }
+            .settings-sidebar {
+              width: 100%;
+              position: static;
+            }
+            .settings-content {
+              margin-left: 0;
+              padding: 1.5rem;
+            }
+          }
+        `}</style>
         <link rel="stylesheet" href="/static/css/pages/user_settings/index.bundle.css" />
       </Head>
       <div className="user-settings-page" dangerouslySetInnerHTML={{ __html: bodyMarkup }} />

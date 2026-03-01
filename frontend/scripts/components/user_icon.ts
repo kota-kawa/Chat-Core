@@ -36,7 +36,7 @@ tpl.innerHTML = `
       display: block;
     }
     /* ホバー時にユーザー名ツールチップ */
-    .btn:hover::after {
+    .btn[data-username]:not([data-username=""]):hover::after {
       content: attr(data-username);
       position: absolute;
       top: 105%;
@@ -166,11 +166,15 @@ class UserIcon extends HTMLElement {
       const data = await res.json();
 
       const avatar = data.avatar_url || "/static/user-icon.png";
-      const name = data.username || "";
+      const name = typeof data.username === "string" ? data.username.trim() : "";
 
       this.avatarImg.src = avatar;
-      // ツールチップにユーザー名
-      this.btn.setAttribute("data-username", name);
+      // ツールチップにユーザー名（空文字時は非表示）
+      if (name) {
+        this.btn.setAttribute("data-username", name);
+      } else {
+        this.btn.removeAttribute("data-username");
+      }
       // alt 属性にもセット
       this.avatarImg.alt = name ? `${name}のアイコン` : "ユーザーアイコン";
       this._profileLoaded = true;

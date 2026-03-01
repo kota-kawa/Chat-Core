@@ -341,8 +341,8 @@ html {
   --input-bg: #ffffff; /* 入力フィールドの背景 */
 }
 
-/* ───────── 戻るボタン（.settings-btn）基本スタイル ───────── */
-.settings-btn {
+/* ───────── 戻るボタン（.settings-back-btn）基本スタイル ───────── */
+.settings-back-btn {
   background: var(--primary-color) !important; /* 緑色 */
   color: var(--text-light);
   width: 3rem;           /* 正円サイズ */
@@ -354,8 +354,18 @@ html {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  /* 影など任意で */
-  /* box-shadow: 0 2px 4px rgba(0,0,0,0.15); */
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.settings-back-btn i {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.settings-back-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.95);
 }
 
 /* ───────── 画面幅 577px 以上（PC/タブレット）─────────
@@ -363,7 +373,7 @@ html {
    ヘッダ行の少し下 (top: 1rem) に固定配置します。
 */
 @media (min-width: 577px) {
-  .settings-btn {
+  .settings-back-btn {
     position: fixed;
     top: 1rem;
     left: calc(260px + 1rem); /* サイドバー幅 + 余白 */
@@ -376,7 +386,7 @@ html {
    画面左上に固定しますが、チャット画面ほど高い位置ではない適切な位置に配置
 */
 @media (max-width: 576px) {
-  .settings-btn {
+  .settings-back-btn {
     position: fixed !important;
     top: 1.5rem !important;   /* チャット画面より低い位置に調整 */
     left: 0.75rem !important;
@@ -699,6 +709,7 @@ body.settings-page,
   position: relative;
   display: inline-block; /* 適切なサイズに */
   margin-top: 0.5rem;
+  overflow: visible;
 }
 
 .avatar-preview {
@@ -712,18 +723,23 @@ body.settings-page,
 
 .change-avatar-btn {
   position: absolute;
-  bottom: 5px; /* 位置調整 */
-  right: 5px;  /* 位置調整 */
-    width: 2.2rem; /* 例: 幅を設定 */
-  height: 2.2rem; /* 例: 高さを幅と同じ値に設定 */
-  background: var(--primary-color);
-  color: #fff;
-  padding: 0.6rem; /* パディング調整 */
-  border-radius: 50%; /* ここを 50% に設定または確認 */
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  right: 0;
+  bottom: 0;
+  width: 2.35rem;
+  height: 2.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-color) !important;
+  color: #fff !important;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.24);
+  transform: translate(18%, 18%);
   transition: background-color 0.2s, transform 0.2s;
-  border: none; /* 枠線削除 */
-  cursor: pointer; /* カーソルをポインタに変更 */
+  cursor: pointer;
+  z-index: 2;
 }
 
 .change-avatar-btn:hover {

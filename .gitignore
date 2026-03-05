@@ -27,8 +27,7 @@ Thumbs.db
 
 
 
-logs/access.log
-logs/error.log
+logs/*.log
 
 
 # ビルドディレクトリを無視

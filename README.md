@@ -98,6 +98,10 @@ Set these in `.env` or in `docker-compose.yml`:
 - `DB_POOL_MIN_CONN` / `DB_POOL_MAX_CONN`: DB connection pool min/max size (defaults: `1` / `10`)
 - `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` / `REDIS_PASSWORD` (optional): Redis settings
 - `FASTAPI_ENV`: set to `production` to enable stricter SameSite/Secure settings (`FLASK_ENV` is supported as a legacy fallback)
+- `LOG_LEVEL` (optional): app log level (default: `INFO`)
+- `LOG_DIR` (optional): log output directory (default: `logs`)
+- `APP_LOG_FILE` / `ERROR_LOG_FILE` (optional): app/error log file names (defaults: `app.log` / `error.log`)
+- `LOG_MAX_BYTES` / `LOG_BACKUP_COUNT` (optional): rotating log size and retention count (defaults: `10485760` / `10`)
 
 Generate `ADMIN_PASSWORD_HASH` with:
 
@@ -254,6 +258,10 @@ alembic upgrade head
 - `DB_POOL_MIN_CONN` / `DB_POOL_MAX_CONN`: DB コネクションプール最小/最大数（デフォルト: `1` / `10`）
 - `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` / `REDIS_PASSWORD`（任意）: Redis 設定
 - `FASTAPI_ENV`: `production` で SameSite/Secure 設定を強化（`FLASK_ENV` は旧環境向けフォールバックとして利用可）
+- `LOG_LEVEL`（任意）: アプリログレベル（デフォルト: `INFO`）
+- `LOG_DIR`（任意）: ログ出力ディレクトリ（デフォルト: `logs`）
+- `APP_LOG_FILE` / `ERROR_LOG_FILE`（任意）: 通常/エラーログのファイル名（デフォルト: `app.log` / `error.log`）
+- `LOG_MAX_BYTES` / `LOG_BACKUP_COUNT`（任意）: ローテーションのサイズ上限と保持数（デフォルト: `10485760` / `10`）
 
 `ADMIN_PASSWORD_HASH` の生成例:
 

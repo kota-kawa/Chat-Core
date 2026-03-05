@@ -12,6 +12,7 @@ from blueprints.chat import cleanup_ephemeral_chats
 from services.db import close_db_pool
 from services.default_tasks import ensure_default_tasks_seeded
 from services.default_shared_prompts import ensure_default_shared_prompts
+from services.logging_config import configure_logging
 from services.runtime_config import get_session_secret_key, is_production_env
 from services.session_middleware import PermanentSessionMiddleware
 from services.web import DEFAULT_INTERNAL_ERROR_MESSAGE, jsonify
@@ -20,14 +21,9 @@ from services.web import DEFAULT_INTERNAL_ERROR_MESSAGE, jsonify
 # Load environment variables at startup.
 load_dotenv()
 
-# ログレベルを環境変数から解決し、アプリ全体のログ設定を初期化する
-# Resolve log level from environment and initialize global logging.
-log_level = os.getenv("LOG_LEVEL", "INFO").upper()
-resolved_log_level = getattr(logging, log_level, logging.INFO)
-logging.basicConfig(
-    level=resolved_log_level,
-    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
-)
+# ルートロガーにコンソール+ローテーションファイル出力を設定する
+# Configure console + rotating file logging on the root logger.
+configure_logging()
 logger = logging.getLogger(__name__)
 
 # セッション署名キーは起動時に必須チェックし、不足時は即時停止する

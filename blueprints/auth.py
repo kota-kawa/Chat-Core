@@ -1,12 +1,13 @@
 import copy
 import logging
 import os
+import time
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
 import requests
 from dotenv import load_dotenv
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from starlette.responses import RedirectResponse
 
 try:
@@ -27,6 +28,7 @@ from services.web import (
 )
 from services.request_models import AuthCodeRequest, EmailRequest
 from services.async_utils import run_blocking
+from services.csrf import require_csrf
 from services.users import (
     get_user_by_email,
     get_user_by_id,
@@ -67,8 +69,11 @@ GOOGLE_SCOPES = [
     "openid",
 ]
 
-auth_bp = APIRouter()
+auth_bp = APIRouter(dependencies=[Depends(require_csrf)])
 logger = logging.getLogger(__name__)
+
+LOGIN_VERIFICATION_CODE_TTL_SECONDS = 300
+LOGIN_VERIFICATION_CODE_MAX_ATTEMPTS = 5
 
 
 def _build_google_authorization_response(request: Request, redirect_uri: str) -> str:
@@ -122,6 +127,8 @@ async def api_current_user(request: Request):
         session.pop("user_email", None)
         session.pop("login_verification_code", None)
         session.pop("login_temp_user_id", None)
+        session.pop("login_verification_code_issued_at", None)
+        session.pop("login_verification_code_attempts", None)
         session.pop("google_oauth_state", None)
         session.pop("google_redirect_uri", None)
         set_session_permanent(session, False)
@@ -263,6 +270,8 @@ async def api_send_login_code(request: Request):
     code = generate_verification_code()
     request.session["login_verification_code"] = code
     request.session["login_temp_user_id"] = user["id"]
+    request.session["login_verification_code_issued_at"] = int(time.time())
+    request.session["login_verification_code_attempts"] = 0
     subject = "AIチャットサービス: ログイン認証コード"
     body_text = f"以下の認証コードをログイン画面に入力してください。\n\n認証コード: {code}"
     try:
@@ -307,6 +316,21 @@ async def api_verify_login_code(request: Request):
             {"status": "fail", "error": "セッション情報がありません。最初からやり直してください"},
             status_code=400,
         )
+    issued_at = int(session.get("login_verification_code_issued_at") or 0)
+    attempts = int(session.get("login_verification_code_attempts") or 0)
+    if issued_at <= 0 or int(time.time()) - issued_at > LOGIN_VERIFICATION_CODE_TTL_SECONDS:
+        session.pop("login_verification_code", None)
+        session.pop("login_temp_user_id", None)
+        session.pop("login_verification_code_issued_at", None)
+        session.pop("login_verification_code_attempts", None)
+        return jsonify({"status": "fail", "error": "認証コードの有効期限が切れています。"}, status_code=400)
+    if attempts >= LOGIN_VERIFICATION_CODE_MAX_ATTEMPTS:
+        session.pop("login_verification_code", None)
+        session.pop("login_temp_user_id", None)
+        session.pop("login_verification_code_issued_at", None)
+        session.pop("login_verification_code_attempts", None)
+        return jsonify({"status": "fail", "error": "認証コードの試行回数が上限に達しました。"}, status_code=400)
+
     submitted_code = str(auth_code or "")
     if constant_time_compare(submitted_code, str(session_code)):
         session["user_id"] = user_id
@@ -315,7 +339,17 @@ async def api_verify_login_code(request: Request):
         set_session_permanent(session, True)
         session.pop("login_verification_code", None)
         session.pop("login_temp_user_id", None)
+        session.pop("login_verification_code_issued_at", None)
+        session.pop("login_verification_code_attempts", None)
         await run_blocking(copy_default_tasks_for_user, user_id)
         return jsonify({"status": "success", "message": "ログインに成功しました"})
     else:
-        return jsonify({"status": "fail", "error": "認証コードが違います"}, status_code=400)
+        attempts += 1
+        session["login_verification_code_attempts"] = attempts
+        if attempts >= LOGIN_VERIFICATION_CODE_MAX_ATTEMPTS:
+            session.pop("login_verification_code", None)
+            session.pop("login_temp_user_id", None)
+            session.pop("login_verification_code_issued_at", None)
+            session.pop("login_verification_code_attempts", None)
+            return jsonify({"status": "fail", "error": "認証コードの試行回数が上限に達しました。"}, status_code=400)
+        return jsonify({"status": "fail", "error": "認証コードが一致しません。"}, status_code=400)

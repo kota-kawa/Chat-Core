@@ -1,6 +1,18 @@
 > 一番下に日本語版もあります
 
-# Chat-Core
+# Chat-Core-AI
+
+![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.133+-009688?logo=fastapi&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-14.2+-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-18.3+-61DAFB?logo=react&logoColor=000000)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.4+-3178C6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4+-06B6D4?logo=tailwindcss&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)
+![Docker Compose](https://img.shields.io/badge/Docker%20Compose-Local%20Dev-2496ED?logo=docker&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq-LLM%20API-F55036?logo=groq&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Google%20Gemini-LLM%20API-4285F4?logo=google&logoColor=white)
 
 **🚀 Live Demo: [https://chatcore-ai.com/](https://chatcore-ai.com/)**
 
@@ -21,7 +33,7 @@ Click a thumbnail to open the video on YouTube.
 </p>
 
 ## Overview
-Chat-Core is a FastAPI-based AI chat application with email-based authentication, persistent + ephemeral conversations, and prompt sharing. It integrates with Groq and Google Gemini APIs, uses PostgreSQL for storage, and ships with a Next.js frontend.
+Chat-Core-AI is a FastAPI-based AI chat application with email-based authentication, persistent + ephemeral conversations, and prompt sharing. It integrates with Groq and Google Gemini APIs, uses PostgreSQL for storage, and ships with a Next.js frontend.
 
 ## Key Features
 - **Email-based authentication** with 6‑digit verification codes
@@ -30,10 +42,11 @@ Chat-Core is a FastAPI-based AI chat application with email-based authentication
 - **Groq / Gemini integrations** for LLM responses
 
 ## Tech Stack
-- **Backend**: FastAPI (Python)
-- **Frontend**: Next.js
-- **Database**: PostgreSQL
-- **Optional**: Redis (for auth/session enhancements)
+- **Backend**: Python 3.12, FastAPI, SQLAlchemy, Alembic
+- **Frontend**: Next.js 14, React 18, TypeScript, Tailwind CSS
+- **Database / Cache**: PostgreSQL 15, Redis 7 (optional)
+- **LLM Providers**: Groq, Google Gemini
+- **Local Dev**: Docker Compose
 
 ## Quick Start (Docker Compose)
 > This project standardizes local execution on Docker Compose.
@@ -174,6 +187,20 @@ Licensed under the Apache License, Version 2.0 - see the [LICENSE](LICENSE) file
 <details>
 <summary>日本語版 (クリックして展開)</summary>
 
+# Chat-Core-AI
+
+![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.133+-009688?logo=fastapi&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-14.2+-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-18.3+-61DAFB?logo=react&logoColor=000000)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.4+-3178C6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4+-06B6D4?logo=tailwindcss&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)
+![Docker Compose](https://img.shields.io/badge/Docker%20Compose-Local%20Dev-2496ED?logo=docker&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq-LLM%20API-F55036?logo=groq&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Google%20Gemini-LLM%20API-4285F4?logo=google&logoColor=white)
+
 **🚀 ライブデモ: [https://chatcore-ai.com/](https://chatcore-ai.com/)**
 
 ## UI Preview
@@ -193,7 +220,7 @@ Click a thumbnail to open the video on YouTube.
 </p>
 
 ## 概要
-Chat-Core は FastAPI で構築した AI チャットアプリです。メール認証・永続／エフェメラルチャット・プロンプト共有を備え、Groq と Google Gemini API に対応しています。PostgreSQL を採用し、Next.js フロントエンドと連携します。
+Chat-Core-AI は FastAPI で構築した AI チャットアプリです。メール認証・永続／エフェメラルチャット・プロンプト共有を備え、Groq と Google Gemini API に対応しています。PostgreSQL を採用し、Next.js フロントエンドと連携します。
 
 ## 主な機能
 - **メール認証**（6 桁コード）
@@ -202,10 +229,11 @@ Chat-Core は FastAPI で構築した AI チャットアプリです。メール
 - **Groq / Gemini 連携**
 
 ## 技術スタック
-- **Backend**: FastAPI (Python)
-- **Frontend**: Next.js
-- **Database**: PostgreSQL
-- **Optional**: Redis
+- **Backend**: Python 3.12, FastAPI, SQLAlchemy, Alembic
+- **Frontend**: Next.js 14, React 18, TypeScript, Tailwind CSS
+- **Database / Cache**: PostgreSQL 15, Redis 7（任意）
+- **LLM Providers**: Groq, Google Gemini
+- **Local Dev**: Docker Compose
 
 ## 実行方法（Docker Compose）
 > 実行方法は Docker Compose に統一しています。

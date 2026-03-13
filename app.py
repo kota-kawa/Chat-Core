@@ -12,8 +12,10 @@ from blueprints.chat import cleanup_ephemeral_chats
 from services.db import close_db_pool
 from services.default_tasks import ensure_default_tasks_seeded
 from services.default_shared_prompts import ensure_default_shared_prompts
+from services.health import get_liveness_status, get_readiness_status
 from services.logging_config import configure_logging
 from services.csrf import get_or_create_csrf_token
+from services.request_context import RequestContextMiddleware
 from services.runtime_config import get_session_secret_key, is_production_env
 from services.session_middleware import PermanentSessionMiddleware
 from services.web import DEFAULT_INTERNAL_ERROR_MESSAGE, jsonify
@@ -64,6 +66,7 @@ async def lifespan(_: FastAPI):
             logger.info("Seeded %s default tasks.", inserted)
     except Exception:
         logger.exception("Failed to seed default tasks.")
+        raise
 
     # 起動時に共有サンプルプロンプトを投入する（未投入分のみ）
     # Seed sample shared prompts on startup (insert only missing rows).
@@ -73,6 +76,7 @@ async def lifespan(_: FastAPI):
             logger.info("Seeded %s sample shared prompts.", inserted)
     except Exception:
         logger.exception("Failed to seed sample shared prompts.")
+        raise
 
     cleanup_stop_event = threading.Event()
     cleanup_thread = threading.Thread(
@@ -101,6 +105,7 @@ app.add_middleware(
     same_site=same_site,
     https_only=https_only,
 )
+app.add_middleware(RequestContextMiddleware)
 
 app.state.session_secret = secret_key
 app.state.session_cookie = "session"
@@ -110,6 +115,17 @@ app.state.session_cookie = "session"
 async def issue_csrf_token(request: Request):
     token = get_or_create_csrf_token(request)
     return jsonify({"csrf_token": token})
+
+
+@app.get("/healthz")
+async def healthz():
+    return jsonify(get_liveness_status())
+
+
+@app.get("/readyz")
+async def readyz():
+    payload, status_code = get_readiness_status()
+    return jsonify(payload, status_code=status_code)
 
 
 # 各 Router を読み込んでエンドポイント定義を登録可能にする
@@ -152,4 +168,4 @@ if __name__ == "__main__":
     import uvicorn
 
     port = int(os.getenv("PORT", "5004"))
-    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=port)

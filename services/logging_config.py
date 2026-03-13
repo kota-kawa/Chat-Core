@@ -1,7 +1,14 @@
+from __future__ import annotations
+
+import json
 import logging
 import os
+from datetime import datetime, timezone
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from typing import Any
+
+from services.request_context import RequestContextFilter
 
 DEFAULT_LOG_LEVEL = "INFO"
 DEFAULT_LOG_DIR = "logs"
@@ -9,12 +16,69 @@ DEFAULT_APP_LOG_FILE = "app.log"
 DEFAULT_ERROR_LOG_FILE = "error.log"
 DEFAULT_LOG_MAX_BYTES = 10 * 1024 * 1024
 DEFAULT_LOG_BACKUP_COUNT = 10
+DEFAULT_LOG_OUTPUT = "json"
 
 APP_LOG_HANDLER_NAME = "chatcore_app_file"
 ERROR_LOG_HANDLER_NAME = "chatcore_error_file"
+CONSOLE_HANDLER_NAME = "chatcore_console"
 LOG_FORMAT = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
 
 logger = logging.getLogger(__name__)
+
+
+class JsonLogFormatter(logging.Formatter):
+    RESERVED_KEYS = {
+        "args",
+        "created",
+        "exc_info",
+        "exc_text",
+        "filename",
+        "funcName",
+        "levelname",
+        "levelno",
+        "lineno",
+        "module",
+        "msecs",
+        "message",
+        "msg",
+        "name",
+        "pathname",
+        "process",
+        "processName",
+        "relativeCreated",
+        "request_id",
+        "request_method",
+        "request_path",
+        "stack_info",
+        "thread",
+        "threadName",
+    }
+
+    def format(self, record: logging.LogRecord) -> str:
+        payload: dict[str, Any] = {
+            "timestamp": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "request_id": getattr(record, "request_id", "-"),
+            "request_method": getattr(record, "request_method", "-"),
+            "request_path": getattr(record, "request_path", "-"),
+        }
+
+        extras = {
+            key: value
+            for key, value in record.__dict__.items()
+            if key not in self.RESERVED_KEYS and not key.startswith("_")
+        }
+        if extras:
+            payload["extra"] = extras
+
+        if record.exc_info:
+            payload["exception"] = self.formatException(record.exc_info)
+        if record.stack_info:
+            payload["stack"] = self.formatStack(record.stack_info)
+
+        return json.dumps(payload, ensure_ascii=False)
 
 
 def _parse_positive_int_env(env_name: str, default_value: int) -> int:
@@ -48,6 +112,12 @@ def _replace_named_handler(root_logger: logging.Logger, handler_name: str) -> No
             existing_handler.close()
 
 
+def _build_formatter(log_output: str) -> logging.Formatter:
+    if log_output == "plain":
+        return logging.Formatter(LOG_FORMAT)
+    return JsonLogFormatter()
+
+
 def _build_rotating_handler(
     *,
     file_path: Path,
@@ -55,6 +125,7 @@ def _build_rotating_handler(
     max_bytes: int,
     backup_count: int,
     handler_name: str,
+    formatter: logging.Formatter,
 ) -> RotatingFileHandler:
     handler = RotatingFileHandler(
         file_path,
@@ -63,16 +134,30 @@ def _build_rotating_handler(
         encoding="utf-8",
     )
     handler.setLevel(level)
-    handler.setFormatter(logging.Formatter(LOG_FORMAT))
+    handler.setFormatter(formatter)
+    handler.addFilter(RequestContextFilter())
     handler.name = handler_name
+    return handler
+
+
+def _build_console_handler(
+    *,
+    level: int,
+    formatter: logging.Formatter,
+) -> logging.StreamHandler:
+    handler = logging.StreamHandler()
+    handler.setLevel(level)
+    handler.setFormatter(formatter)
+    handler.addFilter(RequestContextFilter())
+    handler.name = CONSOLE_HANDLER_NAME
     return handler
 
 
 def configure_logging() -> None:
     log_level_name = os.getenv("LOG_LEVEL", DEFAULT_LOG_LEVEL).upper()
     resolved_log_level = getattr(logging, log_level_name, logging.INFO)
+    log_output = os.getenv("LOG_OUTPUT", DEFAULT_LOG_OUTPUT).lower()
 
-    logging.basicConfig(level=resolved_log_level, format=LOG_FORMAT)
     root_logger = logging.getLogger()
     root_logger.setLevel(resolved_log_level)
 
@@ -87,8 +172,14 @@ def configure_logging() -> None:
     backup_count = _parse_positive_int_env("LOG_BACKUP_COUNT", DEFAULT_LOG_BACKUP_COUNT)
     app_log_file = log_dir / os.getenv("APP_LOG_FILE", DEFAULT_APP_LOG_FILE)
     error_log_file = log_dir / os.getenv("ERROR_LOG_FILE", DEFAULT_ERROR_LOG_FILE)
+    formatter = _build_formatter(log_output)
 
-    _replace_named_handler(root_logger, APP_LOG_HANDLER_NAME)
+    for handler_name in (CONSOLE_HANDLER_NAME, APP_LOG_HANDLER_NAME, ERROR_LOG_HANDLER_NAME):
+        _replace_named_handler(root_logger, handler_name)
+
+    root_logger.addHandler(
+        _build_console_handler(level=resolved_log_level, formatter=formatter)
+    )
     root_logger.addHandler(
         _build_rotating_handler(
             file_path=app_log_file,
@@ -96,10 +187,9 @@ def configure_logging() -> None:
             max_bytes=max_bytes,
             backup_count=backup_count,
             handler_name=APP_LOG_HANDLER_NAME,
+            formatter=formatter,
         )
     )
-
-    _replace_named_handler(root_logger, ERROR_LOG_HANDLER_NAME)
     root_logger.addHandler(
         _build_rotating_handler(
             file_path=error_log_file,
@@ -107,5 +197,6 @@ def configure_logging() -> None:
             max_bytes=max_bytes,
             backup_count=backup_count,
             handler_name=ERROR_LOG_HANDLER_NAME,
+            formatter=formatter,
         )
     )

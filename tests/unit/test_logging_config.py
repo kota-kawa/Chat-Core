@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from services.logging_config import (
     APP_LOG_HANDLER_NAME,
+    CONSOLE_HANDLER_NAME,
     ERROR_LOG_HANDLER_NAME,
     configure_logging,
 )
@@ -18,6 +19,7 @@ class LoggingConfigTestCase(unittest.TestCase):
 
         for handler in list(self.root_logger.handlers):
             if getattr(handler, "name", "") in {
+                CONSOLE_HANDLER_NAME,
                 APP_LOG_HANDLER_NAME,
                 ERROR_LOG_HANDLER_NAME,
             }:
@@ -29,6 +31,7 @@ class LoggingConfigTestCase(unittest.TestCase):
     def tearDown(self):
         for handler in list(self.root_logger.handlers):
             if getattr(handler, "name", "") in {
+                CONSOLE_HANDLER_NAME,
                 APP_LOG_HANDLER_NAME,
                 ERROR_LOG_HANDLER_NAME,
             }:

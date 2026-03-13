@@ -1,18 +1,20 @@
 import asyncio
-import json
 import unittest
 from http.cookies import SimpleCookie
 from unittest.mock import patch
 
 from itsdangerous import URLSafeSerializer
 
-from services.session_middleware import PermanentSessionMiddleware
+from services.session_middleware import COOKIE_BACKEND, REDIS_BACKEND, PermanentSessionMiddleware
 
 
 class DummyRedis:
     def __init__(self):
         self.store = {}
         self.expiry = {}
+
+    def ping(self):
+        return True
 
     def get(self, key):
         return self.store.get(key)
@@ -28,6 +30,11 @@ class DummyRedis:
             del self.store[key]
             return 1
         return 0
+
+
+class FailingRedis(DummyRedis):
+    def set(self, key, value, ex=None):
+        raise RuntimeError("redis down on set")
 
 
 def make_scope(cookie_header=None):
@@ -53,6 +60,22 @@ async def receive():
     return {"type": "http.request", "body": b"", "more_body": False}
 
 
+def get_session_cookie(messages):
+    header_values = [
+        value.decode("latin-1")
+        for message in messages
+        if message["type"] == "http.response.start"
+        for key, value in message["headers"]
+        if key.lower() == b"set-cookie"
+    ]
+    if not header_values:
+        raise AssertionError("session cookie was not set")
+
+    cookie = SimpleCookie()
+    cookie.load(header_values[0])
+    return cookie["session"].value
+
+
 class RedisSessionMiddlewareTest(unittest.TestCase):
     def test_session_roundtrip_via_redis(self):
         dummy_redis = DummyRedis()
@@ -72,23 +95,14 @@ class RedisSessionMiddlewareTest(unittest.TestCase):
 
             asyncio.run(middleware(make_scope(), receive, send))
 
-        header_values = [
-            value.decode("latin-1")
-            for message in messages
-            if message["type"] == "http.response.start"
-            for key, value in message["headers"]
-            if key.lower() == b"set-cookie"
-        ]
-        self.assertTrue(header_values)
-
-        cookie = SimpleCookie()
-        cookie.load(header_values[0])
-        signed = cookie["session"].value
-
+        signed = get_session_cookie(messages)
         serializer = URLSafeSerializer("secret", salt="strike.session")
-        session_id = serializer.loads(signed)
-        payload = dummy_redis.get(f"session:{session_id}")
-        self.assertEqual(json.loads(payload)["foo"], "bar")
+        payload = serializer.loads(signed)
+        self.assertEqual(payload["backend"], REDIS_BACKEND)
+
+        session_id = payload["id"]
+        redis_payload = dummy_redis.get(f"session:{session_id}")
+        self.assertIn('"foo": "bar"', redis_payload)
 
         async def app_read(scope, receive, send):
             captured["session"] = dict(scope["session"])
@@ -105,6 +119,66 @@ class RedisSessionMiddlewareTest(unittest.TestCase):
             asyncio.run(middleware(make_scope(f"session={signed}"), receive, send))
 
         self.assertEqual(captured["session"]["foo"], "bar")
+
+    def test_session_falls_back_to_cookie_when_redis_unavailable(self):
+        captured = {}
+
+        async def app(scope, receive, send):
+            scope["session"]["foo"] = "bar"
+            await send({"type": "http.response.start", "status": 200, "headers": []})
+            await send({"type": "http.response.body", "body": b"ok"})
+
+        with patch("services.session_middleware.get_redis_client", return_value=None):
+            middleware = PermanentSessionMiddleware(app, secret_key="secret", max_age=60)
+            messages = []
+
+            async def send(message):
+                messages.append(message)
+
+            asyncio.run(middleware(make_scope(), receive, send))
+
+        signed = get_session_cookie(messages)
+        serializer = URLSafeSerializer("secret", salt="strike.session")
+        payload = serializer.loads(signed)
+        self.assertEqual(payload["backend"], COOKIE_BACKEND)
+        self.assertEqual(payload["data"]["foo"], "bar")
+
+        async def app_read(scope, receive, send):
+            captured["session"] = dict(scope["session"])
+            await send({"type": "http.response.start", "status": 200, "headers": []})
+            await send({"type": "http.response.body", "body": b"ok"})
+
+        with patch("services.session_middleware.get_redis_client", return_value=None):
+            middleware = PermanentSessionMiddleware(app_read, secret_key="secret", max_age=60)
+            messages = []
+
+            async def send(message):
+                messages.append(message)
+
+            asyncio.run(middleware(make_scope(f"session={signed}"), receive, send))
+
+        self.assertEqual(captured["session"]["foo"], "bar")
+
+    def test_session_falls_back_to_cookie_when_redis_write_fails(self):
+        async def app(scope, receive, send):
+            scope["session"]["foo"] = "bar"
+            await send({"type": "http.response.start", "status": 200, "headers": []})
+            await send({"type": "http.response.body", "body": b"ok"})
+
+        with patch("services.session_middleware.get_redis_client", return_value=FailingRedis()):
+            middleware = PermanentSessionMiddleware(app, secret_key="secret", max_age=60)
+            messages = []
+
+            async def send(message):
+                messages.append(message)
+
+            asyncio.run(middleware(make_scope(), receive, send))
+
+        signed = get_session_cookie(messages)
+        serializer = URLSafeSerializer("secret", salt="strike.session")
+        payload = serializer.loads(signed)
+        self.assertEqual(payload["backend"], COOKIE_BACKEND)
+        self.assertEqual(payload["data"]["foo"], "bar")
 
 
 if __name__ == "__main__":

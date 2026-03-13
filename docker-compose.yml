@@ -19,7 +19,7 @@ services:
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH}
       - PORT=5004
-      - FRONTEND_URL=https://chatcore-ai.com
+      - FRONTEND_URL=${FRONTEND_URL:-https://chatcore-ai.com}
       - POSTGRES_HOST=db
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -29,41 +29,61 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_DB=0
-      # FastAPI のホットリロード用（FASTAPI_ENV は SameSite/secure 切替に使用）
       - FASTAPI_ENV=production
       - FASTAPI_DEBUG=0
+      - LOG_OUTPUT=${LOG_OUTPUT:-json}
     ports:
       - "5004:5004"
-    volumes:
-      - .:/app           # ホストのカレントディレクトリをコンテナ内 /app にマウント
     depends_on:
       db:
         condition: service_healthy
-      redis:
-        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "from urllib.request import urlopen; import sys; sys.exit(0 if urlopen('http://127.0.0.1:5004/healthz').status == 200 else 1)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+    restart: unless-stopped
 
   frontend:
-    image: node:20-alpine
+    build:
+      context: ./frontend
+      dockerfile: ./Dockerfile
+      args:
+        BACKEND_URL: http://app:5004
     container_name: strike_frontend
-    working_dir: /app/frontend
     environment:
       - BACKEND_URL=http://app:5004
-    command: sh -c "npm install && npm run dev -- --hostname 0.0.0.0 --port 3000"
-    volumes:
-      - ./frontend:/app/frontend
-      - frontend_node_modules:/app/frontend/node_modules
     ports:
       - "3000:3000"
     depends_on:
-      - app
+      app:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/healthz').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+    restart: unless-stopped
 
   db:
     image: postgres:15
     container_name: postgres_db
     environment:
-      # 作成するデータベース
       POSTGRES_DB: ${POSTGRES_DB}
-      # ここで作成するユーザ
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
@@ -75,6 +95,7 @@ services:
       timeout: 5s
       retries: 12
       start_period: 5s
+    restart: unless-stopped
 
   redis:
     image: redis:7
@@ -87,7 +108,7 @@ services:
       timeout: 5s
       retries: 12
       start_period: 5s
+    restart: unless-stopped
 
 volumes:
   db_data:
-  frontend_node_modules:

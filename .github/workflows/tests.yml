@@ -373,7 +373,7 @@ jobs:
             retries=30
             while [ "${retries}" -gt 0 ]; do
               status="$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "${cid}")"
-              if [ "${status}" = "healthy" ] || [ "${status}" = "running" ]; then
+              if [ "${status}" = "healthy" ]; then
                 echo "Service ${service} is ${status}"
                 break
               fi
@@ -390,6 +390,29 @@ jobs:
               exit 1
             fi
           done
+
+          probe_backend() {
+            docker compose exec -T app python -c "from urllib.request import urlopen; import sys; sys.exit(0 if urlopen('http://127.0.0.1:5004/readyz').status == 200 else 1)"
+          }
+
+          probe_frontend() {
+            docker compose exec -T frontend node -e "fetch('http://127.0.0.1:3000/api/healthz').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
+          }
+
+          retries=20
+          while [ "${retries}" -gt 0 ]; do
+            if probe_backend && probe_frontend; then
+              echo "HTTP readiness probes passed."
+              break
+            fi
+            sleep 2
+            retries=$((retries - 1))
+          done
+
+          if [ "${retries}" -eq 0 ]; then
+            echo "HTTP readiness probes failed."
+            exit 1
+          fi
 
           docker image prune -f
           trap - ERR

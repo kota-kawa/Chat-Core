@@ -1,0 +1,12 @@
+.env
+.git
+.github
+__pycache__
+.ruff_cache
+.next
+frontend/.next
+frontend/node_modules
+node_modules
+logs
+db_data
+*.log

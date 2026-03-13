@@ -337,10 +337,10 @@ jobs:
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
         run: |
-          set -euo pipefail
+          set -Eeuo pipefail
           port="${SERVER_PORT:-22}"
           ssh -i ~/.ssh/id_rsa -o BatchMode=yes -o StrictHostKeyChecking=accept-new -p "${port}" "${SERVER_USER}@${SERVER_HOST}" <<'REMOTE_SCRIPT'
-          set -euo pipefail
+          set -Eeuo pipefail
 
           cd /var/www/chatcore-ai
 

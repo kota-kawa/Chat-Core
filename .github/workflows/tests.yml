@@ -345,12 +345,57 @@ jobs:
           cd /var/www/chatcore-ai
 
           PREV_COMMIT="$(git rev-parse HEAD)"
+          compose_up_with_wait() {
+            if docker compose up --help 2>/dev/null | grep -q -- '--wait'; then
+              docker compose up -d --build --wait --wait-timeout 180
+            else
+              docker compose up -d --build
+            fi
+          }
+          diagnose() {
+            echo "Deployment diagnostics"
+            docker compose ps || true
+            docker compose logs app db frontend redis --tail=200 || true
+          }
           rollback() {
             echo "Deploy failed. Rolling back to ${PREV_COMMIT}"
             git reset --hard "${PREV_COMMIT}"
-            docker compose up -d --build || true
+            compose_up_with_wait || true
           }
-          trap rollback ERR
+          on_error() {
+            trap - ERR
+            diagnose
+            rollback
+          }
+          fail_deploy() {
+            echo "$1" >&2
+            return 1
+          }
+          wait_for_service_healthy() {
+            service="$1"
+            retries="${2:-90}"
+            while [ "${retries}" -gt 0 ]; do
+              cid="$(docker compose ps -q "${service}")"
+              if [ -z "${cid}" ]; then
+                fail_deploy "Service ${service} container is missing."
+              fi
+
+              status="$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "${cid}")"
+              if [ "${status}" = "healthy" ]; then
+                echo "Service ${service} is ${status}"
+                return 0
+              fi
+              if [ "${status}" = "unhealthy" ] || [ "${status}" = "exited" ] || [ "${status}" = "dead" ]; then
+                fail_deploy "Service ${service} is ${status}"
+              fi
+
+              sleep 2
+              retries=$((retries - 1))
+            done
+
+            fail_deploy "Timed out waiting for service ${service} to become ready."
+          }
+          trap on_error ERR
 
           git fetch origin main
           git reset --hard origin/main
@@ -360,36 +405,14 @@ jobs:
             echo "Created .env from .env.example. Please update it with actual secrets."
           fi
 
-          docker compose up -d --build
+          compose_up_with_wait
 
           docker compose ps
-          for service in app frontend db redis; do
-            cid="$(docker compose ps -q "${service}")"
-            if [ -z "${cid}" ]; then
-              echo "Service ${service} container is missing."
-              exit 1
-            fi
-
-            retries=30
-            while [ "${retries}" -gt 0 ]; do
-              status="$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "${cid}")"
-              if [ "${status}" = "healthy" ]; then
-                echo "Service ${service} is ${status}"
-                break
-              fi
-              if [ "${status}" = "unhealthy" ] || [ "${status}" = "exited" ] || [ "${status}" = "dead" ]; then
-                echo "Service ${service} is ${status}"
-                exit 1
-              fi
-              sleep 2
-              retries=$((retries - 1))
+          if ! docker compose up --help 2>/dev/null | grep -q -- '--wait'; then
+            for service in app frontend db redis; do
+              wait_for_service_healthy "${service}" 90
             done
-
-            if [ "${retries}" -eq 0 ]; then
-              echo "Timed out waiting for service ${service} to become ready."
-              exit 1
-            fi
-          done
+          fi
 
           probe_backend() {
             docker compose exec -T app python -c "from urllib.request import urlopen; import sys; sys.exit(0 if urlopen('http://127.0.0.1:5004/readyz').status == 200 else 1)"
@@ -399,7 +422,7 @@ jobs:
             docker compose exec -T frontend node -e "fetch('http://127.0.0.1:3000/api/healthz').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
           }
 
-          retries=20
+          retries=30
           while [ "${retries}" -gt 0 ]; do
             if probe_backend && probe_frontend; then
               echo "HTTP readiness probes passed."
@@ -410,10 +433,9 @@ jobs:
           done
 
           if [ "${retries}" -eq 0 ]; then
-            echo "HTTP readiness probes failed."
-            exit 1
+            fail_deploy "HTTP readiness probes failed."
           fi
 
-          docker image prune -f
           trap - ERR
+          docker image prune -f || true
           REMOTE_SCRIPT

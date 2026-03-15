@@ -109,13 +109,11 @@ function startStreamingBotMessage(): StreamingBotMessageHandle | null {
   let lastFrameAt: number | null = null;
   let revealCarry = 0;
   let lastScrollAt = 0;
-  let lastMarkdownAt = performance.now();
   let isCompleted = false;
   let isFinalized = false;
 
   const streamingScrollInterval = 72;
-  const markdownRefreshInterval = 2600;
-  const markdownRefreshMinChars = 72;
+  const markdownRefreshCharInterval = 50;
 
   const scrollStreamingViewport = (force = false) => {
     if (!window.chatMessages) return;
@@ -131,15 +129,15 @@ function startStreamingBotMessage(): StreamingBotMessageHandle | null {
     const pendingMarkdownChars = displayedRaw.length - formattedRaw.length;
     if (pendingMarkdownChars <= 0) return false;
 
-    const now = performance.now();
-    if (!force) {
-      if (now - lastMarkdownAt < markdownRefreshInterval) return false;
-      if (!isCompleted && pendingMarkdownChars < markdownRefreshMinChars) return false;
-    }
+    const chunkSize = force
+      ? pendingMarkdownChars
+      : Math.floor(pendingMarkdownChars / markdownRefreshCharInterval) * markdownRefreshCharInterval;
+    if (chunkSize <= 0) return false;
 
-    renderBotMessageContent(formattedContent, displayedRaw);
-    formattedRaw = displayedRaw;
-    lastMarkdownAt = now;
+    const nextFormattedIndex = getNextSafeIndex(displayedRaw, formattedRaw.length, chunkSize);
+    const nextFormattedRaw = displayedRaw.slice(0, nextFormattedIndex);
+    renderBotMessageContent(formattedContent, nextFormattedRaw);
+    formattedRaw = nextFormattedRaw;
     return true;
   };
 

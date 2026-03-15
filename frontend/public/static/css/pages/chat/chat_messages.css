@@ -79,7 +79,6 @@
   isolation: isolate;
   min-height: 1.6em;
   padding-right: 0.9rem;
-  white-space: pre-wrap;
 }
 
 .bot-message--streaming::before {
@@ -96,17 +95,30 @@
   animation: streamSurfaceShift 4.6s ease-in-out infinite;
 }
 
-.bot-message--streaming::after {
+.bot-message__formatted-stream,
+.bot-message__stream-tail {
+  margin: 0 !important;
+}
+
+.bot-message__formatted-stream:empty {
+  display: none;
+}
+
+.bot-message__stream-tail {
+  white-space: pre-wrap;
+}
+
+.bot-message__stream-tail::after {
   content: "";
   display: inline-block;
-  width: 0.58ch;
-  height: 1.05em;
-  margin-left: 0.14rem;
-  vertical-align: -0.14em;
+  width: 0.55ch;
+  height: 1.02em;
+  margin-left: 0.12rem;
+  vertical-align: -0.12em;
   border-radius: 999px;
   background: linear-gradient(180deg, #22c084, #109868);
-  box-shadow: 0 0 0 1px rgba(34, 192, 132, 0.12), 0 0 14px rgba(34, 192, 132, 0.24);
-  animation: streamCaretPulse 1.08s ease-in-out infinite;
+  box-shadow: 0 0 0 1px rgba(34, 192, 132, 0.12), 0 0 10px rgba(34, 192, 132, 0.18);
+  animation: streamCaretPulse 1.22s ease-in-out infinite;
 }
 
 /* Markdown可読性を上げつつ、要素間の余白を詰める */

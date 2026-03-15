@@ -31,13 +31,16 @@ function createBotMessageElements() {
   return { wrapper, msg };
 }
 
-function renderBotMessage(wrapper: HTMLElement, msg: HTMLElement, raw: string) {
+function renderBotMessageContent(target: HTMLElement, raw: string) {
   if (window.renderSanitizedHTML && window.formatLLMOutput) {
-    window.renderSanitizedHTML(msg, window.formatLLMOutput(raw));
+    window.renderSanitizedHTML(target, window.formatLLMOutput(raw));
   } else {
-    window.setTextWithLineBreaks?.(msg, raw);
+    window.setTextWithLineBreaks?.(target, raw);
   }
+}
 
+function renderBotMessage(wrapper: HTMLElement, msg: HTMLElement, raw: string) {
+  renderBotMessageContent(msg, raw);
   if (window.scrollMessageToBottom) {
     window.scrollMessageToBottom();
   } else if (window.scrollMessageToTop) {
@@ -93,17 +96,26 @@ function startStreamingBotMessage(): StreamingBotMessageHandle | null {
   const { wrapper, msg } = elements;
   wrapper.classList.add("message-wrapper--streaming");
   msg.classList.add("bot-message--streaming");
+  const formattedContent = document.createElement("div");
+  formattedContent.className = "bot-message__formatted-stream";
+  const streamTail = document.createElement("span");
+  streamTail.className = "bot-message__stream-tail";
+  msg.append(formattedContent, streamTail);
 
   let receivedRaw = "";
   let displayedRaw = "";
+  let formattedRaw = "";
   let animationFrameId: number | null = null;
   let lastFrameAt: number | null = null;
   let revealCarry = 0;
   let lastScrollAt = 0;
+  let lastMarkdownAt = performance.now();
   let isCompleted = false;
   let isFinalized = false;
 
-  const streamingScrollInterval = 48;
+  const streamingScrollInterval = 72;
+  const markdownRefreshInterval = 2600;
+  const markdownRefreshMinChars = 72;
 
   const scrollStreamingViewport = (force = false) => {
     if (!window.chatMessages) return;
@@ -115,10 +127,27 @@ function startStreamingBotMessage(): StreamingBotMessageHandle | null {
     window.chatMessages.scrollTop = window.chatMessages.scrollHeight;
   };
 
+  const refreshStreamingMarkdown = (force = false) => {
+    const pendingMarkdownChars = displayedRaw.length - formattedRaw.length;
+    if (pendingMarkdownChars <= 0) return false;
+
+    const now = performance.now();
+    if (!force) {
+      if (now - lastMarkdownAt < markdownRefreshInterval) return false;
+      if (!isCompleted && pendingMarkdownChars < markdownRefreshMinChars) return false;
+    }
+
+    renderBotMessageContent(formattedContent, displayedRaw);
+    formattedRaw = displayedRaw;
+    lastMarkdownAt = now;
+    return true;
+  };
+
   const renderStreamingText = (forceScroll = false) => {
-    msg.textContent = displayedRaw;
+    const refreshedMarkdown = refreshStreamingMarkdown();
+    streamTail.textContent = displayedRaw.slice(formattedRaw.length);
     msg.dataset.fullText = displayedRaw;
-    scrollStreamingViewport(forceScroll);
+    scrollStreamingViewport(forceScroll || refreshedMarkdown);
   };
 
   const getNextSafeIndex = (text: string, start: number, charCount: number) => {
@@ -160,17 +189,20 @@ function startStreamingBotMessage(): StreamingBotMessageHandle | null {
 
       const pendingChars = receivedRaw.length - displayedRaw.length;
       if (pendingChars > 0) {
-        const charsPerSecond = Math.min(520, 44 + pendingChars * 2.6);
+        const charsPerSecond = isCompleted
+          ? Math.min(140, 28 + pendingChars * 0.48)
+          : Math.min(92, 18 + pendingChars * 0.24);
         revealCarry += (deltaMs * charsPerSecond) / 1000;
 
-        let revealCount = Math.floor(revealCarry);
-        if (revealCount < 1) revealCount = 1;
-        revealCarry = Math.max(0, revealCarry - revealCount);
+        const revealCount = Math.floor(revealCarry);
+        if (revealCount > 0) {
+          revealCarry = Math.max(0, revealCarry - revealCount);
 
-        const nextIndex = getNextSafeIndex(receivedRaw, displayedRaw.length, revealCount);
-        if (nextIndex > displayedRaw.length) {
-          displayedRaw = receivedRaw.slice(0, nextIndex);
-          renderStreamingText();
+          const nextIndex = getNextSafeIndex(receivedRaw, displayedRaw.length, revealCount);
+          if (nextIndex > displayedRaw.length) {
+            displayedRaw = receivedRaw.slice(0, nextIndex);
+            renderStreamingText();
+          }
         }
       }
 

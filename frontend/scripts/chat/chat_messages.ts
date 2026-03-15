@@ -188,8 +188,8 @@ function startStreamingBotMessage(): StreamingBotMessageHandle | null {
       const pendingChars = receivedRaw.length - displayedRaw.length;
       if (pendingChars > 0) {
         const charsPerSecond = isCompleted
-          ? Math.min(140, 28 + pendingChars * 0.48)
-          : Math.min(92, 18 + pendingChars * 0.24);
+          ? Math.min(118, 22 + pendingChars * 0.4)
+          : Math.min(76, 14 + pendingChars * 0.2);
         revealCarry += (deltaMs * charsPerSecond) / 1000;
 
         const revealCount = Math.floor(revealCarry);

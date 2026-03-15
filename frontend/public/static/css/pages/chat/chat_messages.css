@@ -315,99 +315,48 @@
 }
 
 .thinking-message-wrapper {
-  max-width: 76%;
+  width: auto;
+  max-width: 16rem;
 }
 
 .thinking-message {
   position: relative;
   overflow: hidden;
-  padding: 1rem 1.15rem;
-  border-radius: 24px;
-  border: 1px solid rgba(25, 195, 125, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 12.75rem;
+  padding: 1rem;
+  border-radius: 28px;
+  border: 1px solid rgba(18, 111, 83, 0.24);
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(241, 252, 247, 0.92)),
+    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.96), transparent 28%),
+    radial-gradient(circle at 86% 20%, rgba(84, 217, 170, 0.22), transparent 38%),
+    linear-gradient(138deg, rgba(255, 255, 255, 0.98), rgba(227, 247, 238, 0.94)),
     rgba(255, 255, 255, 0.92);
   box-shadow:
-    0 18px 36px rgba(15, 23, 42, 0.09),
+    0 20px 44px rgba(15, 23, 42, 0.14),
     inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(14px);
 }
 
 .thinking-message::before {
   content: "";
   position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.72) 50%, transparent 100%);
-  transform: translateX(24%);
-  animation: thinkingSweepRtl 2.8s ease-in-out infinite;
+  inset: auto -8% -42% 8%;
+  height: 88%;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(51, 214, 159, 0.34), transparent 72%);
+  filter: blur(10px);
+  animation: constellationPanelDrift 5.8s ease-in-out infinite;
   pointer-events: none;
 }
 
-.thinking-message__header {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.thinking-message__label {
-  color: #0f7d51;
-  font-size: 0.98rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.thinking-message__hint {
-  color: #5e7f70;
-  font-size: 0.8rem;
-  letter-spacing: 0.04em;
-}
-
-.thinking-message__rail {
-  position: relative;
-  z-index: 1;
-  overflow: hidden;
-  padding: 0.8rem 0;
-  border-radius: 999px;
-  border: 1px solid rgba(25, 195, 125, 0.12);
-  background:
-    radial-gradient(circle at left center, rgba(25, 195, 125, 0.12), transparent 38%),
-    linear-gradient(90deg, rgba(25, 195, 125, 0.05), rgba(255, 255, 255, 0.9), rgba(25, 195, 125, 0.05));
-  mask-image: linear-gradient(90deg, transparent 0%, #000 9%, #000 91%, transparent 100%);
-  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 9%, #000 91%, transparent 100%);
-}
-
-.thinking-message__track {
-  display: flex;
-  width: max-content;
-  gap: 1.25rem;
-  white-space: nowrap;
-  color: #18a869;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  animation: thinkingMarqueeRtl 5.8s linear infinite;
-}
-
-.thinking-message__track span {
-  position: relative;
-  padding-left: 1rem;
-}
-
-.thinking-message__track span::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 0.38rem;
-  height: 0.38rem;
-  border-radius: 999px;
-  background: rgba(24, 168, 105, 0.42);
-  transform: translateY(-50%);
+.thinking-message__constellation {
+  --constellation-width: 12.9rem;
+  --constellation-height: 5.2rem;
+  --constellation-radius: 22px;
+  --constellation-scale: 1;
 }
 
 @media (max-width: 576px) {
@@ -418,32 +367,17 @@
   }
 
   .thinking-message-wrapper {
-    max-width: 100%;
-    width: 100%;
+    max-width: 14rem;
   }
 
   .thinking-message {
-    padding: 0.88rem 0.95rem;
-    border-radius: 20px;
+    min-width: 11.4rem;
+    padding: 0.8rem;
+    border-radius: 24px;
   }
 
-  .thinking-message__header {
-    flex-direction: column;
-    gap: 0.22rem;
-    margin-bottom: 0.62rem;
-  }
-
-  .thinking-message__label {
-    font-size: 0.88rem;
-  }
-
-  .thinking-message__hint {
-    font-size: 0.74rem;
-  }
-
-  .thinking-message__track {
-    gap: 1rem;
-    font-size: 0.7rem;
-    letter-spacing: 0.22em;
+  .thinking-message__constellation {
+    --constellation-width: 11.2rem;
+    --constellation-height: 4.5rem;
   }
 }

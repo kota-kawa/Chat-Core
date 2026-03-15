@@ -136,15 +136,18 @@ const bodyMarkup = `
         style="display: none;"
         role="status"
         aria-live="polite"
-        aria-label="Thinking"
+        aria-label="AIが応答を準備しています"
       >
-        <span class="typing-indicator__orb" aria-hidden="true"></span>
-        <div class="typing-indicator__viewport" aria-hidden="true">
-          <div class="typing-indicator__track">
-            <span>Thinking</span>
-            <span>Thinking</span>
-            <span>Thinking</span>
-          </div>
+        <div class="constellation-loader typing-indicator__constellation" aria-hidden="true">
+          <span class="constellation-loader__link constellation-loader__link--1"></span>
+          <span class="constellation-loader__link constellation-loader__link--2"></span>
+          <span class="constellation-loader__link constellation-loader__link--3"></span>
+          <span class="constellation-loader__link constellation-loader__link--4"></span>
+          <span class="constellation-loader__node constellation-loader__node--1"></span>
+          <span class="constellation-loader__node constellation-loader__node--2"></span>
+          <span class="constellation-loader__node constellation-loader__node--3"></span>
+          <span class="constellation-loader__node constellation-loader__node--4"></span>
+          <span class="constellation-loader__node constellation-loader__node--5"></span>
         </div>
       </div>
     </div>

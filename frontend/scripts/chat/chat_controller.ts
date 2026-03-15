@@ -12,6 +12,26 @@ type StreamingBotMessageHandle = {
   showError: (message: string) => void;
 };
 
+function appendConstellationLoader(parent: HTMLElement, modifierClass: string) {
+  const loader = document.createElement("div");
+  loader.className = `constellation-loader ${modifierClass}`;
+  loader.setAttribute("aria-hidden", "true");
+
+  for (let index = 1; index <= 4; index += 1) {
+    const link = document.createElement("span");
+    link.className = `constellation-loader__link constellation-loader__link--${index}`;
+    loader.appendChild(link);
+  }
+
+  for (let index = 1; index <= 5; index += 1) {
+    const node = document.createElement("span");
+    node.className = `constellation-loader__node constellation-loader__node--${index}`;
+    loader.appendChild(node);
+  }
+
+  parent.appendChild(loader);
+}
+
 function createThinkingPlaceholder() {
   if (!window.chatMessages) return null;
 
@@ -22,36 +42,9 @@ function createThinkingPlaceholder() {
   thinking.className = "thinking-message";
   thinking.setAttribute("role", "status");
   thinking.setAttribute("aria-live", "polite");
-  thinking.setAttribute("aria-label", "Thinking");
+  thinking.setAttribute("aria-label", "AIが応答を準備しています");
 
-  const header = document.createElement("div");
-  header.className = "thinking-message__header";
-
-  const label = document.createElement("span");
-  label.className = "thinking-message__label";
-  label.textContent = "Thinking";
-
-  const hint = document.createElement("span");
-  hint.className = "thinking-message__hint";
-  hint.textContent = "回答を準備中";
-
-  header.append(label, hint);
-
-  const rail = document.createElement("div");
-  rail.className = "thinking-message__rail";
-  rail.setAttribute("aria-hidden", "true");
-
-  const track = document.createElement("div");
-  track.className = "thinking-message__track";
-
-  ["Thinking", "Thinking", "Thinking"].forEach((text) => {
-    const segment = document.createElement("span");
-    segment.textContent = text;
-    track.appendChild(segment);
-  });
-
-  rail.appendChild(track);
-  thinking.append(header, rail);
+  appendConstellationLoader(thinking, "thinking-message__constellation");
   wrapper.appendChild(thinking);
   window.chatMessages.appendChild(wrapper);
 

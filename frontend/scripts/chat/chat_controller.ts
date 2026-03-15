@@ -376,12 +376,10 @@ function createThinkingPlaceholder() {
   thinking.setAttribute("aria-live", "polite");
   thinking.setAttribute("aria-label", "AIが応答を準備しています");
 
-  const label = document.createElement("span");
-  label.className = "thinking-message__label";
-  label.textContent = "生成中...";
-  thinking.appendChild(label);
+  const loader = appendConstellationLoader(thinking, "thinking-message__constellation");
   wrapper.appendChild(thinking);
   window.chatMessages.appendChild(wrapper);
+  setupZodiacLoader(loader);
 
   if (window.scrollMessageToBottom) {
     window.scrollMessageToBottom();
